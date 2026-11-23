@@ -1,0 +1,6 @@
+pandas
+pyarrow
+lightgbm
+requests
+beautifulsoup4
+lhafile
