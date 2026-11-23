@@ -94,9 +94,18 @@ def main():
         model.fit(tr[X], tr[y], categorical_feature=['venue'])
         model.booster_.save_model(os.path.join(MODEL, f'model_{y}.txt'))
         print(y, '学習完了')
+    now = now_jst()
+    info = (f'{now:%Y-%m-%d %H:%M} JST / '
+            f'{df["date"].min()}〜{df["date"].max()} / {len(tr)}行')
     with open(os.path.join(MODEL, 'trained_at.txt'), 'w') as f:
-        f.write(f'{now_jst():%Y-%m-%d %H:%M} JST / '
-                f'{df["date"].min()}〜{df["date"].max()} / {len(tr)}行\n')
+        f.write(info + '\n')
+    # モデルの切り替え履歴（成績レポートでモデルごとに集計するため）
+    path = os.path.join(MODEL, 'history.csv')
+    new = not os.path.exists(path)
+    with open(path, 'a', encoding='utf-8') as f:
+        if new:
+            f.write('from,version,detail\n')
+        f.write(f'{now:%Y%m%d%H%M},v{now:%m%d} 自動学習,{info}\n')
     print('保存完了')
     with open(os.path.join(MODEL, 'trained_at.txt')) as f:
         notify('学習完了', f.read())

@@ -31,7 +31,7 @@ def info_morning(jcd, rno, hd):
         except (IndexError, ValueError):
             mot.append(None)
     nan = float('nan')
-    return ids, [nan] * 6, {}, nan, nan, mot
+    return ids, [nan] * 6, {}, nan, nan, mot, ids
 
 
 def top_combos(pr, k=2):
@@ -56,7 +56,7 @@ def main():
     def one(r):
         dl, jcd, rno = r
         try:
-            pr = predict.predict(bst, lk, jcd, rno, hd)
+            pr = predict.predict(bst, lk, jcd, rno, hd, strict=False)
         except Exception as e:
             print('エラー', jcd, rno, e)
             return None
@@ -79,7 +79,7 @@ def main():
         picks = ' '.join(f'{k}({q * 100:.0f}%)' for q, k in top)
         lines.append(f'{dl:%H:%M} {VENUES.get(jcd, jcd)}{rno}R  {picks}')
     lines.append('')
-    lines.append('※展示・オッズ前の候補です。最終判断は締切前の通知で。')
+    lines.append('※展示・オッズ前の候補です（進入は枠なりと仮定）。最終判断は締切前の通知で。')
     notify(f'本日の本命候補 {len(found)}レース', '\n'.join(lines))
 
 

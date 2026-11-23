@@ -9,7 +9,7 @@ import datetime
 
 import pandas as pd
 
-from common import LOGS, now_jst, download_k, read_k, notify
+from common import LOGS, MODEL, now_jst, download_k, read_k, notify
 
 
 def results_for(hd):
@@ -33,9 +33,64 @@ def day_bets(hd):
     bets = bets.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']],
                       on=['jcd', 'rno'], how='left')
     bets = bets[bets['tri'].notna()]  # 中止・返還は除く
+    bets['prob'] = pd.to_numeric(bets['prob'], errors='coerce')
+    bets = bets.sort_values(['jcd', 'rno', 'prob'],
+                            ascending=[True, True, False])
+    bets['何点目'] = bets.groupby(['jcd', 'rno']).cumcount() + 1
+    hist = model_history()
+    bets['モデル'] = [version_of(r, hist) for _, r in bets.iterrows()]
     bets['hit'] = (bets['pick'] == bets['tri']).astype(int)
     bets['ret'] = bets['tri_pay'].where(bets['hit'] == 1, 0)
     return bets, races
+
+
+# モデルの切り替え履歴（この日時以降の予想は、このモデル）
+BASE_HISTORY = [
+    (0, 'v1 1着モデル'),
+    (202611232125, 'v2 3モデル(11/23 Colab)'),
+]
+BANDS = [0, 0.05, 0.08, 0.10, 0.12, 0.15, 0.20, 1.01]
+
+
+def model_history():
+    h = list(BASE_HISTORY)
+    path = os.path.join(MODEL, 'history.csv')
+    if os.path.exists(path):
+        t = pd.read_csv(path, dtype=str)
+        h += [(int(r['from']), r['version']) for _, r in t.iterrows()]
+    return sorted(h)
+
+
+def version_of(row, hist):
+    key = int(str(row['hd']) + str(row['run_at']).replace(':', '')[:4])
+    v = hist[0][1]
+    for start, name in hist:
+        if key >= start:
+            v = name
+    return v
+
+
+def calibration(ab):
+    """予測確率の帯ごとに、実際の的中率と回収率を集計する"""
+    t = ab.copy()
+    t['帯'] = pd.cut(t['prob'].astype(float), BANDS, right=False,
+                    labels=[f'{a*100:.0f}-{b*100:.0f}%' if b < 1 else
+                            f'{a*100:.0f}%以上'
+                            for a, b in zip(BANDS[:-1], BANDS[1:])])
+    g = t.groupby(['モデル', '帯'], observed=True)
+    c = pd.DataFrame({
+        '点数': g.size(),
+        '予測の平均%': (g['prob'].mean() * 100).round(1),
+        '実際の的中率%': (g['hit'].mean() * 100).round(1),
+        '回収率%': (g['ret'].sum() / (g.size() * 100) * 100).round(1),
+    }).reset_index()
+    r = t.groupby(['モデル', '何点目'])
+    k = pd.DataFrame({
+        '点数': r.size(),
+        '的中率%': (r['hit'].mean() * 100).round(1),
+        '回収率%': (r['ret'].sum() / (r.size() * 100) * 100).round(1),
+    }).reset_index()
+    return c, k
 
 
 def fmt(n_races, b):
@@ -100,9 +155,15 @@ def main():
         'hd': '日付', 'venue': '会場', 'rno': 'R', 'deadline': '締切',
         'pick': '買い目', 'prob': '確率', 'odds': 'オッズ', 'ev': '期待値',
         'tri': '結果', 'hit': '的中', 'ret': '払戻'})
-    cols = ['日付', '会場', 'R', '締切', '買い目', '確率', 'オッズ',
-            '期待値', '結果', '的中', '払戻']
+    cols = ['日付', '会場', 'R', '締切', '買い目', '何点目', '確率',
+            'オッズ', '期待値', '結果', '的中', '払戻', 'モデル']
     ab[cols].to_csv(os.path.join(LOGS, 'all_bets.csv'), index=False)
+
+    # 確率の答え合わせ（校正）と、1点目・2点目の比較
+    raw = pd.concat(all_bets, ignore_index=True)
+    cal, by_rank = calibration(raw)
+    cal.to_csv(os.path.join(LOGS, 'calibration.csv'), index=False)
+    by_rank.to_csv(os.path.join(LOGS, 'by_rank.csv'), index=False)
 
     lines = []
     if day is not None:
@@ -110,6 +171,17 @@ def main():
     lines.append('累計: ' + fmt(races_total, ab.rename(
         columns={'的中': 'hit', '払戻': 'ret'})))
     lines.append(f'累計収支: {int(dd["累計収支"].iloc[-1]):+,}円（1点100円）')
+    cur = raw['モデル'].iloc[-1] if len(raw) else ''
+    c = cal[(cal['モデル'] == cur) & (cal['点数'] > 0)]
+    if len(c):
+        lines.append(f'確率の答え合わせ（{cur}）:')
+        for _, r in c.iterrows():
+            lines.append(f' {r["帯"]}: 予測{r["予測の平均%"]}% → '
+                         f'実際{r["実際の的中率%"]}%（{int(r["点数"])}点）')
+    k = by_rank[by_rank['モデル'] == cur]
+    for _, r in k.iterrows():
+        lines.append(f' {int(r["何点目"])}点目: 的中{r["的中率%"]}% '
+                     f'回収{r["回収率%"]}%（{int(r["点数"])}点）')
     notify('成績レポート', '\n'.join(lines))
 
 

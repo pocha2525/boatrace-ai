@@ -15,7 +15,8 @@ from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, page, notify, add_rel)
 
 WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
-# 本命モード：本命がはっきりしたレースで、当たりやすい3連単を2点
+# 本命モード：本命がはっきりしたレースで、当たりやすい3連単を最大2点
+# （2点目は期待値1.0以上のときだけ）
 EV_TH = 1.0          # 一番当たりやすい買い目の期待値がこれ以上
 MIN_PROB = 0.12      # 一番当たりやすい買い目の確率がこれ以上
 MAX_BETS = 2         # 1レースあたりの最大点数
@@ -81,14 +82,16 @@ def race_info(jcd, rno, hd):
     nums = [int(x.get_text(strip=True))
             for x in s.select('span.table1_boatImage1Number')
             if x.get_text(strip=True).isdigit()]
-    # スタート展示の並び（1コースから順）。6艇そろわなければ枠なり扱い
+    # スタート展示の並び（1コースから順）。6艇そろわなければ「読み取れず」
     crs = {b: i + 1 for i, b in enumerate(nums[:6])}
     if sorted(crs) != [1, 2, 3, 4, 5, 6]:
         crs = {}
     w = re.findall(r'LabelData">\s*([\d.]+)\s*(m|cm)\s*<', b)
     wind = next((float(v) for v, u in w if u == 'm'), 0.0)
     wave = next((float(v) for v, u in w if u == 'cm'), 0.0)
-    r = BeautifulSoup(page('racelist', jcd, rno, hd), 'html.parser')
+    rl = page('racelist', jcd, rno, hd)
+    rl_ids = list(dict.fromkeys(re.findall(r'toban=(\d{4})', rl)))[:6]
+    r = BeautifulSoup(rl, 'html.parser')
     h2 = r.select('td.is-lineH2')
     n = len(h2) // 6
     mot = []
@@ -98,7 +101,23 @@ def race_info(jcd, rno, hd):
             mot.append(int(txt.split()[0]))
         except (IndexError, ValueError):
             mot.append(None)
-    return ids, tj, crs, wind, wave, mot
+    return ids, tj, crs, wind, wave, mot, rl_ids
+
+
+def check_race(ids, tj, crs, mot, rl_ids, strict):
+    """6艇の対応が確かめられなければ、見送りの理由を返す"""
+    if len(ids) != 6 or len(set(ids)) != 6:
+        return f'選手が6人そろわない（{len(ids)}人）'
+    if len(rl_ids) == 6 and ids != rl_ids:
+        return '出走表と直前情報で選手の並びが一致しない'
+    if len(mot) != 6 or any(m is None for m in mot):
+        return 'モーター番号が6艇分そろわない'
+    if strict:
+        if len(tj) != 6 or any(t is None or t != t for t in tj):
+            return '展示タイムが6艇分そろわない（欠場・展示前の可能性）'
+        if not crs:
+            return '進入が読み取れない'
+    return None
 
 
 def odds_map(jcd, rno, hd):
@@ -118,10 +137,14 @@ def odds_map(jcd, rno, hd):
 
 # ---------- 予想 ----------
 
-def predict(bst, lk, jcd, rno, hd):
-    """各艇の 1着・2着・3着 の確率を返す: (艇番, w, q2, q3)"""
-    ids, tj, crs, wind, wave, mot = race_info(jcd, rno, hd)
-    if len(ids) < 3:
+def predict(bst, lk, jcd, rno, hd, strict=True):
+    """各艇の 1着・2着・3着 の確率を返す: (艇番, w, q2, q3)
+    strict=True（締切前）：展示タイム・進入が6艇分そろわなければ見送り
+    strict=False（朝の候補）：進入は枠なりとして暫定で計算"""
+    ids, tj, crs, wind, wave, mot, rl_ids = race_info(jcd, rno, hd)
+    reason = check_race(ids, tj, crs, mot, rl_ids, strict)
+    LAST['skip'] = reason
+    if reason:
         return None
     yr = int(hd[:4])
 
@@ -189,7 +212,7 @@ def combos(pr, om):
 def entry_text():
     crs = LAST.get('crs') or {}
     if not crs:
-        return '進入: 読み取れず（枠なりで計算）'
+        return '進入: 読み取れず'
     order = [b for b, c in sorted(crs.items(), key=lambda x: x[1])]
     mark = '' if order == [1, 2, 3, 4, 5, 6] else '  ※枠なりではない'
     return '進入: ' + '-'.join(map(str, order)) + mark
@@ -232,12 +255,15 @@ def run_race(bst, lk, jcd, rno, hd, dl, now):
     base = {'hd': hd, 'jcd': jcd, 'venue': name, 'rno': rno,
             'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}'}
     if pr is None:
-        print(name, rno, 'R 情報が取れませんでした')
+        print(name, rno, 'R 見送り：', LAST.get('skip') or '情報が取れない')
         return
     res = combos(pr, odds_map(jcd, rno, hd))  # 当たりやすい順
-    # 一番当たりやすい組み合わせが条件を満たすレースだけ、上位2点を出す
+    # 一番当たりやすい組み合わせが条件を満たすレースだけ買う。
+    # 2点目以降も期待値1.0以上のときだけ追加する
     ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
-    bets = res[:MAX_BETS] if ok else []
+    bets = [res[0]] if ok else []
+    if ok:
+        bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH]
     rows = []
     for ev, k, q, o in bets:
         rows.append(dict(base, pick=k, prob=round(q, 4), odds=o,
@@ -294,9 +320,9 @@ def main():
             info.append(f'次の締切: {VENUES.get(j)} {r}R {dl:%H:%M}')
             if not targets:
                 targets = [upcoming[0]]
-        info.append(open(os.path.join(MODEL, 'trained_at.txt')).read()
-                    if os.path.exists(os.path.join(MODEL, 'trained_at.txt'))
-                    else '')
+        ta = os.path.join(MODEL, 'trained_at.txt')
+        info.append('モデル: ' + (open(ta).read().strip()
+                    if os.path.exists(ta) else 'v2 3モデル(11/23 Colab)'))
         notify('動作確認OK', '\n'.join(info))
 
     for mins, jcd, rno, dl in targets:
