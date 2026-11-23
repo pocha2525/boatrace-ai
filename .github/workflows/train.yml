@@ -1,8 +1,12 @@
 name: train
 on:
-  schedule:
-    - cron: '23 19 * * 0'
+  # Google Apps Script から10分ごとなどに起動する
   workflow_dispatch:
+    inputs:
+      auto:
+        description: '自動実行なら1'
+        required: false
+        default: '0'
 permissions:
   contents: write
 concurrency:

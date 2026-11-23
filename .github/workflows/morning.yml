@@ -1,9 +1,12 @@
 name: morning
 on:
-  schedule:
-    # 毎朝 日本時間 8:23 に本日の本命候補を通知
-    - cron: '23 23 * * *'
+  # Google Apps Script から10分ごとなどに起動する
   workflow_dispatch:
+    inputs:
+      auto:
+        description: '自動実行なら1'
+        required: false
+        default: '0'
 jobs:
   morning:
     runs-on: ubuntu-latest
