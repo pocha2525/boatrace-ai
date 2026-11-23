@@ -1,0 +1,21 @@
+name: morning
+on:
+  schedule:
+    # 毎朝 日本時間 8:23 に本日の本命候補を通知
+    - cron: '23 23 * * *'
+  workflow_dispatch:
+jobs:
+  morning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONUNBUFFERED: '1'
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      RELAY_URL: ${{ secrets.RELAY_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pandas lightgbm requests beautifulsoup4
+      - run: python morning.py
