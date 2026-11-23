@@ -12,6 +12,10 @@ jobs:
   predict:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      PYTHONUNBUFFERED: '1'
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      RELAY_URL: ${{ secrets.RELAY_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,7 +24,6 @@ jobs:
       - run: pip install pandas lightgbm requests beautifulsoup4
       - run: python predict.py
         env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           MANUAL: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
       - name: save
         run: |

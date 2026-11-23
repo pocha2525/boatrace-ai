@@ -10,22 +10,28 @@ concurrency:
 jobs:
   train:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 300
+    env:
+      PYTHONUNBUFFERED: '1'
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      RELAY_URL: ${{ secrets.RELAY_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - uses: actions/cache@v4
+      - uses: actions/cache/restore@v4
         with:
           path: data
           key: kdata-${{ github.run_id }}
           restore-keys: kdata-
       - run: pip install -r requirements.txt
       - run: python train.py
-      - run: python -c "from common import notify; notify('学習完了', open('model/trained_at.txt').read())"
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data
+          key: kdata-${{ github.run_id }}
       - name: save
         run: |
           git config user.name "github-actions[bot]"
