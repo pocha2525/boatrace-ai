@@ -1,0 +1,38 @@
+name: train
+on:
+  schedule:
+    - cron: '23 19 * * 0'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repo-write
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache@v4
+        with:
+          path: data
+          key: kdata-${{ github.run_id }}
+          restore-keys: kdata-
+      - run: pip install -r requirements.txt
+      - run: python train.py
+      - run: python -c "from common import notify; notify('学習完了', open('model/trained_at.txt').read())"
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      - name: save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for d in model logs; do [ -d $d ] && git add -A $d; done
+          if ! git diff --cached --quiet; then
+            git commit -m "update"
+            git pull --rebase
+            git push
+          fi
