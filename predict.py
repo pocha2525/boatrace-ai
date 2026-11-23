@@ -13,9 +13,10 @@ from common import (MODEL, LOGS, JST, VENUES, FEATS, X, BR, now_jst,
                     get, page, notify)
 
 WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
-EV_TH = 1.2          # 期待値がこれ以上の買い目だけ出す
-MIN_PROB = 0.03      # 確率がこれ未満の買い目は出さない
-MAX_BETS = 5         # 1レースあたりの最大点数
+# 本命モード：当たりやすい3連単を上位2点まで
+EV_TH = 1.0          # 期待値がこれ以上の買い目だけ出す
+MIN_PROB = 0.15      # 確率がこれ未満の買い目は出さない
+MAX_BETS = 2         # 1レースあたりの最大点数
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
             'prob', 'odds', 'ev', 'run_at']
 
@@ -154,7 +155,8 @@ def combos(p, om):
         o = om.get(k)
         if o == o and o and q >= MIN_PROB:
             res.append((q * o, k, q, o))
-    return sorted(res, reverse=True)
+    # 当たりやすい順（確率の高い順）に並べる
+    return sorted(res, key=lambda x: -x[2])
 
 
 # ---------- 記録 ----------
@@ -203,7 +205,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now):
     top = sorted(p.items(), key=lambda x: -x[1])[:3]
     head = ' / '.join(f'{b}号艇{v * 100:.0f}%' for b, v in top)
     if bets:
-        lines = [f'締切 {dl:%H:%M}', f'1着予想: {head}', '買い目:']
+        lines = [f'締切 {dl:%H:%M}', f'1着予想: {head}', '本命:']
         for ev, k, q, o in bets:
             lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
         notify(f'{name} {rno}R', '\n'.join(lines))
