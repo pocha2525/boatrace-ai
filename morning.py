@@ -6,7 +6,6 @@
 """
 import os
 import re
-from itertools import permutations
 from concurrent.futures import ThreadPoolExecutor
 
 from bs4 import BeautifulSoup
@@ -35,13 +34,9 @@ def info_morning(jcd, rno, hd):
     return ids, [nan] * 6, {}, nan, nan, mot
 
 
-def top_combos(p, k=2):
-    res = []
-    for a, b, c in permutations(p, 3):
-        q = p[a] * p[b] / (1 - p[a])
-        q = q * p[c] / max(1 - p[a] - p[b], 0.01)
-        res.append((q, f'{a}-{b}-{c}'))
-    return sorted(res, reverse=True)[:k]
+def top_combos(pr, k=2):
+    t = predict.tri_probs(pr)
+    return sorted(((q, c) for c, q in t.items()), reverse=True)[:k]
 
 
 def main():
@@ -61,13 +56,13 @@ def main():
     def one(r):
         dl, jcd, rno = r
         try:
-            p = predict.predict(bst, lk, jcd, rno, hd)
+            pr = predict.predict(bst, lk, jcd, rno, hd)
         except Exception as e:
             print('エラー', jcd, rno, e)
             return None
-        if not p:
+        if not pr:
             return None
-        top = top_combos(p)
+        top = top_combos(pr)
         if top[0][0] < MIN_PROB:
             return None
         return dl, jcd, rno, top

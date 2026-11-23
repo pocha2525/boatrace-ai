@@ -7,8 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 import lightgbm as lgb
 
-from common import (DATA, MODEL, FEATS, X, now_jst, k_path,
-                    download_k, read_k, notify)
+from common import (DATA, MODEL, FEATS, X, TARGETS, now_jst, k_path,
+                    download_k, read_k, notify, add_rel)
 
 START = datetime.date(2023, 1, 1)
 TRAIN_FROM = 20230401  # 選手の成績がある程度たまってから学習に使う
@@ -52,16 +52,6 @@ def past(df, keys, col, name):
     return df.merge(g[k + [name]], on=k, how='left')
 
 
-def add_rel(d):
-    keys = ['date', 'venue', 'race']
-    grp = d.groupby(keys)
-    d['tenji_diff'] = d['tenji'] - grp['tenji'].transform('mean')
-    d['tenji_rank'] = grp['tenji'].rank()
-    d['rwin_rank'] = grp['r_win'].rank(ascending=False)
-    d['rst_diff'] = d['r_st'] - grp['r_st'].transform('mean')
-    return d
-
-
 def main():
     os.makedirs(MODEL, exist_ok=True)
     download_all()
@@ -74,6 +64,7 @@ def main():
     df['year'] = df['date'] // 10000
     df['win'] = (df['rank'] == 1).astype(int)
     df['top2'] = (df['rank'] <= 2).astype(int)
+    df['top3'] = (df['rank'] <= 3).astype(int)
     df['st_ok'] = df['st'].where(df['st'] < 1)
 
     # 今日の予想用：全期間の成績表を保存
@@ -88,16 +79,21 @@ def main():
         df = past(df, keys, col, name)
     keys = ['date', 'venue', 'race']
     df = df.merge(rc[keys + ['wind', 'wave']], on=keys, how='left')
-    df = add_rel(df)
+    df = add_rel(df, keys)
+    one = df[df['course'] == 1][keys + ['rc_win_d']]
+    one = one.drop_duplicates(keys).rename(columns={'rc_win_d': 'in_d'})
+    df = df.merge(one, on=keys, how='left')
     tr = df[df['date'] >= TRAIN_FROM]
     print('学習データ', len(tr))
 
-    model = lgb.LGBMClassifier(
-        n_estimators=400, learning_rate=0.05, num_leaves=63,
-        subsample=0.8, subsample_freq=1, colsample_bytree=0.8,
-        verbose=-1)
-    model.fit(tr[X], tr['win'], categorical_feature=['venue'])
-    model.booster_.save_model(os.path.join(MODEL, 'model.txt'))
+    for y in TARGETS:
+        model = lgb.LGBMClassifier(
+            n_estimators=400, learning_rate=0.05, num_leaves=63,
+            subsample=0.8, subsample_freq=1, colsample_bytree=0.8,
+            verbose=-1)
+        model.fit(tr[X], tr[y], categorical_feature=['venue'])
+        model.booster_.save_model(os.path.join(MODEL, f'model_{y}.txt'))
+        print(y, '学習完了')
     with open(os.path.join(MODEL, 'trained_at.txt'), 'w') as f:
         f.write(f'{now_jst():%Y-%m-%d %H:%M} JST / '
                 f'{df["date"].min()}〜{df["date"].max()} / {len(tr)}行\n')

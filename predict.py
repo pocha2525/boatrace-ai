@@ -9,14 +9,17 @@ import pandas as pd
 import lightgbm as lgb
 from bs4 import BeautifulSoup
 
-from common import (MODEL, LOGS, JST, VENUES, FEATS, X, BR, now_jst,
-                    get, page, notify)
+import numpy as np
+
+from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
+                    now_jst, get, page, notify, add_rel)
 
 WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
 # 本命モード：本命がはっきりしたレースで、当たりやすい3連単を2点
-EV_TH = 1.0          # 期待値がこれ以上の買い目だけ出す
-MIN_PROB = 0.15      # 確率がこれ未満の買い目は出さない
+EV_TH = 1.0          # 一番当たりやすい買い目の期待値がこれ以上
+MIN_PROB = 0.12      # 一番当たりやすい買い目の確率がこれ以上
 MAX_BETS = 2         # 1レースあたりの最大点数
+LAST = {}  # 直前に予想したレースの進入・確率（通知の表示用）
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
             'prob', 'odds', 'ev', 'run_at']
 
@@ -24,10 +27,10 @@ LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
 # ---------- 読み込み ----------
 
 def load_model():
-    path = os.path.join(MODEL, 'model.txt')
-    if not os.path.exists(path):
+    paths = [os.path.join(MODEL, f'model_{y}.txt') for y in TARGETS]
+    if not all(os.path.exists(p) for p in paths):
         return None, None
-    bst = lgb.Booster(model_file=path)
+    bst = [lgb.Booster(model_file=p) for p in paths]
     lk = {}
     for _, _, n in FEATS:
         t = pd.read_csv(os.path.join(MODEL, f'cur_{n}.csv'))
@@ -75,9 +78,13 @@ def race_info(jcd, rno, hd):
     for tb in s.select('table.is-w748 tbody')[:6]:
         t = [td.get_text(strip=True) for td in tb.select('td')]
         tj.append(pd.to_numeric(t[4], errors='coerce') if len(t) > 4 else None)
-    nums = [x.get_text(strip=True)
-            for x in s.select('span.table1_boatImage1Number')]
-    crs = {int(x): i + 1 for i, x in enumerate(nums) if x.isdigit()}
+    nums = [int(x.get_text(strip=True))
+            for x in s.select('span.table1_boatImage1Number')
+            if x.get_text(strip=True).isdigit()]
+    # スタート展示の並び（1コースから順）。6艇そろわなければ枠なり扱い
+    crs = {b: i + 1 for i, b in enumerate(nums[:6])}
+    if sorted(crs) != [1, 2, 3, 4, 5, 6]:
+        crs = {}
     w = re.findall(r'LabelData">\s*([\d.]+)\s*(m|cm)\s*<', b)
     wind = next((float(v) for v, u in w if u == 'm'), 0.0)
     wave = next((float(v) for v, u in w if u == 'cm'), 0.0)
@@ -112,6 +119,7 @@ def odds_map(jcd, rno, hd):
 # ---------- 予想 ----------
 
 def predict(bst, lk, jcd, rno, hd):
+    """各艇の 1着・2着・3着 の確率を返す: (艇番, w, q2, q3)"""
     ids, tj, crs, wind, wave, mot = race_info(jcd, rno, hd)
     if len(ids) < 3:
         return None
@@ -125,38 +133,72 @@ def predict(bst, lk, jcd, rno, hd):
         rid = int(rid)
         b = i + 1
         c = crs.get(b, b)
-        rows.append({
-            'boat': b, 'course': c, 'venue': jcd,
-            'tenji': tj[i] if i < len(tj) else None,
-            'r_win': g('r_win', rid), 'r_top2': g('r_top2', rid),
-            'r_st': g('r_st', rid),
-            'rc_win': g('rc_win', rid, c), 'rc_top2': g('rc_top2', rid, c),
-            'rv_win': g('rv_win', rid, jcd),
-            'm_top2': g('m_top2', jcd, mot[i], yr),
-            'vc_win': g('vc_win', jcd, c),
-            'wind': wind, 'wave': wave,
-        })
-    d = pd.DataFrame(rows).astype(float)
-    d['tenji_diff'] = d['tenji'] - d['tenji'].mean()
-    d['tenji_rank'] = d['tenji'].rank()
-    d['rwin_rank'] = d['r_win'].rank(ascending=False)
-    d['rst_diff'] = d['r_st'] - d['r_st'].mean()
-    d['p'] = bst.predict(d[X])
-    d['p'] = d['p'] / d['p'].sum()
-    return dict(zip(d['boat'].astype(int), d['p'].clip(0.001, 0.98)))
+        r = {'boat': b, 'course': c, 'venue': jcd,
+             'tenji': tj[i] if i < len(tj) else None,
+             'wind': wind, 'wave': wave,
+             'm_top2': g('m_top2', jcd, mot[i], yr)}
+        for _, _, n in FEATS:
+            if n.startswith('rc_'):
+                r[n] = g(n, rid, c)
+            elif n.startswith('rv_'):
+                r[n] = g(n, rid, jcd)
+            elif n.startswith('vc_'):
+                r[n] = g(n, jcd, c)
+            elif n.startswith('r_'):
+                r[n] = g(n, rid)
+        rows.append(r)
+    d = add_rel(pd.DataFrame(rows).astype(float))
+    one = d.loc[d['course'] == 1, 'rc_win_d']
+    d['in_d'] = one.iloc[0] if len(one) else np.nan
+    w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]
+    w = w / w.sum()
+    t2 = t2 * 2 / t2.sum()
+    t3 = t3 * 3 / t3.sum()
+    q2 = np.clip(t2 - w, 1e-3, None)
+    q3 = np.clip(t3 - t2, 1e-3, None)
+    boats = d['boat'].astype(int).tolist()
+    LAST.update(crs=crs, boats=boats, w=w, q2=q2 / q2.sum(),
+                q3=q3 / q3.sum(),
+                rc=d[['rc_top2_d', 'rc_top3_d']].values.tolist(),
+                course=d['course'].astype(int).tolist())
+    return boats, w, q2, q3
 
 
-def combos(p, om):
+def tri_probs(pr):
+    """3連単すべての確率（1着・2着・3着それぞれの確率で計算）"""
+    boats, w, q2, q3 = pr
+    out = {}
+    for a, b, c in permutations(range(len(boats)), 3):
+        s2 = q2.sum() - q2[a]
+        s3 = q3.sum() - q3[a] - q3[b]
+        out[f'{boats[a]}-{boats[b]}-{boats[c]}'] = \
+            w[a] * q2[b] / s2 * q3[c] / s3
+    return out
+
+
+def combos(pr, om):
     res = []
-    for a, b, c in permutations(p, 3):
-        q = p[a] * p[b] / (1 - p[a])
-        q = q * p[c] / max(1 - p[a] - p[b], 0.01)
-        k = f'{a}-{b}-{c}'
+    for k, q in tri_probs(pr).items():
         o = om.get(k)
         if o == o and o and q >= 0.01:
             res.append((q * o, k, q, o))
     # 当たりやすい順（確率の高い順）に並べる
     return sorted(res, key=lambda x: -x[2])
+
+
+def entry_text():
+    crs = LAST.get('crs') or {}
+    if not crs:
+        return '進入: 読み取れず（枠なりで計算）'
+    order = [b for b, c in sorted(crs.items(), key=lambda x: x[1])]
+    mark = '' if order == [1, 2, 3, 4, 5, 6] else '  ※枠なりではない'
+    return '進入: ' + '-'.join(map(str, order)) + mark
+
+
+def rank_text(label, key):
+    v = LAST[key]
+    top = sorted(zip(LAST['boats'], v), key=lambda x: -x[1])[:3]
+    return f'{label}: ' + ' / '.join(f'{b}号艇{p * 100:.0f}%' for b, p in top)
 
 
 # ---------- 記録 ----------
@@ -186,13 +228,13 @@ def write_log(hd, rows):
 
 def run_race(bst, lk, jcd, rno, hd, dl, now):
     name = VENUES.get(jcd, str(jcd))
-    p = predict(bst, lk, jcd, rno, hd)
+    pr = predict(bst, lk, jcd, rno, hd)
     base = {'hd': hd, 'jcd': jcd, 'venue': name, 'rno': rno,
             'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}'}
-    if p is None:
+    if pr is None:
         print(name, rno, 'R 情報が取れませんでした')
         return
-    res = combos(p, odds_map(jcd, rno, hd))  # 当たりやすい順
+    res = combos(pr, odds_map(jcd, rno, hd))  # 当たりやすい順
     # 一番当たりやすい組み合わせが条件を満たすレースだけ、上位2点を出す
     ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
     bets = res[:MAX_BETS] if ok else []
@@ -204,10 +246,10 @@ def run_race(bst, lk, jcd, rno, hd, dl, now):
         rows.append(dict(base, pick='', prob='', odds='', ev=''))
     write_log(hd, rows)
 
-    top = sorted(p.items(), key=lambda x: -x[1])[:3]
-    head = ' / '.join(f'{b}号艇{v * 100:.0f}%' for b, v in top)
+    head = rank_text('1着', 'w')
     if bets:
-        lines = [f'締切 {dl:%H:%M}', f'1着予想: {head}', '本命:']
+        lines = [f'締切 {dl:%H:%M}', entry_text(), head,
+                 rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本命:']
         for ev, k, q, o in bets:
             lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
         notify(f'{name} {rno}R', '\n'.join(lines))

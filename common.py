@@ -28,21 +28,42 @@ VENUES = {
 }
 
 # (集計に使う列, 対象の値, 特徴量の名前)
+R, RC, V, VC = ['racer'], ['racer', 'course'], ['racer', 'venue'], ['venue', 'course']
 FEATS = [
-    (['racer'], 'win', 'r_win'),
-    (['racer'], 'top2', 'r_top2'),
-    (['racer'], 'st_ok', 'r_st'),
-    (['racer', 'course'], 'win', 'rc_win'),
-    (['racer', 'course'], 'top2', 'rc_top2'),
-    (['racer', 'venue'], 'win', 'rv_win'),
+    (R, 'win', 'r_win'), (R, 'top2', 'r_top2'), (R, 'top3', 'r_top3'),
+    (R, 'st_ok', 'r_st'),
+    (RC, 'win', 'rc_win'), (RC, 'top2', 'rc_top2'), (RC, 'top3', 'rc_top3'),
+    (V, 'win', 'rv_win'),
     (['venue', 'motor', 'year'], 'top2', 'm_top2'),
-    (['venue', 'course'], 'win', 'vc_win'),
+    (VC, 'win', 'vc_win'), (VC, 'top2', 'vc_top2'), (VC, 'top3', 'vc_top3'),
 ]
 
-X = ['boat', 'course', 'venue', 'tenji', 'tenji_diff',
-     'tenji_rank', 'r_win', 'r_top2', 'r_st', 'rst_diff',
-     'rc_win', 'rc_top2', 'rv_win', 'm_top2', 'vc_win',
-     'rwin_rank', 'wind', 'wave']
+X = ['boat', 'course', 'venue', 'tenji', 'tenji_diff', 'tenji_rank',
+     'r_win', 'r_top2', 'r_top3', 'r_st', 'rst_diff',
+     'rc_win', 'rc_top2', 'rc_top3', 'rc_win_d', 'rc_top2_d', 'rc_top3_d',
+     'rv_win', 'm_top2', 'vc_win', 'vc_top2', 'vc_top3',
+     'rwin_rank', 'top3_rank', 'in_d', 'wind', 'wave']
+TARGETS = ['win', 'top2', 'top3']
+
+
+def add_rel(d, keys=None):
+    """レース内の比較・平均との差の特徴量を追加する（学習と予想で共通）"""
+    for c in ['win', 'top2', 'top3']:
+        d[f'rc_{c}_d'] = d[f'rc_{c}'] - d[f'vc_{c}']
+    g = d.groupby(keys) if keys else None
+
+    def tr(col, fn):
+        return g[col].transform(fn) if g is not None else d[col].agg(fn)
+
+    def rk(col, asc=True):
+        return g[col].rank(ascending=asc) if g is not None \
+            else d[col].rank(ascending=asc)
+    d['tenji_diff'] = d['tenji'] - tr('tenji', 'mean')
+    d['tenji_rank'] = rk('tenji')
+    d['rwin_rank'] = rk('r_win', False)
+    d['rst_diff'] = d['r_st'] - tr('r_st', 'mean')
+    d['top3_rank'] = rk('rc_top3_d', False)
+    return d
 
 
 def now_jst():
