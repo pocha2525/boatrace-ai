@@ -81,8 +81,7 @@ def main():
         return
     lines = []
     for dl, jcd, rno, top in found[:MAX_LINES]:
-        picks = ' '.join(f'{k}({q * 100:.0f}%)' for q, k in top
-                         if q >= MIN_PROB)
+        picks = ' '.join(f'{k}({q * 100:.0f}%)' for q, k in top)
         lines.append(f'{dl:%H:%M} {VENUES.get(jcd, jcd)}{rno}R  {picks}')
     lines.append('')
     lines.append('※展示・オッズ前の候補です。最終判断は締切前の通知で。')

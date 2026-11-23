@@ -13,7 +13,7 @@ from common import (MODEL, LOGS, JST, VENUES, FEATS, X, BR, now_jst,
                     get, page, notify)
 
 WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
-# 本命モード：当たりやすい3連単を上位2点まで
+# 本命モード：本命がはっきりしたレースで、当たりやすい3連単を2点
 EV_TH = 1.0          # 期待値がこれ以上の買い目だけ出す
 MIN_PROB = 0.15      # 確率がこれ未満の買い目は出さない
 MAX_BETS = 2         # 1レースあたりの最大点数
@@ -153,7 +153,7 @@ def combos(p, om):
         q = q * p[c] / max(1 - p[a] - p[b], 0.01)
         k = f'{a}-{b}-{c}'
         o = om.get(k)
-        if o == o and o and q >= MIN_PROB:
+        if o == o and o and q >= 0.01:
             res.append((q * o, k, q, o))
     # 当たりやすい順（確率の高い順）に並べる
     return sorted(res, key=lambda x: -x[2])
@@ -192,8 +192,10 @@ def run_race(bst, lk, jcd, rno, hd, dl, now):
     if p is None:
         print(name, rno, 'R 情報が取れませんでした')
         return
-    bets = [x for x in combos(p, odds_map(jcd, rno, hd))
-            if x[0] >= EV_TH][:MAX_BETS]
+    res = combos(p, odds_map(jcd, rno, hd))  # 当たりやすい順
+    # 一番当たりやすい組み合わせが条件を満たすレースだけ、上位2点を出す
+    ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
+    bets = res[:MAX_BETS] if ok else []
     rows = []
     for ev, k, q, o in bets:
         rows.append(dict(base, pick=k, prob=round(q, 4), odds=o,
@@ -225,11 +227,15 @@ def main():
         print(msg)
         return
 
-    venues = today_venues(hd)
+    venues = []
     done = done_races(hd)
     upcoming = []
-    for jcd in venues:
-        for rno, dl in deadlines(jcd, hd).items():
+    for jcd in today_venues(hd):
+        dls = deadlines(jcd, hd)
+        if not dls:
+            continue  # 今日レースのない会場（前売りなど）は数えない
+        venues.append(jcd)
+        for rno, dl in dls.items():
             mins = (dl - now).total_seconds() / 60
             if mins > 0:
                 upcoming.append((mins, jcd, rno, dl))
@@ -239,7 +245,8 @@ def main():
     targets = [u for u in upcoming
                if u[0] <= WINDOW_MIN and (u[1], u[2]) not in done]
     if manual:
-        info = [f'会場 {len(venues)}場 / これからのレース {len(upcoming)}']
+        info = [f'会場 {len(venues)}場 / これからのレース {len(upcoming)}',
+                '、'.join(VENUES.get(j, str(j)) for j in venues)]
         if upcoming:
             m, j, r, dl = upcoming[0]
             info.append(f'次の締切: {VENUES.get(j)} {r}R {dl:%H:%M}')
