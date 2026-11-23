@@ -2,6 +2,7 @@
 import os
 import re
 import io
+import base64
 import time
 import datetime
 import tempfile
@@ -10,9 +11,9 @@ import unicodedata
 import requests
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-DATA = os.path.join(ROOT, 'data')
-MODEL = os.path.join(ROOT, 'model')
-LOGS = os.path.join(ROOT, 'logs')
+DATA = os.environ.get('DATA_DIR') or os.path.join(ROOT, 'data')
+MODEL = os.environ.get('MODEL_DIR') or os.path.join(ROOT, 'model')
+LOGS = os.environ.get('LOGS_DIR') or os.path.join(ROOT, 'logs')
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
 UA = {'User-Agent': 'Mozilla/5.0 (personal boatrace-ai)'}
@@ -48,16 +49,52 @@ def now_jst():
     return datetime.datetime.now(JST)
 
 
+RELAY = os.environ.get('RELAY_URL', '').strip()
+
+
+class Resp:
+    """中継（GAS）から受け取った中身を requests の返り値と同じ形にする"""
+    def __init__(self, content):
+        self.content = content
+        self.status_code = 200
+        self.encoding = 'utf-8'
+
+    @property
+    def text(self):
+        return self.content.decode(self.encoding or 'utf-8', errors='replace')
+
+
+def get_relay(url):
+    r = requests.get(RELAY, params={'u': url}, timeout=90)
+    if r.status_code != 200:
+        print('中継エラー', r.status_code, url)
+        return 'retry'
+    j = r.json()
+    st = j.get('status')
+    if st == 200:
+        return Resp(base64.b64decode(j.get('body', '')))
+    if st == 404:
+        return None
+    print('中継', j.get('error') or st, url)
+    return 'retry'
+
+
 def get(url, tries=3):
-    """URLを取得する。404ならNone、失敗時は数回やり直す。"""
+    """URLを取得する。404ならNone、失敗時は数回やり直す。
+    RELAY_URL があれば、Google Apps Script 経由で取得する。"""
     for i in range(tries):
         try:
-            r = requests.get(url, headers=UA, timeout=30)
-            if r.status_code == 200:
-                return r
-            if r.status_code == 404:
-                return None
-        except requests.RequestException as e:
+            if RELAY:
+                r = get_relay(url)
+                if r != 'retry':
+                    return r
+            else:
+                r = requests.get(url, headers=UA, timeout=30)
+                if r.status_code == 200:
+                    return r
+                if r.status_code == 404:
+                    return None
+        except (requests.RequestException, ValueError) as e:
             print('通信エラー', url, e)
         time.sleep(2 * (i + 1))
     return None

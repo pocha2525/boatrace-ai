@@ -8,7 +8,7 @@ import pandas as pd
 import lightgbm as lgb
 
 from common import (DATA, MODEL, FEATS, X, now_jst, k_path,
-                    download_k, read_k)
+                    download_k, read_k, notify)
 
 START = datetime.date(2023, 1, 1)
 TRAIN_FROM = 20230401  # 選手の成績がある程度たまってから学習に使う
@@ -66,6 +66,9 @@ def main():
     os.makedirs(MODEL, exist_ok=True)
     download_all()
     df, rc = load_all()
+    if len(df) == 0:
+        notify('学習エラー', '成績データを1件も取得できませんでした')
+        raise SystemExit(1)
     df = df.dropna(subset=['course'])
     df['course'] = df['course'].astype(int)
     df['year'] = df['date'] // 10000
@@ -99,6 +102,8 @@ def main():
         f.write(f'{now_jst():%Y-%m-%d %H:%M} JST / '
                 f'{df["date"].min()}〜{df["date"].max()} / {len(tr)}行\n')
     print('保存完了')
+    with open(os.path.join(MODEL, 'trained_at.txt')) as f:
+        notify('学習完了', f.read())
 
 
 if __name__ == '__main__':
