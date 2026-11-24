@@ -12,7 +12,8 @@ from bs4 import BeautifulSoup
 import numpy as np
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
-                    now_jst, get, page, notify, add_rel)
+                    now_jst, get, page, notify, add_rel, send_notify,
+                    SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE)
 
 WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
 # 本命モード：本命がはっきりしたレースで、当たりやすい3連単を最大2点
@@ -23,6 +24,23 @@ MAX_BETS = 2         # 1レースあたりの最大点数
 LAST = {}  # 直前に予想したレースの進入・確率（通知の表示用）
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
             'prob', 'odds', 'ev', 'run_at']
+
+# ---- 通知の安全対策 ----
+SAFE_MIN = 2  # 締切まで残りこの分数未満なら送らない（締切後の通知も防ぐ）
+ST_CANCEL = '締切により中止'
+ST_SKIP = '条件未達'
+# この状態の記録があるレースは、二度と通知しない
+#  （送信失敗だけは、締切に間に合えば次の回に再試行する）
+FINAL = {SENT_OK, SENT_UNKNOWN, SENT_NONE, ST_CANCEL, ST_SKIP}
+NOTIFY_COLS = ['notify_id', 'hd', 'jcd', 'venue', 'rno', 'deadline',
+               'run_start', 'decided_at', 'remain_decided',
+               'send_start', 'send_end', 'remain_send', 'status',
+               'http', 'ntfy_id', 'error', 'picks', 'probs', 'odds',
+               'evs', 'reason', 'morning', 'notice']
+# 朝の候補（morning.py が保存）
+MORNING_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'picks', 'probs']
+# 次の起動（約10分後）では締切2分前を切るので、今回が最後の判定になる残り分数
+LAST_CHANCE_MIN = 12
 
 
 # ---------- 読み込み ----------
@@ -230,57 +248,194 @@ def log_path(hd):
     return os.path.join(LOGS, f'{hd}.csv')
 
 
-def done_races(hd):
-    path = log_path(hd)
+def read_log(path):
+    """記録を読む。マージで見出し行が重複していても取り除く"""
     if not os.path.exists(path):
-        return set()
-    t = pd.read_csv(path)
-    return set(zip(t['jcd'], t['rno']))
+        return None
+    t = pd.read_csv(path, dtype=str)
+    t = t[t['hd'] != 'hd']
+    return t
 
 
-def write_log(hd, rows):
+def done_races(hd):
+    """もう予想・通知しないレース（会場, R）"""
+    done = set()
+    t = read_log(log_path(hd))
+    if t is not None:
+        done |= {(int(j), int(r)) for j, r in zip(t['jcd'], t['rno'])}
+    n = read_log(notify_path(hd))
+    if n is not None:
+        n = n[n['status'].isin(FINAL)]
+        done |= {(int(j), int(r)) for j, r in zip(n['jcd'], n['rno'])}
+    return done
+
+
+def notify_path(hd):
+    return os.path.join(LOGS, f'notify_{hd}.csv')
+
+
+def append_rows(path, cols, rows):
     os.makedirs(LOGS, exist_ok=True)
-    path = log_path(hd)
     new = not os.path.exists(path)
     with open(path, 'a', newline='', encoding='utf-8') as f:
-        w = csv.DictWriter(f, fieldnames=LOG_COLS)
+        w = csv.DictWriter(f, fieldnames=cols, extrasaction='ignore')
         if new:
             w.writeheader()
         w.writerows(rows)
 
 
-def run_race(bst, lk, jcd, rno, hd, dl, now):
+def write_log(hd, rows):
+    """実運用の記録（成績の集計に使う）"""
+    append_rows(log_path(hd), LOG_COLS, rows)
+
+
+def write_notify(hd, row):
+    """検証用の記録（通知の判断・送信結果・時刻・予測をすべて残す）"""
+    append_rows(notify_path(hd), NOTIFY_COLS, [row])
+
+
+def morning_path(hd):
+    return os.path.join(LOGS, f'morning_{hd}.csv')
+
+
+def morning_races(hd):
+    """朝の候補に上がったレース（会場, R）"""
+    t = read_log(morning_path(hd))
+    if t is None:
+        return set()
+    return {(int(j), int(r)) for j, r in zip(t['jcd'], t['rno'])}
+
+
+def skip_reason(res, om):
+    """買わなかった理由（本番と同じ判定の順番）"""
+    if not om:
+        return 'オッズが取れない'
+    if not res:
+        return 'オッズのある買い目が無い'
+    ev, k, q, o = res[0]
+    if q < MIN_PROB:
+        return f'本命{k}の確率{q * 100:.1f}%（{MIN_PROB * 100:.0f}%未満）'
+    return f'本命{k}の期待値{ev:.2f}（{EV_TH:.1f}未満）'
+
+
+def send_skip_notice(name, rno, dl, nid, reason, res):
+    """朝の候補だったレースを見送ったことを通知する。送信結果の状態を返す"""
+    if remain(dl) < SAFE_MIN:
+        return '締切により送らず'
+    lines = [f'締切 {dl:%H:%M}', f'理由: {reason}']
+    if res:
+        lines += [entry_text(), rank_text('1着', 'w'), '本命（買わない）:']
+        for ev, k, q, o in res[:MAX_BETS]:
+            lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
+    lines += ['※朝の候補でしたが、締切前の判定で見送りです', f'通知ID: {nid}']
+    return send_notify(f'見送り {name} {rno}R', '\n'.join(lines))['status']
+
+
+def remain(dl):
+    return (dl - now_jst()).total_seconds() / 60
+
+
+def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
+    """cand=True: 朝の候補に上がったレース（見送りも通知する）"""
     name = VENUES.get(jcd, str(jcd))
+    nid = f'{hd}-{jcd:02d}-{rno:02d}'  # 通知ID（1レース1通知）
     pr = predict(bst, lk, jcd, rno, hd)
     base = {'hd': hd, 'jcd': jcd, 'venue': name, 'rno': rno,
             'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}'}
+    mark = '○' if cand else ''
     if pr is None:
-        print(name, rno, 'R 見送り：', LAST.get('skip') or '情報が取れない')
+        why = LAST.get('skip') or '情報が取れない'
+        print(name, rno, 'R 見送り：', why)
+        # 朝の候補で、今回が最後の判定なら「見送り」を通知して終える
+        # （それ以外は今まで通り、次の回にもう一度判定する）
+        if cand and remain(dl) < LAST_CHANCE_MIN:
+            st = send_skip_notice(name, rno, dl, nid, why, [])
+            write_notify(hd, dict(base, notify_id=nid,
+                                  run_start=f'{now:%H:%M:%S}',
+                                  decided_at=f'{now_jst():%H:%M:%S}',
+                                  remain_decided=round(remain(dl), 2),
+                                  status=ST_SKIP, reason=why,
+                                  morning=mark, notice=st))
+            write_log(hd, [dict(base, pick='', prob='', odds='', ev='')])
         return
-    res = combos(pr, odds_map(jcd, rno, hd))  # 当たりやすい順
+    om = odds_map(jcd, rno, hd)
+    res = combos(pr, om)  # 当たりやすい順
     # 一番当たりやすい組み合わせが条件を満たすレースだけ買う。
     # 2点目以降も期待値1.0以上のときだけ追加する
     ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
     bets = [res[0]] if ok else []
     if ok:
         bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH]
-    rows = []
-    for ev, k, q, o in bets:
-        rows.append(dict(base, pick=k, prob=round(q, 4), odds=o,
-                         ev=round(ev, 2)))
-    if not rows:
-        rows.append(dict(base, pick='', prob='', odds='', ev=''))
-    write_log(hd, rows)
+
+    # 検証用の記録の共通部分（買い目、なければ上位2つの予測を残す）
+    shown = bets if bets else res[:MAX_BETS]
+    rec = dict(base, notify_id=nid, run_start=f'{now:%H:%M:%S}',
+               decided_at=f'{now_jst():%H:%M:%S}',
+               remain_decided=round(remain(dl), 2),
+               send_start='', send_end='', remain_send='',
+               http='', ntfy_id='', error='',
+               picks=' '.join(k for ev, k, q, o in shown),
+               probs=' '.join(f'{q:.4f}' for ev, k, q, o in shown),
+               odds=' '.join(str(o) for ev, k, q, o in shown),
+               evs=' '.join(f'{ev:.2f}' for ev, k, q, o in shown),
+               morning=mark, notice='')
+    no_bet = dict(base, pick='', prob='', odds='', ev='')
 
     head = rank_text('1着', 'w')
-    if bets:
-        lines = [f'締切 {dl:%H:%M}', entry_text(), head,
-                 rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本命:']
-        for ev, k, q, o in bets:
-            lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
-        notify(f'{name} {rno}R', '\n'.join(lines))
+    if not bets:
+        why = skip_reason(res, om)
+        st = send_skip_notice(name, rno, dl, nid, why, res) if cand else ''
+        write_notify(hd, dict(rec, status=ST_SKIP, reason=why, notice=st))
+        write_log(hd, [no_bet])
+        print(f'{name} {rno}R 見送り（{why} / {head}）')
+        return
+
+    # 判定した時点で締切まで2分未満なら送らない
+    if rec['remain_decided'] < SAFE_MIN:
+        write_notify(hd, dict(rec, status=ST_CANCEL,
+                              reason=f'判定時に締切まで{SAFE_MIN}分未満'))
+        write_log(hd, [no_bet])
+        print(f'{name} {rno}R 通知中止：締切まで{rec["remain_decided"]}分')
+        return
+
+    lines = [f'締切 {dl:%H:%M}', entry_text(), head,
+             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本命:']
+    for ev, k, q, o in bets:
+        lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
+    if cand:
+        lines.append('※朝の候補のレースです')
+    lines.append(f'通知ID: {nid}')
+
+    # 送る直前にもう一度確かめる
+    r_send = remain(dl)
+    if r_send < SAFE_MIN:
+        write_notify(hd, dict(rec, status=ST_CANCEL,
+                              remain_send=round(r_send, 2),
+                              reason=f'送信直前に締切まで{SAFE_MIN}分未満'))
+        write_log(hd, [no_bet])
+        print(f'{name} {rno}R 通知中止：締切まで{r_send:.2f}分')
+        return
+    t0 = now_jst()
+    out = send_notify(f'{name} {rno}R', '\n'.join(lines))
+    t1 = now_jst()
+    rec.update(send_start=f'{t0:%H:%M:%S}', send_end=f'{t1:%H:%M:%S}',
+               remain_send=round(r_send, 2), status=out['status'],
+               http=out['http'], ntfy_id=out['ntfy_id'], error=out['error'])
+
+    if out['status'] == SENT_OK:
+        write_notify(hd, dict(rec, reason='ntfyが受付（スマホ到着は未確認）'))
+        write_log(hd, [dict(base, pick=k, prob=round(q, 4), odds=o,
+                            ev=round(ev, 2)) for ev, k, q, o in bets])
+    elif out['status'] == SENT_FAIL:
+        # 成績の記録には書かない → 次の回に締切まで余裕があれば再試行
+        write_notify(hd, dict(rec, reason='送信失敗（次の回に再試行）'))
+    elif out['status'] == SENT_UNKNOWN:
+        # 届いた可能性があるので、次の回以降も再送しない
+        write_notify(hd, dict(rec, reason='タイムアウト（再送しない）'))
+        write_log(hd, [no_bet])
     else:
-        print(f'{name} {rno}R 見送り（{head}）')
+        write_notify(hd, dict(rec, reason='NTFY_TOPIC未設定'))
+        write_log(hd, [no_bet])
 
 
 def main():
@@ -325,9 +480,12 @@ def main():
                     if os.path.exists(ta) else 'v2 3モデル(11/23 Colab)'))
         notify('動作確認OK', '\n'.join(info))
 
+    cands = morning_races(hd)
+    print('朝の候補', len(cands), 'レース')
     for mins, jcd, rno, dl in targets:
         try:
-            run_race(bst, lk, jcd, rno, hd, dl, now)
+            run_race(bst, lk, jcd, rno, hd, dl, now,
+                     cand=(jcd, rno) in cands)
         except Exception as e:
             print('エラー', jcd, rno, e)
 

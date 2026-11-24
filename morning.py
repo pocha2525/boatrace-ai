@@ -4,6 +4,7 @@
 コースは枠なり、展示タイムと風・波は「不明」として計算する。
 最終判断は締切前の通知（predict.py）で行う。
 """
+import csv
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor
@@ -11,7 +12,10 @@ from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 
 import predict
-from common import VENUES, now_jst, page, notify
+import time
+
+from common import (VENUES, LOGS, now_jst, page, send_notify, SENT_OK,
+                    SENT_FAIL, SENT_UNKNOWN)
 
 MIN_PROB = predict.MIN_PROB   # 本命の3連単がこの確率以上なら候補
 MAX_LINES = 60
@@ -39,8 +43,36 @@ def top_combos(pr, k=2):
     return sorted(((q, c) for c, q in t.items()), reverse=True)[:k]
 
 
+def send(title, message):
+    """送信失敗のときだけ最大3回まで送り直す（結果不明は送り直さない）"""
+    for i in range(3):
+        st = send_notify(title, message)['status']
+        if st != SENT_FAIL:
+            return st
+        time.sleep(5 * (i + 1))
+    return st
+
+
+def save_candidates(hd, found):
+    """朝の候補を logs/morning_日付.csv に保存（締切前に見送りも通知するため）"""
+    os.makedirs(LOGS, exist_ok=True)
+    with open(predict.morning_path(hd), 'w', newline='', encoding='utf-8') as f:
+        w = csv.DictWriter(f, fieldnames=predict.MORNING_COLS)
+        w.writeheader()
+        for dl, jcd, rno, top in found:
+            w.writerow(dict(hd=hd, jcd=jcd, venue=VENUES.get(jcd, jcd),
+                            rno=rno, deadline=f'{dl:%H:%M}',
+                            picks=' '.join(k for q, k in top),
+                            probs=' '.join(f'{q:.4f}' for q, k in top)))
+
+
 def main():
     hd = os.environ.get('HD') or f'{now_jst():%Y%m%d}'
+    manual = os.environ.get('MANUAL') == '1'
+    # 自動実行で、今日の候補がもう保存済みなら二重に送らない
+    if os.path.exists(predict.morning_path(hd)) and not manual:
+        print('今日の朝の候補は送信済みです')
+        return
     bst, lk = predict.load_model()
     if bst is None:
         print('モデルがありません')
@@ -72,7 +104,9 @@ def main():
     found.sort()
 
     if not found:
-        notify('本日の本命候補', '本命がはっきりしたレースはありませんでした')
+        st = send('本日の本命候補', '本命がはっきりしたレースはありませんでした')
+        if st in (SENT_OK, SENT_UNKNOWN):
+            save_candidates(hd, [])
         return
     lines = []
     for dl, jcd, rno, top in found[:MAX_LINES]:
@@ -80,7 +114,12 @@ def main():
         lines.append(f'{dl:%H:%M} {VENUES.get(jcd, jcd)}{rno}R  {picks}')
     lines.append('')
     lines.append('※展示・オッズ前の候補です（進入は枠なりと仮定）。最終判断は締切前の通知で。')
-    notify(f'本日の本命候補 {len(found)}レース', '\n'.join(lines))
+    lines.append('※候補のレースは、締切前に「買い」か「見送り」のどちらかを通知します。')
+    st = send(f'本日の本命候補 {len(found)}レース', '\n'.join(lines))
+    # 受付成功・結果不明のときに保存（届いた可能性があるので二重に送らない）
+    if st in (SENT_OK, SENT_UNKNOWN):
+        save_candidates(hd, found)
+    print('送信結果', st)
 
 
 if __name__ == '__main__':

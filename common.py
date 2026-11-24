@@ -238,16 +238,47 @@ def read_k(path):
 
 # ---------- 通知 ----------
 
-def notify(title, message):
-    """ntfy でスマホに通知する（NTFY_TOPIC が無ければ表示だけ）。"""
+# 通知の送信結果
+SENT_OK = '受付成功'      # ntfy が HTTP 200 で受け付けた（スマホへの到着は確認できない）
+SENT_FAIL = '送信失敗'    # HTTP エラー、または通信エラー（届いていない）→ 再試行してよい
+SENT_UNKNOWN = '結果不明'  # タイムアウト（届いたか分からない）→ 再送しない
+SENT_NONE = '未送信'      # NTFY_TOPIC が未設定
+
+
+def send_notify(title, message, timeout=20, priority=4):
+    """ntfy に送り、結果を返す。
+    戻り値: dict(status, http, ntfy_id, error)
+    ※ status=受付成功 は「ntfy のサーバーが受け付けた」という意味で、
+      スマホに実際に届いたかは確認できない。"""
     print('=====', title)
     print(message)
     topic = os.environ.get('NTFY_TOPIC', '').strip()
     if not topic:
         print('(NTFY_TOPIC が未設定のため通知は送っていません)')
-        return
+        return dict(status=SENT_NONE, http='', ntfy_id='', error='')
     try:
-        requests.post('https://ntfy.sh/', timeout=20, json={
-            'topic': topic, 'title': title, 'message': message})
+        r = requests.post('https://ntfy.sh/', timeout=timeout, json={
+            'topic': topic, 'title': title, 'message': message,
+            'priority': priority})  # 4=高（通知を目立たせる）
+    except requests.Timeout as e:
+        print('通知タイムアウト（結果不明）', e)
+        return dict(status=SENT_UNKNOWN, http='', ntfy_id='',
+                    error=type(e).__name__)
     except requests.RequestException as e:
         print('通知エラー', e)
+        return dict(status=SENT_FAIL, http='', ntfy_id='',
+                    error=type(e).__name__)
+    if r.status_code != 200:
+        print('通知エラー HTTP', r.status_code)
+        return dict(status=SENT_FAIL, http=r.status_code, ntfy_id='',
+                    error=r.text[:100].replace('\n', ' '))
+    try:
+        nid = r.json().get('id', '')
+    except ValueError:
+        nid = ''
+    return dict(status=SENT_OK, http=200, ntfy_id=nid, error='')
+
+
+def notify(title, message):
+    """ntfy でスマホに通知する（結果の状態を返す）"""
+    return send_notify(title, message)['status']

@@ -24,7 +24,17 @@ def results_for(hd):
 
 def day_bets(hd):
     """その日の記録に結果を付けて返す（結果がまだ無ければ None）。"""
-    log = pd.read_csv(os.path.join(LOGS, f'{hd}.csv'), dtype={'pick': str})
+    log = pd.read_csv(os.path.join(LOGS, f'{hd}.csv'), dtype=str)
+    # マージで見出し行が重複した場合は取り除く
+    log = log[log['hd'] != 'hd'].copy()
+    log['jcd'] = log['jcd'].astype(int)
+    log['rno'] = log['rno'].astype(int)
+    # 同じレース・同じ買い目が重複して記録されていたら1つにまとめる
+    n0 = len(log)
+    log = log.drop_duplicates(subset=['hd', 'jcd', 'rno', 'pick'],
+                              keep='first')
+    if len(log) < n0:
+        print(hd, '重複を取り除いた行数', n0 - len(log))
     rc = results_for(hd)
     if rc is None:
         return None, 0
