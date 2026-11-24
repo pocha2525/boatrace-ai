@@ -438,6 +438,69 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         write_log(hd, [no_bet])
 
 
+# ---------- レース結果（その日のうちに記録する） ----------
+RESULT_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'tri', 'tri_pay',
+               'got_at']
+RESULT_WAIT_MIN = 12    # 締切からこの分数たったら結果を見に行く
+RESULT_GIVEUP_MIN = 180  # 締切からこの分数たっても取れなければあきらめる
+RESULT_MAX = 8          # 1回の実行で見に行く最大レース数（時間をかけすぎない）
+TRI_PAT = re.compile(r'3連単\s*([1-6])\s*-\s*([1-6])\s*-\s*([1-6])\s*'
+                     r'[¥￥]\s*([\d,]+)')
+
+
+def result_path(hd):
+    return os.path.join(LOGS, f'results_{hd}.csv')
+
+
+def parse_result(html):
+    """公式のレース結果ページから3連単の組番と払戻金を読む。無ければ None"""
+    if not html:
+        return None
+    text = re.sub(r'\s+', ' ', BeautifulSoup(html, 'html.parser').get_text(' '))
+    m = TRI_PAT.search(text)
+    if not m:
+        return None
+    return f'{m.group(1)}-{m.group(2)}-{m.group(3)}', int(m.group(4).replace(',', ''))
+
+
+def update_results(hd, now):
+    """判定したレースのうち、終わったものの結果を記録する（予想には影響しない）"""
+    t = read_log(notify_path(hd))
+    if t is None or len(t) == 0:
+        return
+    t = t.drop_duplicates('notify_id', keep='last')
+    got = set()
+    r = read_log(result_path(hd))
+    if r is not None:
+        got = {(int(j), int(n)) for j, n in zip(r['jcd'], r['rno'])}
+    todo = []
+    for _, x in t.iterrows():
+        key = (int(x['jcd']), int(x['rno']))
+        if key in got:
+            continue
+        h, m = map(int, str(x['deadline']).split(':'))
+        dl = now.replace(hour=h, minute=m, second=0, microsecond=0)
+        past = (now - dl).total_seconds() / 60
+        if past >= RESULT_WAIT_MIN:
+            todo.append((past, key, x['venue'], x['deadline']))
+    todo.sort(reverse=True)  # 古いレースから
+    rows = []
+    for past, (jcd, rno), venue, dl in todo[:RESULT_MAX]:
+        try:
+            res = parse_result(page('raceresult', jcd, rno, hd))
+        except Exception as e:
+            print('結果を読めない', jcd, rno, e)
+            res = None
+        if res is None and past < RESULT_GIVEUP_MIN:
+            continue  # まだ出ていない。次の回にもう一度
+        tri, pay = res if res else ('取得できず', '')
+        rows.append(dict(hd=hd, jcd=jcd, venue=venue, rno=rno, deadline=dl,
+                         tri=tri, tri_pay=pay, got_at=f'{now_jst():%H:%M}'))
+    if rows:
+        append_rows(result_path(hd), RESULT_COLS, rows)
+        print('結果を記録', len(rows), 'レース')
+
+
 def main():
     now = now_jst()
     hd = os.environ.get('HD') or f'{now:%Y%m%d}'
@@ -488,6 +551,12 @@ def main():
                      cand=(jcd, rno) in cands)
         except Exception as e:
             print('エラー', jcd, rno, e)
+
+    # 判定が全部終わってから、終わったレースの結果を記録する
+    try:
+        update_results(hd, now_jst())
+    except Exception as e:
+        print('結果の記録に失敗', e)
 
 
 if __name__ == '__main__':
