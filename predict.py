@@ -15,7 +15,7 @@ from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, page, notify, add_rel, send_notify,
                     SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE)
 
-WINDOW_MIN = 13      # 締切まで何分以内のレースを予想するか
+WINDOW_MIN = 15      # 締切まで何分以内のレースを予想するか（11/24 13→15）
 # 本命モード：本命がはっきりしたレースで、当たりやすい3連単を最大2点
 # （2点目は期待値1.0以上のときだけ）
 EV_TH = 1.0          # 一番当たりやすい買い目の期待値がこれ以上
