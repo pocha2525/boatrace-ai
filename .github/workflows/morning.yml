@@ -1,12 +1,14 @@
 name: morning
 on:
-  # Google Apps Script から10分ごとなどに起動する
+  # Google Apps Script から1日1回起動する
   workflow_dispatch:
     inputs:
       auto:
         description: '自動実行なら1'
         required: false
         default: '0'
+permissions:
+  contents: write
 jobs:
   morning:
     runs-on: ubuntu-latest
@@ -22,3 +24,22 @@ jobs:
           python-version: '3.11'
       - run: pip install pandas lightgbm requests beautifulsoup4
       - run: python morning.py
+        env:
+          MANUAL: ${{ inputs.auto == '1' && '0' || '1' }}
+      - name: save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 朝の候補が保存するのは logs/ だけ（model/ などには触れない）
+          [ -d logs ] && git add -A logs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "morning"
+          # 保存に失敗したら、最新を取り込み直して最大3回まで再試行
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then
+              echo "保存成功（${i}回目）"; exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "保存失敗（${i}回目）"; sleep $((i * 5))
+          done
+          echo "保存に3回失敗しました"; exit 1
