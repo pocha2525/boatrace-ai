@@ -2,6 +2,7 @@
 
 logs/all_bets.csv : 全買い目と結果の一覧
 logs/daily.csv    : 日ごとの成績表
+logs/judged_all.csv : 判定した全レース（買い・見送り）と実際の結果
 """
 import os
 import glob
@@ -12,7 +13,17 @@ import pandas as pd
 from common import LOGS, MODEL, now_jst, download_k, read_k, notify
 
 
+_RESULTS = {}
+
+
 def results_for(hd):
+    """その日の全レースの結果（同じ日は1回だけ読む）"""
+    if hd not in _RESULTS:
+        _RESULTS[hd] = _results_for(hd)
+    return _RESULTS[hd]
+
+
+def _results_for(hd):
     d = datetime.datetime.strptime(hd, '%Y%m%d').date()
     path = download_k(d)
     if path is None:
@@ -113,6 +124,77 @@ def fmt(n_races, b):
             f' / 回収率{roi:.1f}%')
 
 
+JUDGED = os.path.join(LOGS, 'judged_all.csv')
+JUDGED_COLS = ['日付', '締切', '会場', 'R', '判定', '朝の候補', '本命', '2番手',
+               '本命オッズ', '本命期待値', '見送り理由', '結果', '払戻',
+               '本命当たり']
+
+
+def judged_day(h):
+    """その日に判定した全レースに、実際の結果を付ける（結果がまだ無ければ None）"""
+    t = pd.read_csv(os.path.join(LOGS, f'notify_{h}.csv'), dtype=str)
+    t = t[t['notify_id'] != 'notify_id']
+    t = t.drop_duplicates('notify_id', keep='last').copy()
+    if len(t) == 0:
+        return None
+    rc = results_for(h)
+    if rc is None:
+        return None
+    t['jcd'] = t['jcd'].astype(int)
+    t['rno'] = t['rno'].astype(int)
+    t = t.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']], on=['jcd', 'rno'],
+                how='left')
+    first = lambda s: str(s).split(' ')[0] if isinstance(s, str) and s else ''
+    second = lambda s: (str(s).split(' ') + [''])[1] if isinstance(s, str) else ''
+    out = pd.DataFrame({
+        '日付': f'{h[:4]}/{h[4:6]}/{h[6:]}',
+        '締切': t['deadline'],
+        '会場': t['venue'],
+        'R': t['rno'],
+        '判定': t['status'].map({'受付成功': '買い', '条件未達': '見送り'})
+                .fillna(t['status']),
+        '朝の候補': t['morning'].fillna(''),
+        '本命': t['picks'].map(first),
+        '2番手': t['picks'].map(second),
+        '本命オッズ': t['odds'].map(first),
+        '本命期待値': t['evs'].map(first),
+        '見送り理由': t['reason'].fillna('').where(
+            t['status'] != '受付成功', ''),
+        '結果': t['tri'].fillna('中止・返還'),
+        '払戻': t['tri_pay'].fillna(0).astype(int),
+    })
+    out['本命当たり'] = (out['本命'] == out['結果']).map({True: '◎', False: '×'})
+    out.loc[out['結果'] == '中止・返還', '本命当たり'] = '-'
+    return out.sort_values('締切')[JUDGED_COLS]
+
+
+def update_judged(hd):
+    """まだ記録していない日の判定に結果を付けて、judged_all.csv に足す"""
+    old = None
+    done = set()
+    if os.path.exists(JUDGED):
+        old = pd.read_csv(JUDGED, dtype=str)
+        old = old[old['日付'] != '日付']
+        done = {d.replace('/', '') for d in old['日付']}
+    new = []
+    for path in sorted(glob.glob(os.path.join(LOGS, 'notify_*.csv'))):
+        h = os.path.basename(path)[7:15]
+        if h > hd or h in done:
+            continue
+        try:
+            j = judged_day(h)
+        except Exception as e:
+            print('判定の記録を作れない', h, e)
+            j = None
+        if j is not None:
+            new.append(j)
+    if not new:
+        return
+    parts = ([old] if old is not None else []) + [x.astype(str) for x in new]
+    pd.concat(parts, ignore_index=True)[JUDGED_COLS].to_csv(JUDGED, index=False)
+    print('判定の記録に追加', sum(len(x) for x in new), '行')
+
+
 def main():
     hd = os.environ.get('HD') or \
         f'{now_jst().date() - datetime.timedelta(days=1):%Y%m%d}'
@@ -121,6 +203,12 @@ def main():
     races_total = 0
     races_day = 0
     day = None
+    # 判定した全レース（見送りも）に実際の結果を付けて残す
+    try:
+        update_judged(hd)
+    except Exception as e:
+        print('判定の記録の更新に失敗', e)
+
     for path in sorted(glob.glob(os.path.join(LOGS, '2*.csv'))):
         h = os.path.basename(path)[:8]
         if h > hd:
