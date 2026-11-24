@@ -399,7 +399,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         return
 
     lines = [f'締切 {dl:%H:%M}', entry_text(), head,
-             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本命:']
+             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '買い目:']
     for ev, k, q, o in bets:
         lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
     if cand:
@@ -416,7 +416,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         print(f'{name} {rno}R 通知中止：締切まで{r_send:.2f}分')
         return
     t0 = now_jst()
-    out = send_notify(f'{name} {rno}R', '\n'.join(lines))
+    out = send_notify(f'買い {name} {rno}R', '\n'.join(lines))
     t1 = now_jst()
     rec.update(send_start=f'{t0:%H:%M:%S}', send_end=f'{t1:%H:%M:%S}',
                remain_send=round(r_send, 2), status=out['status'],
