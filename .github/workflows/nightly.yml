@@ -1,0 +1,57 @@
+name: nightly
+on:
+  # Google Apps Script から毎朝5時台に1回起動する（手動でも動かせる）
+  workflow_dispatch:
+    inputs:
+      auto:
+        description: '自動実行なら1'
+        required: false
+        default: '0'
+permissions:
+  contents: write
+concurrency:
+  group: nightly
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PYTHONUNBUFFERED: '1'
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      RELAY_URL: ${{ secrets.RELAY_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      # 成績ファイルは前回までの分を使い回す（毎回全部ダウンロードしない）
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: kdata-${{ github.run_id }}
+          restore-keys: kdata-
+      - run: pip install -r requirements.txt
+      - run: python nightly.py
+        env:
+          MANUAL: ${{ inputs.auto == '1' && '0' || '1' }}
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data
+          key: kdata-${{ github.run_id }}
+      - name: save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 保存するのは model/（成績表・入れ替えたモデル）と logs/ だけ
+          for d in model logs; do [ -d $d ] && git add -A $d; done
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "nightly"
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then
+              echo "保存成功（${i}回目）"; exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+            echo "保存失敗（${i}回目）"; sleep $((i * 5))
+          done
+          echo "保存に3回失敗しました"; exit 1
