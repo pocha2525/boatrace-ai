@@ -98,14 +98,16 @@ def challenge(df, today):
     cand_dir = os.path.join(MODEL, 'candidate')
     os.makedirs(cand_dir, exist_ok=True)
     cand = []
+    # scikit-learn を使わない LightGBM 本体の学習（設定は train.py と同じ）
+    params = dict(objective='binary', learning_rate=0.05, num_leaves=63,
+                  bagging_fraction=0.8, bagging_freq=1, feature_fraction=0.8,
+                  verbose=-1)
     for y in TARGETS:
-        m = lgb.LGBMClassifier(
-            n_estimators=400, learning_rate=0.05, num_leaves=63,
-            subsample=0.8, subsample_freq=1, colsample_bytree=0.8,
-            verbose=-1)
-        m.fit(tr[X2], tr[y], categorical_feature=['venue'])
+        ds = lgb.Dataset(tr[X2], tr[y], categorical_feature=['venue'],
+                         free_raw_data=False)
+        m = lgb.train(params, ds, num_boost_round=400)
         path = os.path.join(cand_dir, f'model_{y}.txt')
-        m.booster_.save_model(path)
+        m.save_model(path)
         cand.append(lgb.Booster(model_file=path))
         print(y, '挑戦者 学習完了')
     champ = [lgb.Booster(model_file=os.path.join(MODEL, f'model_{y}.txt'))
