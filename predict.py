@@ -19,6 +19,7 @@ WINDOW_MIN = 15      # 締切まで何分以内のレースを予想するか（
 # 本命モード：本命がはっきりしたレースで、当たりやすい3連単を最大2点
 # （2点目は期待値1.0以上のときだけ）
 EV_TH = 1.0          # 一番当たりやすい買い目の期待値がこれ以上
+EV_TH2 = 0.8         # 2点目（確率2位）の期待値がこれ以上なら追加（11/25 1.0→0.8）
 MIN_PROB = 0.12      # 一番当たりやすい買い目の確率がこれ以上
 MAX_BETS = 2         # 1レースあたりの最大点数
 LAST = {}  # 直前に予想したレースの進入・確率（通知の表示用）
@@ -361,11 +362,11 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     om = odds_map(jcd, rno, hd)
     res = combos(pr, om)  # 当たりやすい順
     # 一番当たりやすい組み合わせが条件を満たすレースだけ買う。
-    # 2点目以降も期待値1.0以上のときだけ追加する
+    # 2点目は期待値0.8以上のときだけ追加する（EV_TH2）
     ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
     bets = [res[0]] if ok else []
     if ok:
-        bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH]
+        bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH2]
 
     # 検証用の記録の共通部分（買い目、なければ上位2つの予測を残す）
     shown = bets if bets else res[:MAX_BETS]
