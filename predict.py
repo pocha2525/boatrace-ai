@@ -11,6 +11,8 @@ from bs4 import BeautifulSoup
 
 import numpy as np
 
+import setsu
+
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, page, notify, add_rel, send_notify,
                     SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE)
@@ -56,6 +58,8 @@ def load_model():
         t = pd.read_csv(os.path.join(MODEL, f'cur_{n}.csv'))
         ks = [c for c in t.columns if c != n]
         lk[n] = {tuple(r[:-1]): r[-1] for r in t[ks + [n]].values.tolist()}
+    # 今節の成績表（夜間の改善で毎朝作り直す。無ければ「初日」扱い）
+    lk['_setsu'] = setsu.load_tables(MODEL)
     return bst, lk
 
 
@@ -188,6 +192,9 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
                 r[n] = g(n, jcd, c)
             elif n.startswith('r_'):
                 r[n] = g(n, rid)
+        # 今節の材料（今節の材料を使うモデルのときだけ予想に使われる）
+        r.update(setsu.lookup(lk.get('_setsu', ({}, {})), rid, jcd, c,
+                              r['tenji'], r.get('vc_win'), hd))
         rows.append(r)
     d = add_rel(pd.DataFrame(rows).astype(float))
     one = d.loc[d['course'] == 1, 'rc_win_d']
