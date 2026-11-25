@@ -125,13 +125,13 @@ def fmt(n_races, b):
 
 
 JUDGED = os.path.join(LOGS, 'judged_all.csv')
-JUDGED_COLS = ['日付', '締切', '会場', 'R', '判定', '朝の候補', '本命', '2番手',
-               '本命オッズ', '本命期待値', '見送り理由', '結果', '払戻',
-               '本命当たり']
+JUDGED_COLS = ['日付', '締切', '会場', 'R', '判定', '朝の候補',
+               '本命', '本命オッズ', '本命期待値', '2番手', '2番手オッズ', '2番手期待値',
+               '結果', '払戻', '本命当たり', '当たり', '見送り理由']
 
 
 def judged_day(h):
-    """その日に判定した全レースに、実際の結果を付ける（結果がまだ無ければ None）"""
+    """その日に判定した全レースに、実際の結果と買った点数を付ける（結果がまだ無ければ None）"""
     t = pd.read_csv(os.path.join(LOGS, f'notify_{h}.csv'), dtype=str)
     t = t[t['notify_id'] != 'notify_id']
     t = t.drop_duplicates('notify_id', keep='last').copy()
@@ -144,26 +144,48 @@ def judged_day(h):
     t['rno'] = t['rno'].astype(int)
     t = t.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']], on=['jcd', 'rno'],
                 how='left')
-    first = lambda s: str(s).split(' ')[0] if isinstance(s, str) and s else ''
-    second = lambda s: (str(s).split(' ') + [''])[1] if isinstance(s, str) else ''
+    # 実際に買った買い目（成績記録 logs/日付.csv）
+    bought = {}
+    bp = os.path.join(LOGS, f'{h}.csv')
+    if os.path.exists(bp):
+        b = pd.read_csv(bp, dtype=str)
+        b = b[(b['hd'] != 'hd') & b['pick'].notna() & (b['pick'] != '')]
+        for j, r, p in zip(b['jcd'], b['rno'], b['pick']):
+            bought.setdefault((int(j), int(r)), set()).add(p)
+
+    def part(s, i):
+        a = str(s).split(' ') if isinstance(s, str) and s else []
+        return a[i] if len(a) > i else ''
     out = pd.DataFrame({
         '日付': f'{h[:4]}/{h[4:6]}/{h[6:]}',
         '締切': t['deadline'],
         '会場': t['venue'],
         'R': t['rno'],
-        '判定': t['status'].map({'受付成功': '買い', '条件未達': '見送り'})
-                .fillna(t['status']),
         '朝の候補': t['morning'].fillna(''),
-        '本命': t['picks'].map(first),
-        '2番手': t['picks'].map(second),
-        '本命オッズ': t['odds'].map(first),
-        '本命期待値': t['evs'].map(first),
-        '見送り理由': t['reason'].fillna('').where(
-            t['status'] != '受付成功', ''),
+        '本命': t['picks'].map(lambda s: part(s, 0)),
+        '本命オッズ': t['odds'].map(lambda s: part(s, 0)),
+        '本命期待値': t['evs'].map(lambda s: part(s, 0)),
+        '2番手': t['picks'].map(lambda s: part(s, 1)),
+        '2番手オッズ': t['odds'].map(lambda s: part(s, 1)),
+        '2番手期待値': t['evs'].map(lambda s: part(s, 1)),
         '結果': t['tri'].fillna('中止・返還'),
         '払戻': t['tri_pay'].fillna(0).astype(int),
+        '見送り理由': t['reason'].fillna('').where(t['status'] != '受付成功', ''),
     })
+    keys = list(zip(t['jcd'], t['rno']))
+    got = [bought.get(k, set()) for k in keys]
+    st = t['status'].tolist()
+    out['判定'] = [('買い%d点' % len(g) if g else '買い') if s == '受付成功'
+                   else '見送り' if s == '条件未達' else s for s, g in zip(st, got)]
     out['本命当たり'] = (out['本命'] == out['結果']).map({True: '◎', False: '×'})
+    mark = []
+    for res, p1, p2, g in zip(out['結果'], out['本命'], out['2番手'], got):
+        if res == '中止・返還':
+            mark.append('-')
+            continue
+        m = '本命◎' if res == p1 else '2番手◎' if p2 and res == p2 else '×'
+        mark.append(m + ('（的中）' if res in g else ''))
+    out['当たり'] = mark
     out.loc[out['結果'] == '中止・返還', '本命当たり'] = '-'
     return out.sort_values('締切')[JUDGED_COLS]
 
@@ -176,6 +198,8 @@ def update_judged(hd):
         old = pd.read_csv(JUDGED, dtype=str)
         old = old[old['日付'] != '日付']
         done = {d.replace('/', '') for d in old['日付']}
+        if set(JUDGED_COLS) - set(old.columns):
+            old, done = None, set()   # 列が増えたので全部作り直す
     new = []
     for path in sorted(glob.glob(os.path.join(LOGS, 'notify_*.csv'))):
         h = os.path.basename(path)[7:15]
