@@ -19,6 +19,7 @@ from common import (VENUES, LOGS, now_jst, page, send_notify, SENT_OK,
 
 MIN_PROB = predict.MIN_PROB   # 本命の3連単がこの確率以上なら候補
 MAX_LINES = 60
+AHEAD_MIN = 10   # 締切までこの分数より短いレースは、候補に入れない（間に合わないため）
 
 
 def info_morning(jcd, rno, hd):
@@ -84,6 +85,11 @@ def main():
         for rno, dl in predict.deadlines(jcd, hd).items():
             races.append((dl, jcd, rno))
     print('本日のレース数', len(races))
+    # 締切を過ぎたレース・もうすぐ締切のレースは計算しない
+    start = now_jst()
+    races = [r for r in races
+             if (r[0] - start).total_seconds() / 60 >= AHEAD_MIN]
+    print('これからのレース数', len(races))
 
     def one(r):
         dl, jcd, rno = r
@@ -101,10 +107,13 @@ def main():
 
     with ThreadPoolExecutor(4) as ex:
         found = [x for x in ex.map(one, races) if x]
+    # 計算に時間がかかるので、送る直前にもう一度、締切を過ぎたものを外す
+    sent_at = now_jst()
+    found = [x for x in found if x[0] > sent_at]
     found.sort()
 
     if not found:
-        st = send('本日の本命候補', '本命がはっきりしたレースはありませんでした')
+        st = send('本日の本命候補', 'これからのレースに、本命がはっきりしたレースはありませんでした')
         if st in (SENT_OK, SENT_UNKNOWN):
             save_candidates(hd, [])
         return
