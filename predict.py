@@ -368,8 +368,9 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     if ok:
         bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH2]
 
-    # 検証用の記録の共通部分（買い目、なければ上位2つの予測を残す）
-    shown = bets if bets else res[:MAX_BETS]
+    # 検証用の記録の共通部分（買い・見送りに関係なく、確率の上位2つを残す。
+    # 買った買い目は成績記録 logs/日付.csv に入る）
+    shown = res[:MAX_BETS]
     rec = dict(base, notify_id=nid, run_start=f'{now:%H:%M:%S}',
                decided_at=f'{now_jst():%H:%M:%S}',
                remain_decided=round(remain(dl), 2),
