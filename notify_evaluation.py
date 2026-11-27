@@ -54,15 +54,43 @@ def message(summaries, run_id, repository, conclusion='success'):
     return '\n'.join(lines)
 
 
+def threshold_message(audits, run_id, repository, conclusion='success'):
+    lines = ['本命確率2〜30%・0.5刻み、1/2/4点を各100円で比較。',
+             '前期間50R・5日以上で選び、後期間で採点（過去探索）。']
+    labels = {'baseline_66_refit':'基準66', 'candidate':'追加67'}
+    for data in sorted(audits, key=lambda a: a['holdout_from']):
+        lines.append(f"{data['holdout_from']}〜{data['holdout_until']}（{'展示照合' if data['input_mode']=='observed' else '枠なり仮定'}）")
+        for arm, label in labels.items():
+            values = []
+            for c in data['choices']:
+                if c['arm'] != arm:
+                    continue
+                h = c.get('holdout')
+                if h and h['roi_pct'] is not None:
+                    values.append(f"{c['tickets']}点 {c['selected_threshold_pct']:g}%以上→回収{h['roi_pct']:.1f}%/{h['races']}R")
+                else:
+                    values.append(f"{c['tickets']}点 選定データ不足")
+            lines.append(label+': '+'、'.join(values))
+    if conclusion != 'success':
+        lines.append('保存済み結果のみ。実行状態: '+conclusion)
+    lines += ['※締切前オッズ・期待値条件は未再現。既に閲覧した過去データの探索で、将来の利益を確認したものではありません。本番設定は変更せず。',
+              'https://github.com/'+repository+'/actions/runs/'+str(run_id)]
+    return '\n'.join(lines)
+
+
 def main():
     from common import send_notify, SENT_OK
     run_id = os.environ['BACKTEST_RUN_ID']
     paths = glob.glob('logs/backtest/*_'+run_id+'/summary.json')+glob.glob('logs/refine/*_'+run_id+'/summary.json')
     summaries = [enrich(json.load(open(p, encoding='utf8')), p) for p in paths]
+    audits = [json.load(open(os.path.join(os.path.dirname(p), 'threshold_audit.json'), encoding='utf8'))
+              for p in paths if os.path.exists(os.path.join(os.path.dirname(p), 'threshold_audit.json'))]
     conclusion = verified_conclusion(run_id, os.environ['GITHUB_REPOSITORY'], os.environ.get('BACKTEST_CONCLUSION', 'unknown'))
     text = message(summaries, run_id, os.environ['GITHUB_REPOSITORY'], conclusion)
-    result = send_notify('1点・2点の検証結果' if summaries else '検証結果を確定できず', text,
-                         notification_id='backtest-result-'+run_id+'-tickets-v3')
+    if audits:
+        text = threshold_message(audits, run_id, os.environ['GITHUB_REPOSITORY'], conclusion)
+    result = send_notify('確率別1・2・4点の検証結果' if audits else '1点・2点の検証結果' if summaries else '検証結果を確定できず', text,
+                         notification_id='backtest-result-'+run_id+('-thresholds-v1' if audits else '-tickets-v3'))
     print('通知受付:', result['status'])
     if result['status'] != SENT_OK:
         raise SystemExit('通知の受付を確認できませんでした')

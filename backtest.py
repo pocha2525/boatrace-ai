@@ -59,6 +59,7 @@ def metrics(p, truth, pay):
     order = np.argsort(-p, axis=1, kind='stable')
     hit1 = order[:, 0] == truth
     hit2 = (order[:, :2] == truth[:, None]).any(1)
+    hit4 = (order[:, :4] == truth[:, None]).any(1)
     ll = np.log(np.clip(p[np.arange(len(p)), truth], 1e-15, 1))
     selected = p.max(1) >= .12  # the existing production probability threshold
     n_selected = int(selected.sum())
@@ -67,11 +68,25 @@ def metrics(p, truth, pay):
                 multiclass_brier=float((np.square(p).sum(1)-2*np.exp(ll)+1).mean()),
                 fixed1_roi_pct=float((pay*hit1).sum()/len(p)),
                 fixed2_roi_pct=float((pay*hit2).sum()/(len(p)*2)),
+                top4_hit_pct=float(hit4.mean()*100),
+                fixed4_roi_pct=float((pay*hit4).sum()/(len(p)*4)),
                 selected12_n=n_selected,
                 selected12_hit_pct=float(hit1[selected].mean()*100) if n_selected else None,
                 selected12_roi_pct=float((pay[selected]*hit1[selected]).sum()/n_selected) if n_selected else None,
                 selected12_two_hit_pct=float(hit2[selected].mean()*100) if n_selected else None,
-                selected12_two_roi_pct=float((pay[selected]*hit2[selected]).sum()/(n_selected*2)) if n_selected else None), ll, hit1, order
+                selected12_two_roi_pct=float((pay[selected]*hit2[selected]).sum()/(n_selected*2)) if n_selected else None,
+                selected12_four_hit_pct=float(hit4[selected].mean()*100) if n_selected else None,
+                selected12_four_roi_pct=float((pay[selected]*hit4[selected]).sum()/(n_selected*4)) if n_selected else None), ll, hit1, order
+
+
+def saved_predictions(result, p, name):
+    order = np.argsort(-p, axis=1, kind='stable')
+    detail = result.copy()
+    detail['arm'] = name
+    for i in range(4):
+        detail[f'top{i+1}_probability'] = p[np.arange(len(p)), order[:, i]]
+        detail[f'pick{i+1}'] = ['-'.join(str(b+1) for b in ORDERS[j]) for j in order[:, i]]
+    return detail
 
 
 def main():
@@ -143,10 +158,12 @@ def main():
     vt, truth = outcomes(validation), outcomes(holdout)
     race = holdout.groupby(KEYS, sort=True).first().reset_index()[KEYS]
     result = race.merge(rc[KEYS+['tri', 'tri_pay']], on=KEYS, how='left', validate='one_to_one')
+    validation_result = validation.groupby(KEYS, sort=True).first().reset_index()[KEYS].merge(
+        rc[KEYS+['tri', 'tri_pay']], on=KEYS, how='left', validate='one_to_one')
     if result.tri_pay.isna().any():
         raise ValueError('評価レースの公式払戻が不足しています')
     pay = result.tri_pay.to_numpy(float)
-    summaries, scores, all_rows = {}, {}, []
+    summaries, scores, all_rows, validation_rows = {}, {}, [], []
     for name, features in arms.items():
         models = []
         for y in TARGETS:
@@ -161,13 +178,10 @@ def main():
         stat.update(features=len(features), temperature=temp,
                     validation_log_probability=float(np.log(temper(pv,temp)[np.arange(len(vt)),vt]).mean()))
         summaries[name], scores[name] = stat, (ll, hit)
-        detail = result.copy()
-        detail['arm'], detail['log_probability'], detail['top1_hit'] = name, ll, hit.astype(int)
-        detail['top1_probability'] = p[np.arange(len(p)), order[:, 0]]
-        detail['top2_probability'] = p[np.arange(len(p)), order[:, 1]]
-        detail['pick1'] = ['-'.join(str(b+1) for b in ORDERS[i]) for i in order[:, 0]]
-        detail['pick2'] = ['-'.join(str(b+1) for b in ORDERS[i]) for i in order[:, 1]]
+        detail = saved_predictions(result, p, name)
+        detail['log_probability'], detail['top1_hit'] = ll, hit.astype(int)
         all_rows.append(detail)
+        validation_rows.append(saved_predictions(validation_result, temper(pv, temp), name))
         print(name, json.dumps(stat), flush=True)
     # Select only with validation, then expose a single holdout comparison.
     chosen = max([n for n in arms if n != 'baseline_66_refit'], key=lambda n: summaries[n]['validation_log_probability'])
@@ -176,6 +190,9 @@ def main():
     (root/'summary.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding='utf8')
     pd.DataFrame(summaries).T.to_csv(root/'metrics.csv', index_label='arm')
     pd.concat(all_rows, ignore_index=True).to_csv(root/'races.csv', index=False)
+    pd.concat(validation_rows, ignore_index=True).to_csv(root/'validation_races.csv', index=False)
+    from threshold_audit import audit
+    audit(root)
     print(json.dumps(meta, ensure_ascii=False, indent=2), flush=True)
 
 
