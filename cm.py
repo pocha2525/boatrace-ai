@@ -338,15 +338,24 @@ def add_rel(d, keys=None):
     return d
 
 
-COLS = ['hd', 'jcd', 'rno', 'boat', 'racer', 'cm_pos', 'cm_neg', 'cm_score', 'cm_mot', 'text']
+COLS = ['hd', 'jcd', 'rno', 'boat', 'racer', 'cm_pos', 'cm_neg', 'cm_score', 'cm_mot', 'text', 'observed_at', 'deadline', 'asof_verified']
 
 
-def append(root, hd, jcd, rno, rows):
+def append(root, hd, jcd, rno, rows, deadline=None):
     if not rows:
         return
     os.makedirs(root, exist_ok=True)
     p = os.path.join(root, f'comment_{hd}.csv')
-    t = pd.DataFrame([dict(hd=hd, jcd=jcd, rno=rno, boat=b, racer=v['reg'],
+    from common import now_jst
+    observed = now_jst()
+    verified = int(deadline is not None and observed < deadline)
+    if os.path.exists(p):
+        old = pd.read_csv(p, dtype=str)
+        if list(old.columns) != COLS:
+            old.reindex(columns=COLS).to_csv(p, index=False)
+    t = pd.DataFrame([dict(observed_at=observed.isoformat(),
+                           deadline=deadline.isoformat() if deadline else '',
+                           asof_verified=verified, hd=hd, jcd=jcd, rno=rno, boat=b, racer=v['reg'],
                            **{k: v[k] for k in ['cm_pos', 'cm_neg', 'cm_score', 'cm_mot', 'text']})
                       for b, v in sorted(rows.items())])[COLS]
     t.to_csv(p, mode='a', header=not os.path.exists(p), index=False)
@@ -358,11 +367,16 @@ def load_hist(roots):
     if not fs:
         return pd.DataFrame(columns=COLS)
     d = pd.concat([pd.read_csv(f) for f in fs], ignore_index=True)
-    return d.drop_duplicates(['hd', 'jcd', 'rno', 'boat'], keep='last')
+    return d[d['hd'].astype(str) != 'hd']
 
 
 def add_hist(df, roots):
     h = load_hist(roots)
+    # A retrospective page can include comments updated after this race.
+    # Use only captures proven to precede the corresponding deadline.
+    if len(h):
+        verified = pd.to_numeric(h.get('asof_verified', pd.Series(0, index=h.index)), errors='coerce')
+        h = h[verified == 1].drop_duplicates(['hd', 'jcd', 'rno', 'boat'], keep='last')
     if len(h):
         # Re-score raw text whenever the dictionary changes.
         if 'text' in h:
@@ -372,7 +386,7 @@ def add_hist(df, roots):
             h['cm_score'] = h['cm_pos'] - h['cm_neg']
         h = h.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race'})
         h['date'] = h['date'].astype(int)
-        k = ['date', 'venue', 'race', 'boat']
+        k = ['date', 'venue', 'race', 'boat', 'racer']
         df = df.merge(h[k + ['cm_pos', 'cm_neg', 'cm_score', 'cm_mot']], on=k, how='left')
     else:
         for c in ['cm_pos', 'cm_neg', 'cm_score', 'cm_mot']:

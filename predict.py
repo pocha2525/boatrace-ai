@@ -180,7 +180,7 @@ def odds_map(jcd, rno, hd):
 
 # ---------- 予想 ----------
 
-def predict(bst, lk, jcd, rno, hd, strict=True):
+def predict(bst, lk, jcd, rno, hd, strict=True, deadline=None):
     """各艇の 1着・2着・3着 の確率を返す: (艇番, w, q2, q3)
     strict=True（締切前）：展示タイム・進入が6艇分そろわなければ見送り
     strict=False（朝の候補）：進入は枠なりとして暫定で計算"""
@@ -232,7 +232,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     try:
         cmd = cm.fetch(get_direct, jcd, rno, hd, pages.get('racelist') or '') if strict else {}
         if strict:
-            cm.append(LOGS, hd, jcd, rno, cmd)
+            cm.append(LOGS, hd, jcd, rno, cmd, deadline=deadline)
     except Exception as e:
         print('選手コメントを読めない', e)
         cmd = {}
@@ -496,7 +496,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
                              reason='情報取得開始前に締切まで2分未満'))
         write_log(hd, [dict(base, pick='', prob='', odds='', ev='')])
         return
-    pr = predict(bst, lk, jcd, rno, hd)
+    pr = predict(bst, lk, jcd, rno, hd, deadline=dl)
     try:
         save_sample(hd, 'beforeinfo', LAST.get('html_before'))
         save_sample(hd, 'racelist', LAST.get('html_racelist'))
