@@ -15,6 +15,7 @@ import setsu
 import extra
 import bfile
 import before
+import ot
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, page, notify, add_rel, send_notify,
@@ -191,6 +192,16 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     except Exception as e:
         print('直前情報を読めない', e)
         bf = []
+    try:
+        otd = ot.fetch(get, jcd, rno, hd)   # オリジナル展示（一周・まわり足・直線）
+        if strict and otd:
+            append_rows(os.path.join(LOGS, f'oriten_{hd}.csv'),
+                        ['hd', 'jcd', 'rno', 'boat', 'lap', 'turn', 'straight'],
+                        [dict(hd=hd, jcd=jcd, rno=rno, boat=k, lap=v[0], turn=v[1],
+                              straight=v[2]) for k, v in sorted(otd.items())])
+    except Exception as e:
+        print('オリジナル展示を読めない', e)
+        otd = {}
     wxy = (np.nan, np.nan)
     if bf:
         nm = bfile.img_dir(bf[0].get('wind_img'))
@@ -231,10 +242,12 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
                       ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
                        'ex_st', 'ex_f', 'stab']})
         r['wd_x'], r['wd_y'] = wxy
+        r['ot_lap'], r['ot_turn'], r['ot_str'] = otd.get(b, (np.nan, np.nan, np.nan))
         rows.append(r)
     d = add_rel(pd.DataFrame(rows).astype(float))
     d = bfile.add_brel(d)
     d = before.add_rel(d)
+    d = ot.add_rel(d)
     one = d.loc[d['course'] == 1, 'rc_win_d']
     d['in_d'] = one.iloc[0] if len(one) else np.nan
     w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]

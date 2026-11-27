@@ -3,3 +3,4 @@ lightgbm
 requests
 beautifulsoup4
 lhafile
+lxml
