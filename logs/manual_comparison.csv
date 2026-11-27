@@ -1,0 +1,9 @@
+hd,jcd,rno,policy,pending,hits,investment,returned,profit,source,published_at
+20261121,12,10,manual_actual_allocation,0,1,10000,17550.0,7550.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-21T19:25:49+09:00
+20261121,12,10,manual_equal100,0,1,400,1170.0,770.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-21T19:25:49+09:00
+20261123,14,12,manual_actual_allocation,0,1,10000,23760.0,13760.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-23T13:44:31+09:00
+20261123,14,12,manual_equal100,0,1,400,720.0,320.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-23T13:44:31+09:00
+20261126,11,6,manual_actual_allocation,0,0,10000,0.0,-10000.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-26T12:46:38+09:00
+20261126,11,6,manual_equal100,0,0,400,0.0,-400.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-26T12:46:38+09:00
+20261127,11,5,manual_actual_allocation,0,0,10000,0.0,-10000.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-27T12:05:38+09:00
+20261127,11,5,manual_equal100,0,0,400,0.0,-400.0,predeadline_chat_record; confirmed_official_result_in_nightly_review,2026-11-27T12:05:38+09:00
