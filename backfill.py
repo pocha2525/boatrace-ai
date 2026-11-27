@@ -11,6 +11,8 @@ from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 
 import before
+import cm
+from common import get_direct
 from common import page, now_jst, k_path, read_k
 import train
 
@@ -67,6 +69,50 @@ def main(budget=BUDGET):
             got_days.append(hd)
         d -= datetime.timedelta(days=1)
     return used, got_days
+
+
+CM_ROOT = os.path.join('hist', 'comment')
+CM_DONE = os.path.join(CM_ROOT, 'done.txt')
+CM_BUDGET = int(os.environ.get('CM_BUDGET', '800'))
+
+
+def comments(budget=CM_BUDGET):
+    """下関・唐津の選手コメントの過去分を取りためる（各場のサイトを直接、間を空けて読む）"""
+    import time
+    os.makedirs(CM_ROOT, exist_ok=True)
+    done = set(open(CM_DONE).read().split()) if os.path.exists(CM_DONE) else set()
+    used = 0
+    d = now_jst().date() - datetime.timedelta(days=1)
+    while used < budget and d >= datetime.date(2024, 1, 1):
+        hd = f'{d:%Y%m%d}'
+        if not os.path.exists(k_path(d)):
+            d -= datetime.timedelta(days=1)
+            continue
+        _, races = read_k(k_path(d))
+        for v in cm.URLS:
+            key = f'{hd}-{v}'
+            rs = sorted(r['race'] for r in races if r['venue'] == v)
+            if key in done or not rs:
+                continue
+            got = 0
+            for rno in rs:
+                if used >= budget:
+                    break
+                try:
+                    rows = cm.fetch(get_direct, v, rno, hd)
+                except Exception as e:
+                    print('読めず', key, rno, e)
+                    rows = {}
+                used += 1
+                got += bool(rows)
+                cm.append(CM_ROOT, hd, v, rno, rows)
+                time.sleep(1.0)
+            if used < budget:
+                with open(CM_DONE, 'a') as f:
+                    f.write(key + '\n')
+            print('コメント', key, got, '/', len(rs))
+        d -= datetime.timedelta(days=1)
+    return used
 
 
 def coverage():

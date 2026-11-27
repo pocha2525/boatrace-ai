@@ -23,6 +23,7 @@ import bfile
 import before
 import backfill
 import ot
+import cm
 
 EVAL_DAYS = 28       # 比べる期間（どちらのモデルも学習に使っていない直近の日数）
 MIN_GAIN = 0.002     # 3連単の当てはまり（1レース平均の対数）がこれ以上良くなったら入れ替え
@@ -117,6 +118,7 @@ def add_all(df, rc):
                    for x in df['date'].unique()})
     df = bfile.add_hist(df, rc, days)
     df = ot.add_hist(df, os.environ.get('OT_ROOT', 'oriten'))   # オリジナル展示の過去分
+    df = cm.add_hist(df, [backfill.CM_ROOT, 'logs'])   # 選手コメント
     bh = before.load_hist(backfill.ROOT)
     if len(bh):
         bh = bh.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race'})
@@ -160,7 +162,7 @@ def challenge(df, today):
     """挑戦者モデルを作り、直近28日で今のモデルと比べる。良ければ入れ替える"""
     cut = int((today - datetime.timedelta(days=EVAL_DAYS)).strftime('%Y%m%d'))
     # 今の材料 ＋ 今節 ＋ フライング歴・当日の前走 ＋ 出走表の数字・風向
-    X2 = X + setsu.SETSU + extra.EXTRA + bfile.BFEATS + ot.OT
+    X2 = X + setsu.SETSU + extra.EXTRA + bfile.BFEATS + ot.OT + cm.CM
     # 直前情報（展示ST・チルト・部品交換など）は、比べる期間の8割以上と
     # 学習に60日以上そろったときだけ入れる
     ev_cov = df.loc[df['date'] >= cut, 'ex_st'].notna().mean() if 'ex_st' in df else 0
@@ -267,7 +269,7 @@ def main():
             pd.DataFrame([dict(date=row['date'], run_at=row['run_at'], **r)]).to_csv(
                 det, mode='a', header=not os.path.exists(det), index=False)
             lines.append(f'新しい材料（今節・フライング歴・当日の前走・級別・全国/当地勝率・'
-                         f'モーター/ボート2連率・年齢・体重・風向・一周/まわり足/直線'
+                         f'モーター/ボート2連率・年齢・体重・風向・一周/まわり足/直線・選手コメント'
                          f'{"・直前情報" if r["use_bf"] else ""}、計{r["n_feats"]}個）を入れたモデルを、'
                          f'直近{EVAL_DAYS}日（{r["races"]}レース）で比較：')
             lines.append(f'  当てはまり 今{r["champ_ll"]} → 新{r["cand_ll"]}（大きいほど良い）')
@@ -283,6 +285,11 @@ def main():
                      '（60日分以上そろうと、展示ST・チルト・部品交換なども比べます）')
     except Exception as e:
         lines.append(f'直前情報の取りためで失敗：{e!r}')
+    try:
+        u = backfill.comments()
+        lines.append(f'選手コメントの過去分（下関・唐津）を取りため：{u}ページ')
+    except Exception as e:
+        lines.append(f'選手コメントの取りためで失敗：{e!r}')
     try:
         n = build_wind_map(rc)
         lines.append(f'風向の対応表：場×向き {n}通りを確認済み')

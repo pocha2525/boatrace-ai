@@ -16,6 +16,7 @@ import extra
 import bfile
 import before
 import ot
+import cm
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, get_direct, page, notify, add_rel, send_notify,
@@ -213,6 +214,13 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
                 save_sample(hd, f'oriten_{jcd:02d}', ot.LAST['html'])
     except Exception as e:
         print('記録できない', e)
+    try:
+        cmd = cm.fetch(get_direct, jcd, rno, hd, LAST.get('html_racelist') or '')   # 選手コメント
+        if strict:
+            cm.append(LOGS, hd, jcd, rno, cmd)
+    except Exception as e:
+        print('選手コメントを読めない', e)
+        cmd = {}
     wxy = (np.nan, np.nan)
     if bf:
         nm = bfile.img_dir(jcd, bf[0].get('wind_img'))
@@ -254,11 +262,15 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
                        'ex_st', 'ex_f', 'stab']})
         r['wd_x'], r['wd_y'] = wxy
         r['ot_lap'], r['ot_turn'], r['ot_str'] = otd.get(b, (np.nan, np.nan, np.nan))
+        c_ = cmd.get(b) if cmd.get(b, {}).get('reg') == rid else None
+        for k in ['cm_pos', 'cm_neg', 'cm_score', 'cm_mot']:
+            r[k] = c_[k] if c_ else np.nan
         rows.append(r)
     d = add_rel(pd.DataFrame(rows).astype(float))
     d = bfile.add_brel(d)
     d = before.add_rel(d)
     d = ot.add_rel(d)
+    d = cm.add_rel(d)
     one = d.loc[d['course'] == 1, 'rc_win_d']
     d['in_d'] = one.iloc[0] if len(one) else np.nan
     w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]
