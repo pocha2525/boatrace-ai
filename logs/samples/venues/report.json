@@ -1,0 +1,1952 @@
+{
+ "1": {
+  "site": "http://www.kiryu-kyotei.com",
+  "date": "20261122",
+  "hits": [],
+  "tried": [
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/cyokuzen.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/comment.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-comment.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/syusou.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-syusou.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/zenken.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-zenken.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/oriten.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-oriten.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/tenji.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/tenji_info.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/seibi.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "http://www.kiryu-kyotei.com/modules/yosou/group-seibi.php?day=20261122",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "2": {
+  "site": "https://www.boatrace-toda.jp",
+  "date": "20261124",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/cyokuzen.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/tenji.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/tenji_info.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/seibi.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-toda.jp/modules/yosou/group-seibi.php?day=20261124",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "3": {
+  "site": "https://www.boatrace-edogawa.com",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-edogawa.com/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "4": {
+  "site": "https://www.heiwajima.gr.jp",
+  "date": "20261122",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/cyokuzen.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/cyokuzen.php?day=20261122&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-cyokuzen.php?day=20261122&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/comment.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-comment.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/syusou.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-syusou.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/zenken.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-zenken.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/oriten.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-oriten.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/tenji.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/tenji_info.php?day=20261122&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/seibi.php?day=20261122",
+    "size": 0
+   },
+   {
+    "url": "https://www.heiwajima.gr.jp/modules/yosou/group-seibi.php?day=20261122",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "5": {
+  "site": "https://boatrace-tamagawa.com",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-tamagawa.com/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "6": {
+  "site": "https://www.boatrace-hamanako.jp",
+  "date": null,
+  "hits": [],
+  "tried": [],
+  "links": []
+ },
+ "7": {
+  "site": "https://www.gamagori-kyotei.com",
+  "date": "20261124",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/cyokuzen.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/tenji.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/tenji_info.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/seibi.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.gamagori-kyotei.com/modules/yosou/group-seibi.php?day=20261124",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "8": {
+  "site": "https://www.boatrace-tokoname.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "9": {
+  "site": "https://www.boatrace-tsu.com",
+  "date": "20261124",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/cyokuzen.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/tenji.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/tenji_info.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/seibi.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tsu.com/modules/yosou/group-seibi.php?day=20261124",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "10": {
+  "site": "https://www.boatrace-mikuni.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "11": {
+  "site": "https://www.boatrace-biwako.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-biwako.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "12": {
+  "site": "https://www.boatrace-suminoe.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-suminoe.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "13": {
+  "site": "https://boatrace-amagasaki.jp",
+  "date": "20261125",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/cyokuzen.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/tenji.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/tenji_info.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/seibi.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://boatrace-amagasaki.jp/modules/yosou/group-seibi.php?day=20261125",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "14": {
+  "site": "https://www.n14.jp",
+  "date": "20261123",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.n14.jp/modules/yosou/cyokuzen.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/cyokuzen.php?day=20261123&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/cyokuzen.php?day=20261123&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/cyokuzen.php?day=20261123&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-cyokuzen.php?day=20261123&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-cyokuzen.php?day=20261123&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-cyokuzen.php?day=20261123&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-cyokuzen.php?day=20261123&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/comment.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-comment.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/syusou.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-syusou.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/zenken.php?day=20261123",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-zenken.php?day=20261123",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/oriten.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-oriten.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/tenji.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/tenji_info.php?day=20261123&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/seibi.php?day=20261123",
+    "size": 0
+   },
+   {
+    "url": "https://www.n14.jp/modules/yosou/group-seibi.php?day=20261123",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "15": {
+  "site": "https://www.marugameboat.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.marugameboat.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "16": {
+  "site": "https://www.kojimaboat.jp",
+  "date": null,
+  "hits": [],
+  "tried": [],
+  "links": []
+ },
+ "17": {
+  "site": "https://www.boatrace-miyajima.com",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-miyajima.com/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "18": {
+  "site": "https://www.boatrace-tokuyama.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-tokuyama.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "19": {
+  "site": "https://www.boatrace-shimonoseki.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "20": {
+  "site": "https://www.wmb.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.wmb.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.wmb.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "21": {
+  "site": "https://www.boatrace-ashiya.com",
+  "date": "20261125",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/cyokuzen.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/tenji.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/tenji_info.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/seibi.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-ashiya.com/modules/yosou/group-seibi.php?day=20261125",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "22": {
+  "site": "https://www.boatrace-fukuoka.com",
+  "date": "20261124",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/cyokuzen.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-cyokuzen.php?day=20261124&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-comment.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-syusou.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-zenken.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-oriten.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/tenji.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/tenji_info.php?day=20261124&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/seibi.php?day=20261124",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-fukuoka.com/modules/yosou/group-seibi.php?day=20261124",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "23": {
+  "site": "https://www.boatrace-karatsu.jp",
+  "date": "20261126",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/cyokuzen.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261126&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-comment.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-syusou.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-zenken.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-oriten.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/tenji.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/tenji_info.php?day=20261126&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/seibi.php?day=20261126",
+    "size": 0
+   },
+   {
+    "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-seibi.php?day=20261126",
+    "size": 0
+   }
+  ],
+  "links": []
+ },
+ "24": {
+  "site": "https://www.omurakyotei.jp",
+  "date": "20261125",
+  "hits": [],
+  "tried": [
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/cyokuzen.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=1",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=2",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=3",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-cyokuzen.php?day=20261125&race=6&kind=4",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-comment.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-syusou.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-zenken.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-oriten.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/tenji.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/tenji_info.php?day=20261125&race=6",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/seibi.php?day=20261125",
+    "size": 0
+   },
+   {
+    "url": "https://www.omurakyotei.jp/modules/yosou/group-seibi.php?day=20261125",
+    "size": 0
+   }
+  ],
+  "links": []
+ }
+}
