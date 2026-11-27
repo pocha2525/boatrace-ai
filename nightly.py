@@ -19,6 +19,9 @@ from common import MODEL, FEATS, X, TARGETS, now_jst, notify, add_rel, k_path
 import train
 import setsu
 import extra
+import bfile
+import before
+import backfill
 
 EVAL_DAYS = 28       # 比べる期間（どちらのモデルも学習に使っていない直近の日数）
 MIN_GAIN = 0.002     # 3連単の当てはまり（1レース平均の対数）がこれ以上良くなったら入れ替え
@@ -90,10 +93,79 @@ def trifecta_score(models, ev):
     return float(np.mean(lls)), float(np.mean(hits)) * 100, len(lls)
 
 
+def download_b_all():
+    """番組表ファイル（過去分）をそろえる"""
+    from concurrent.futures import ThreadPoolExecutor
+    end = now_jst().date()
+    days, d = [], train.START
+    while d <= end:
+        if not os.path.exists(bfile.b_path(d)):
+            days.append(d)
+        d += datetime.timedelta(days=1)
+    print('番組表 未取得', len(days))
+    with ThreadPoolExecutor(4) as ex:
+        for i, _ in enumerate(ex.map(bfile.download_b, days)):
+            if i % 100 == 0:
+                print('番組表', i, '/', len(days))
+
+
+def add_all(df, rc):
+    """学習・比較用の材料を全部そろえる"""
+    df = extra.add_hist(setsu.add_hist(features(df, rc)))
+    days = sorted({datetime.date(x // 10000, x // 100 % 100, x % 100)
+                   for x in df['date'].unique()})
+    df = bfile.add_hist(df, rc, days)
+    bh = before.load_hist(backfill.ROOT)
+    if len(bh):
+        bh = bh.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race'})
+        bh['date'] = bh['date'].astype(int)
+        k = ['date', 'venue', 'race', 'boat']
+        cols = ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
+                'ex_st', 'ex_f', 'stab']
+        df = df.merge(bh[k + cols], on=k, how='left')
+        df = before.add_rel(df, ['date', 'venue', 'race'])
+    return df
+
+
+def build_wind_map(rc):
+    """公式サイトの風向の画像番号と、成績ファイルの風向を突き合わせて対応表を作る"""
+    import glob
+    fs = glob.glob(os.path.join(backfill.ROOT, 'before_*.csv')) + \
+        glob.glob(os.path.join('logs', 'before_*.csv'))
+    if not fs:
+        return 0
+    b = pd.concat([pd.read_csv(f, usecols=['hd', 'jcd', 'rno', 'wind_img'])
+                   for f in fs], ignore_index=True).dropna()
+    b = b.drop_duplicates(['hd', 'jcd', 'rno'], keep='last')
+    b.columns = ['date', 'venue', 'race', 'img']
+    b['date'] = b['date'].astype(int)
+    m = b.merge(rc[['date', 'venue', 'race', 'wind_dir', 'wind']],
+                on=['date', 'venue', 'race'])
+    m = m[(m['wind'] > 0) & m['wind_dir'].isin(bfile.DIRS)]
+    out = []
+    for img, g in m.groupby('img'):
+        vc = g['wind_dir'].value_counts()
+        if vc.iloc[0] >= 3 and vc.iloc[0] / len(g) >= 0.6:
+            out.append((int(img), vc.index[0], int(vc.iloc[0]), len(g)))
+    if out:
+        pd.DataFrame(out, columns=['img', 'dir', 'match', 'n']).to_csv(
+            os.path.join(MODEL, 'wind_img_map.csv'), index=False)
+    return len(out)
+
+
 def challenge(df, today):
     """挑戦者モデルを作り、直近28日で今のモデルと比べる。良ければ入れ替える"""
     cut = int((today - datetime.timedelta(days=EVAL_DAYS)).strftime('%Y%m%d'))
-    X2 = X + setsu.SETSU + extra.EXTRA   # 今の材料 ＋ 今節 ＋ フライング歴・当日の前走
+    # 今の材料 ＋ 今節 ＋ フライング歴・当日の前走 ＋ 出走表の数字・風向
+    X2 = X + setsu.SETSU + extra.EXTRA + bfile.BFEATS
+    # 直前情報（展示ST・チルト・部品交換など）は、比べる期間の8割以上と
+    # 学習に60日以上そろったときだけ入れる
+    ev_cov = df.loc[df['date'] >= cut, 'ex_st'].notna().mean() if 'ex_st' in df else 0
+    tr_days = df.loc[(df['date'] < cut) & df['ex_st'].notna(), 'date'].nunique() \
+        if 'ex_st' in df else 0
+    use_bf = ev_cov >= 0.8 and tr_days >= 60
+    if use_bf:
+        X2 = X2 + before.BEFORE
     tr = df[(df['date'] >= train.TRAIN_FROM) & (df['date'] < cut)]
     ev = df[df['date'] >= cut]
     cand_dir = os.path.join(MODEL, 'candidate')
@@ -116,7 +188,14 @@ def challenge(df, today):
     c_ll, c_hit, n = trifecta_score(champ, ev)
     n_ll, n_hit, _ = trifecta_score(cand, ev)
     win = n_ll - c_ll >= MIN_GAIN and n_hit >= c_hit
-    res = dict(cut=cut, races=n, champ_ll=round(c_ll, 4), cand_ll=round(n_ll, 4),
+    imp = {}
+    for y, m in zip(TARGETS, cand):
+        for f_, v in zip(m.feature_name(), m.feature_importance('gain')):
+            imp[f_] = imp.get(f_, 0) + v
+    top = sorted(imp.items(), key=lambda x: -x[1])[:12]
+    res = dict(cut=cut, races=n, n_feats=len(X2), use_bf=int(use_bf),
+               ev_cov=round(float(ev_cov), 2), bf_days=int(tr_days),
+               top=' '.join(k for k, _ in top), champ_ll=round(c_ll, 4), cand_ll=round(n_ll, 4),
                champ_hit=round(c_hit, 1), cand_hit=round(n_hit, 1),
                adopted=int(win))
     if win:
@@ -140,6 +219,7 @@ def main():
     yday = today - datetime.timedelta(days=1)
     full = os.environ.get('MANUAL') == '1' or today.weekday() == 0
     train.download_all()
+    download_b_all()
     # 成績ファイルの取りこぼしが多いと、成績表がおかしくなるので何も変えない
     expect = (yday - train.START).days + 1
     have = sum(os.path.exists(k_path(train.START + datetime.timedelta(days=i)))
@@ -178,9 +258,14 @@ def main():
                champ_hit='', cand_hit='', adopted='')
     if full:
         try:
-            r = challenge(extra.add_hist(setsu.add_hist(features(df, rc))), today)
-            row.update(r)
-            lines.append(f'新しい材料（今節・フライング歴・当日の前走）を入れたモデルを、'
+            r = challenge(add_all(df, rc), today)
+            row.update({k: v for k, v in r.items() if k in row})
+            det = os.path.join('logs', 'nightly_detail.csv')
+            pd.DataFrame([dict(date=row['date'], run_at=row['run_at'], **r)]).to_csv(
+                det, mode='a', header=not os.path.exists(det), index=False)
+            lines.append(f'新しい材料（今節・フライング歴・当日の前走・級別・全国/当地勝率・'
+                         f'モーター/ボート2連率・年齢・体重・風向'
+                         f'{"・直前情報" if r["use_bf"] else ""}、計{r["n_feats"]}個）を入れたモデルを、'
                          f'直近{EVAL_DAYS}日（{r["races"]}レース）で比較：')
             lines.append(f'  当てはまり 今{r["champ_ll"]} → 新{r["cand_ll"]}（大きいほど良い）')
             lines.append(f'  本命の的中率 今{r["champ_hit"]}% → 新{r["cand_hit"]}%')
@@ -188,6 +273,18 @@ def main():
                          if r['adopted'] else '  → 良くならなかったので、今のモデルのままです')
         except Exception as e:
             lines.append(f'新しいモデルの比較に失敗（今のモデルのまま）：{e!r}')
+    try:
+        used, got = backfill.main()
+        lines.append(f'直前情報の過去分を取りため：{used}ページ読み、'
+                     f'これまでに{backfill.coverage()}日分そろいました'
+                     '（60日分以上そろうと、展示ST・チルト・部品交換なども比べます）')
+    except Exception as e:
+        lines.append(f'直前情報の取りためで失敗：{e!r}')
+    try:
+        n = build_wind_map(rc)
+        lines.append(f'風向の対応表：{n}/16方位を確認済み')
+    except Exception as e:
+        lines.append(f'風向の対応表を作れず：{e!r}')
     os.makedirs('logs', exist_ok=True)
     new = not os.path.exists(LOG)
     pd.DataFrame([row]).to_csv(LOG, mode='a', header=new, index=False)
