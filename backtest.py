@@ -60,11 +60,16 @@ def metrics(p, truth, pay):
     hit1 = order[:, 0] == truth
     hit2 = (order[:, :2] == truth[:, None]).any(1)
     ll = np.log(np.clip(p[np.arange(len(p)), truth], 1e-15, 1))
+    selected = p.max(1) >= .12  # the existing production probability threshold
+    n_selected = int(selected.sum())
     return dict(races=len(p), top1_hit_pct=float(hit1.mean()*100),
                 top2_hit_pct=float(hit2.mean()*100), mean_log_probability=float(ll.mean()),
                 multiclass_brier=float((np.square(p).sum(1)-2*np.exp(ll)+1).mean()),
                 fixed1_roi_pct=float((pay*hit1).sum()/len(p)),
-                fixed2_roi_pct=float((pay*hit2).sum()/(len(p)*2))), ll, hit1, order
+                fixed2_roi_pct=float((pay*hit2).sum()/(len(p)*2)),
+                selected12_n=n_selected,
+                selected12_hit_pct=float(hit1[selected].mean()*100) if n_selected else None,
+                selected12_roi_pct=float((pay[selected]*hit1[selected]).sum()/n_selected) if n_selected else None), ll, hit1, order
 
 
 def main():
@@ -72,18 +77,31 @@ def main():
     raw, rc = train.load_all()
     if not len(raw) or raw.date.nunique() < 180:
         raise ValueError('バックテストには成績キャッシュが180日以上必要です')
-    end = min(int(raw.date.max()), int((now_jst().date()-datetime.timedelta(days=1)).strftime('%Y%m%d')))
+    end = min(int(raw.date.max()), int(os.environ.get('BACKTEST_END') or (now_jst().date()-datetime.timedelta(days=1)).strftime('%Y%m%d')))
     end_day = datetime.datetime.strptime(str(end), '%Y%m%d').date()
     cut = int((end_day-datetime.timedelta(days=27)).strftime('%Y%m%d'))
     holdout_from = int((end_day-datetime.timedelta(days=13)).strftime('%Y%m%d'))
     raw, rc = raw[raw.date <= end].copy(), rc[rc.date <= end].copy()
-    frame = nightly.add_all(nightly.prepare(raw, rc), rc)
+    history = nightly.prepare(raw, rc)
+    frame = nightly.add_all(history, rc)
+    refine = os.environ.get('BACKTEST_VARIANT') == 'recent'
+    input_mode = os.environ.get('BACKTEST_INPUT', 'observed')
+    if refine:
+        import recent
+        frame = recent.attach(history, frame)
     tr = frame[(frame.date >= train.TRAIN_FROM) & (frame.date < cut)]
     ev = complete(frame[(frame.date >= cut) & (frame.date <= end)])
     # K tenji is the published exhibition time, not the race finishing time.
     # Legacy before CSVs lack a tenji column; this fallback is explicit.
-    observed = ev[['_ex_course', '_ex_wind', '_ex_wave', 'ex_st', 'tenji']].notna().all(1)
-    observed &= ev.groupby(KEYS)['_ex_course'].transform('nunique').eq(6)
+    if input_mode == 'observed':
+        observed = ev[['_ex_course', '_ex_wind', '_ex_wave', 'ex_st', 'tenji']].notna().all(axis=1)
+        observed &= ev.groupby(KEYS)['_ex_course'].transform('nunique').eq(6)
+    elif input_mode == 'boat_assumption':
+        # Sensitivity analysis for periods without saved before-information.
+        # No final race courses/weather are substituted into model inputs.
+        observed = ev.tenji.notna()
+    else:
+        raise ValueError('Unknown backtest input mode')
     observed = observed.groupby([ev[k] for k in KEYS]).transform('all')
     ev = ev[observed].copy()
     validation, holdout = ev[ev.date < holdout_from], ev[ev.date >= holdout_from]
@@ -98,11 +116,14 @@ def main():
         candidates = list(dict.fromkeys(candidates + before.BEFORE))
     arms = {'baseline_66_refit': baseline, 'candidate': candidates,
             'candidate_without_comments': [f for f in candidates if f not in cm.CM]}
-    root = Path('logs/backtest') / (now_jst().strftime('%Y%m%d_%H%M%S')+'_'+os.environ.get('GITHUB_RUN_ID', 'local'))
+    if refine:
+        arms = {'baseline_66_refit': baseline, 'candidate': candidates,
+                'candidate_recent': list(dict.fromkeys(candidates+recent.FEATURES))}
+    root = Path(os.environ.get('BACKTEST_ROOT', 'logs/backtest')) / (now_jst().strftime('%Y%m%d_%H%M%S')+'_'+str(end)+'_'+input_mode+'_'+os.environ.get('GITHUB_RUN_ID', 'local'))
     root.mkdir(parents=True, exist_ok=True)
     coverage = []
     for split, data in [('train', tr), ('validation', validation), ('holdout', holdout)]:
-        for feature in list(dict.fromkeys(candidates + before.BEFORE)):
+        for feature in list(dict.fromkeys(list(arms.values())[-1] + candidates + before.BEFORE)):
             coverage.append(dict(split=split, feature=feature, rows=len(data),
                                  available=int(data[feature].notna().sum()) if feature in data else 0))
     pd.DataFrame(coverage).to_csv(root/'coverage.csv', index=False)
@@ -112,13 +133,14 @@ def main():
                 train_rows=len(tr), eligible_evaluation_races=len(ev)//6,
                 excluded_evaluation_races=len(complete(frame[frame.date >= cut]))//6-len(ev)//6,
                 before_training_days=bf_days, before_features_enabled=bool(use_bf),
-                model_promoted=False, note='Historical diagnostic, not a fresh prospective holdout. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties, F/L, retirements and incomplete finishing fields excluded from this fixed-ticket experiment.')
+                input_mode=input_mode, variant='recent' if refine else 'original',
+                model_promoted=False, exploratory=True, note='Historical diagnostic, not a fresh prospective holdout. November evaluation was already inspected in earlier experiments. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. Boat-assumption periods do not restore actual exhibition courses. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties, F/L, retirements and incomplete finishing fields excluded from this fixed-ticket experiment.')
     params = dict(objective='binary', learning_rate=.05, num_leaves=63,
                   bagging_fraction=.8, bagging_freq=1, feature_fraction=.8,
                   verbose=-1, num_threads=2, seed=20261127)
     vt, truth = outcomes(validation), outcomes(holdout)
     race = holdout.groupby(KEYS, sort=True).first().reset_index()[KEYS]
-    result = race.merge(rc[KEYS+['tri_pay']], on=KEYS, how='left', validate='one_to_one')
+    result = race.merge(rc[KEYS+['tri', 'tri_pay']], on=KEYS, how='left', validate='one_to_one')
     if result.tri_pay.isna().any():
         raise ValueError('評価レースの公式払戻が不足しています')
     pay = result.tri_pay.to_numpy(float)
@@ -140,12 +162,13 @@ def main():
         detail = result.copy()
         detail['arm'], detail['log_probability'], detail['top1_hit'] = name, ll, hit.astype(int)
         detail['top1_probability'] = p[np.arange(len(p)), order[:, 0]]
+        detail['top2_probability'] = p[np.arange(len(p)), order[:, 1]]
         detail['pick1'] = ['-'.join(str(b+1) for b in ORDERS[i]) for i in order[:, 0]]
         detail['pick2'] = ['-'.join(str(b+1) for b in ORDERS[i]) for i in order[:, 1]]
         all_rows.append(detail)
         print(name, json.dumps(stat), flush=True)
     # Select only with validation, then expose a single holdout comparison.
-    chosen = max(['candidate', 'candidate_without_comments'], key=lambda n: summaries[n]['validation_log_probability'])
+    chosen = max([n for n in arms if n != 'baseline_66_refit'], key=lambda n: summaries[n]['validation_log_probability'])
     check = evaluation.compare(scores['baseline_66_refit'][0], scores[chosen][0], result.date.to_numpy())
     meta.update(chosen_on_validation=chosen, comparison=check, metrics=summaries)
     (root/'summary.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding='utf8')
