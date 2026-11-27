@@ -204,7 +204,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
         otd = {}
     wxy = (np.nan, np.nan)
     if bf:
-        nm = bfile.img_dir(bf[0].get('wind_img'))
+        nm = bfile.img_dir(jcd, bf[0].get('wind_img'))
         if nm is not None:
             wxy = bfile.wind_xy(nm, bf[0].get('wind'))
 

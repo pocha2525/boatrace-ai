@@ -194,8 +194,8 @@ def parse_racelist(html):
 _IMG = None
 
 
-def img_dir(n):
-    """画像番号から風向の名前。対応が確かめられていなければ None"""
+def img_dir(jcd, n):
+    """場と画像番号から風向の名前。対応が確かめられていなければ None"""
     global _IMG
     if _IMG is None:
         _IMG = {}
@@ -203,8 +203,10 @@ def img_dir(n):
                          'wind_img_map.csv')
         if os.path.exists(p):
             t = pd.read_csv(p)
-            _IMG = dict(zip(t['img'].astype(int), t['dir']))
+            if 'venue' in t:
+                _IMG = {(int(v), int(i)): d for v, i, d in
+                        zip(t['venue'], t['img'], t['dir'])}
     try:
-        return _IMG.get(int(n))
+        return _IMG.get((int(jcd), int(n)))
     except (TypeError, ValueError):
         return None

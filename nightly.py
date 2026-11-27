@@ -144,13 +144,14 @@ def build_wind_map(rc):
     m = b.merge(rc[['date', 'venue', 'race', 'wind_dir', 'wind']],
                 on=['date', 'venue', 'race'])
     m = m[(m['wind'] > 0) & m['wind_dir'].isin(bfile.DIRS)]
+    # 画像の向きは場ごとに違う（場の図に合わせて描かれている）ので、場×番号で対応を取る
     out = []
-    for img, g in m.groupby('img'):
+    for (v, img), g in m.groupby(['venue', 'img']):
         vc = g['wind_dir'].value_counts()
-        if vc.iloc[0] >= 3 and vc.iloc[0] / len(g) >= 0.6:
-            out.append((int(img), vc.index[0], int(vc.iloc[0]), len(g)))
+        if vc.iloc[0] >= 3 and vc.iloc[0] / len(g) >= 0.5:
+            out.append((int(v), int(img), vc.index[0], int(vc.iloc[0]), len(g)))
     if out:
-        pd.DataFrame(out, columns=['img', 'dir', 'match', 'n']).to_csv(
+        pd.DataFrame(out, columns=['venue', 'img', 'dir', 'match', 'n']).to_csv(
             os.path.join(MODEL, 'wind_img_map.csv'), index=False)
     return len(out)
 
@@ -284,7 +285,7 @@ def main():
         lines.append(f'直前情報の取りためで失敗：{e!r}')
     try:
         n = build_wind_map(rc)
-        lines.append(f'風向の対応表：{n}/16方位を確認済み')
+        lines.append(f'風向の対応表：場×向き {n}通りを確認済み')
     except Exception as e:
         lines.append(f'風向の対応表を作れず：{e!r}')
     os.makedirs('logs', exist_ok=True)
