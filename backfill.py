@@ -35,6 +35,19 @@ def complete_races(path):
     return out
 
 
+def eligible_races(path):
+    """Only six-boat races with recorded courses can train strict inference."""
+    rows, races = read_k(path)
+    if not rows:
+        return []
+    entries = pd.DataFrame(rows)
+    valid = set()
+    for key, group in entries.groupby(['venue', 'race']):
+        if set(group.boat) == set(range(1, 7)) and group.course.notna().all():
+            valid.add(key)
+    return [race for race in races if (race['venue'], race['race']) in valid]
+
+
 def done_days():
     # 過去の「試行済み」を完了とした記録も、保存データから再確認する。
     if not os.path.exists(DONE):
@@ -44,7 +57,7 @@ def done_days():
         d = datetime.datetime.strptime(hd, '%Y%m%d').date()
         if not os.path.exists(k_path(d)):
             continue
-        _, races = read_k(k_path(d))
+        races = eligible_races(k_path(d))
         expected = {(r['venue'], r['race']) for r in races}
         if expected and expected <= complete_races(before.path(ROOT, hd)):
             out.add(hd)
@@ -71,7 +84,7 @@ def main(budget=BUDGET):
         if hd in done or not os.path.exists(k_path(d)):
             d -= datetime.timedelta(days=1)
             continue
-        _, races = read_k(k_path(d))
+        races = eligible_races(k_path(d))
         p = before.path(ROOT, hd)
         have = complete_races(p)
         todo = [(hd, r['venue'], r['race']) for r in races
@@ -111,8 +124,12 @@ def comments(budget=CM_BUDGET):
         if not os.path.exists(k_path(d)):
             d -= datetime.timedelta(days=1)
             continue
-        _, races = read_k(k_path(d))
+        entries, races = read_k(k_path(d))
+        registered = {(row['venue'], row['race'], row['boat']): row['racer'] for row in entries}
         for v in cm.URLS:
+            from venue_data import STATIC
+            if v in STATIC:
+                continue  # Static current-day pages cannot supply historical comments.
             key = f'{hd}-{v}'
             rs = sorted(r['race'] for r in races if r['venue'] == v)
             if key in done or not rs:
@@ -127,7 +144,9 @@ def comments(budget=CM_BUDGET):
                     print('読めず', key, rno, e)
                     rows = {}
                 used += 1
-                got += bool(rows)
+                rows = {boat: row for boat, row in rows.items()
+                        if registered.get((v, rno, boat)) == row['reg']}
+                got += len(rows) == 6
                 cm.append(CM_ROOT, hd, v, rno, rows)
                 time.sleep(1.0)
             if got == len(rs):

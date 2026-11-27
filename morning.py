@@ -51,7 +51,8 @@ def top_combos(pr, k=2):
 def send(title, message):
     """送信失敗のときだけ最大3回まで送り直す（結果不明は送り直さない）"""
     for i in range(3):
-        st = send_notify(title, message)['status']
+        st = send_notify(title, message, notification_id='morning-' +
+                         (os.environ.get('HD') or f'{now_jst():%Y%m%d}'))['status']
         if st != SENT_FAIL:
             return st
         time.sleep(5 * (i + 1))

@@ -64,6 +64,19 @@ def load_hist(root):
 
 def add_hist(df, root):
     h = load_hist(root)
+    live = []
+    for path in glob.glob(os.path.join('logs', 'oriten_*.csv')):
+        frame = pd.read_csv(path)
+        frame = frame.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race',
+                                      'lap': 'ot_lap', 'turn': 'ot_turn', 'straight': 'ot_str'})
+        columns = ['date', 'venue', 'race', 'boat', 'ot_lap', 'ot_turn', 'ot_str']
+        for col in columns:
+            frame[col] = pd.to_numeric(frame[col], errors='coerce')
+        live.append(frame[columns].dropna(subset=['date', 'venue', 'race', 'boat']))
+    if live:
+        parts = ([h] if len(h) else []) + live
+        h = pd.concat(parts, ignore_index=True).drop_duplicates(
+            ['date', 'venue', 'race', 'boat'], keep='last')
     k = ['date', 'venue', 'race', 'boat']
     if len(h):
         df = df.merge(h, on=k, how='left')
@@ -72,6 +85,9 @@ def add_hist(df, root):
             df[c] = np.nan
     return add_rel(df, ['date', 'venue', 'race'])
 
+
+from venue_data import ORIGINAL
+URLS.update(ORIGINAL)
 
 LAST = ThreadState()
 
@@ -84,6 +100,16 @@ def fetch(get, jcd, rno, hd):
     if not u:
         LAST['memo'] = '公表なし/未対応'
         return {}
+    from venue_data import ORIGINAL, html as venue_html
+    if jcd in ORIGINAL:
+        text = venue_html(get, jcd, rno, hd)
+        if jcd == 17:
+            segments = text.split('####')
+            text = segments[7] if len(segments) > 7 else ''
+        from .parse import parse_page
+        rows, memo = parse_page(text) if text else ([], '未公表/日付を確認できず')
+        LAST.update(memo=memo, size=len(text), html=text)
+        return {x['lane']: (x.get('lap'), x.get('turn'), x.get('straight')) for x in rows}
     url = u.format(d=hd, r=rno, r2=f'{rno:02d}')
     LAST['url'] = url
     r = get(url, tries=1)

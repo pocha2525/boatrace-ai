@@ -6,6 +6,7 @@ import datetime
 import threading
 from functools import wraps
 from itertools import permutations
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import lightgbm as lgb
@@ -61,7 +62,8 @@ def load_model():
     if not all(os.path.exists(p) for p in paths):
         return None, None
     bst = [lgb.Booster(model_file=p) for p in paths]
-    lk = {}
+    import hashlib
+    lk = {'_model_ids': [hashlib.sha256(open(path, 'rb').read()).hexdigest() for path in paths]}
     for _, _, n in FEATS:
         t = pd.read_csv(os.path.join(MODEL, f'cur_{n}.csv'))
         ks = [c for c in t.columns if c != n]
@@ -70,6 +72,10 @@ def load_model():
     lk['_setsu'] = setsu.load_tables(MODEL)
     # フライング歴（夜間の改善で毎朝作り直す）
     lk['_f'] = extra.load_f(MODEL)
+    import json
+    calibration_path = os.path.join(MODEL, 'calibration.json')
+    lk['_temperature'] = json.load(open(calibration_path)).get('temperature', 1.0) \
+        if os.path.exists(calibration_path) else 1.0
     return bst, lk
 
 
@@ -179,6 +185,8 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     strict=True（締切前）：展示タイム・進入が6艇分そろわなければ見送り
     strict=False（朝の候補）：進入は枠なりとして暫定で計算"""
     LAST.clear()
+    import venue_data
+    venue_data.clear()
     ids, tj, crs, wind, wave, mot, rl_ids = race_info(jcd, rno, hd)
     reason = check_race(ids, tj, crs, mot, rl_ids, strict)
     LAST['skip'] = reason
@@ -279,6 +287,8 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     d = cm.add_rel(d)
     one = d.loc[d['course'] == 1, 'rc_win_d']
     d['in_d'] = one.iloc[0] if len(one) else np.nan
+    if strict:
+        snapshot_features(d, hd, jcd, rno, bst, lk.get('_model_ids'))
     w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]
     w = w / w.sum()
     t2 = t2 * 2 / t2.sum()
@@ -286,6 +296,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     q2 = np.clip(t2 - w, 1e-3, None)
     q3 = np.clip(t3 - t2, 1e-3, None)
     boats = d['boat'].astype(int).tolist()
+    LAST['temperature'] = lk.get('_temperature', 1.0)
     LAST.update(crs=crs, boats=boats, w=w, q2=q2 / q2.sum(),
                 q3=q3 / q3.sum(),
                 rc=d[['rc_top2_d', 'rc_top3_d']].values.tolist(),
@@ -302,6 +313,11 @@ def tri_probs(pr):
         s3 = q3.sum() - q3[a] - q3[b]
         out[f'{boats[a]}-{boats[b]}-{boats[c]}'] = \
             w[a] * q2[b] / s2 * q3[c] / s3
+    temperature = LAST.get('temperature', 1.0)
+    if temperature != 1.0:
+        adjusted = {k: v ** (1.0 / temperature) for k, v in out.items()}
+        total = sum(adjusted.values())
+        out = {k: v / total for k, v in adjusted.items()}
     return out
 
 
@@ -378,6 +394,14 @@ def locked_log(fn):
 def append_rows(path, cols, rows):
     os.makedirs(LOGS, exist_ok=True)
     new = not os.path.exists(path)
+    if not new:
+        with open(path, newline='', encoding='utf-8') as existing:
+            current = next(csv.reader(existing), [])
+        if current != cols:
+            old = pd.read_csv(path, dtype=str)
+            old = old[old.iloc[:, 0] != current[0]]
+            cols = list(dict.fromkeys(current + cols))
+            old.reindex(columns=cols).to_csv(path, index=False)
     with open(path, 'a', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction='ignore')
         if new:
@@ -429,7 +453,7 @@ def send_skip_notice(name, rno, dl, nid, reason, res):
         for ev, k, q, o in res[:MAX_BETS]:
             lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
     lines += ['※朝の候補でしたが、締切前の判定で見送りです', f'通知ID: {nid}']
-    return send_notify(f'見送り {name} {rno}R', '\n'.join(lines))['status']
+    return send_notify(f'見送り {name} {rno}R', '\n'.join(lines), notification_id=nid, deadline=dl)['status']
 
 
 @locked_log
@@ -466,6 +490,12 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     """cand=True: 朝の候補に上がったレース（見送りも通知する）"""
     name = VENUES.get(jcd, str(jcd))
     nid = f'{hd}-{jcd:02d}-{rno:02d}'  # 通知ID（1レース1通知）
+    if remain(dl) < SAFE_MIN:
+        base = dict(hd=hd, jcd=jcd, venue=name, rno=rno, deadline=f'{dl:%H:%M}', run_at=f'{now:%H:%M}')
+        write_notify(hd, dict(base, notify_id=nid, status=ST_CANCEL,
+                             reason='情報取得開始前に締切まで2分未満'))
+        write_log(hd, [dict(base, pick='', prob='', odds='', ev='')])
+        return
     pr = predict(bst, lk, jcd, rno, hd)
     try:
         save_sample(hd, 'beforeinfo', LAST.get('html_before'))
@@ -549,7 +579,9 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         print(f'{name} {rno}R 通知中止：締切まで{r_send:.2f}分')
         return
     t0 = now_jst()
-    out = send_notify(f'買い {name} {rno}R', '\n'.join(lines))
+    out = send_notify(f'買い {name} {rno}R', '\n'.join(lines), notification_id=nid, deadline=dl,
+                      receipt={'notify': rec, 'bets': [dict(base, pick=k, prob=round(q, 4),
+                               odds=float(o), ev=round(ev, 2)) for ev, k, q, o in bets]})
     t1 = now_jst()
     rec.update(send_start=f'{t0:%H:%M:%S}', send_end=f'{t1:%H:%M:%S}',
                remain_send=round(r_send, 2), status=out['status'],
@@ -567,13 +599,13 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         write_notify(hd, dict(rec, reason='タイムアウト（再送しない）'))
         write_log(hd, [no_bet])
     else:
-        write_notify(hd, dict(rec, reason='NTFY_TOPIC未設定'))
+        write_notify(hd, dict(rec, reason=out.get('error') or 'NTFY_TOPIC未設定'))
         write_log(hd, [no_bet])
 
 
 # ---------- レース結果（その日のうちに記録する） ----------
 RESULT_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'tri', 'tri_pay',
-               'got_at']
+               'got_at', 'tri_payouts', 'refund_boats', 'race_status']
 RESULT_WAIT_MIN = 12    # 締切からこの分数たったら結果を見に行く
 RESULT_MAX = 8          # 1回の実行で見に行く最大レース数（時間をかけすぎない）
 TRI_PAT = re.compile(r'3連単\s*([1-6])\s*-\s*([1-6])\s*-\s*([1-6])\s*'
@@ -593,6 +625,31 @@ def parse_result(html):
     if not m:
         return None
     return f'{m.group(1)}-{m.group(2)}-{m.group(3)}', int(m.group(4).replace(',', ''))
+
+
+def parse_result_details(html):
+    """Read every official trifecta payout row, including rowspan dead heats."""
+    import json
+    soup = BeautifulSoup(html or '', 'html.parser')
+    payouts, refunds = {}, []
+    for body in soup.select('table tbody'):
+        cells = body.select('td')
+        if not cells or cells[0].get_text(strip=True) != '3連単':
+            continue
+        for row in body.select('tr'):
+            boats = [x.get_text(strip=True) for x in row.select('span.numberSet1_number')]
+            pay = re.search(r'[¥￥]\s*([\d,]+)', row.get_text(' ', strip=True))
+            if len(boats) == 3 and pay:
+                payouts['-'.join(boats)] = int(pay[1].replace(',', ''))
+    for table in soup.select('table'):
+        if any(h.get_text(strip=True) == '返還' for h in table.select('th')):
+            refunds = [x.get_text(strip=True) for x in table.select('span.numberSet1_number')]
+    if not payouts and not refunds:
+        return None
+    tri = next(iter(payouts), '返還')
+    return dict(tri=tri, tri_pay=payouts.get(tri, ''),
+                tri_payouts=json.dumps(payouts), refund_boats=''.join(refunds),
+                race_status='settled' if payouts else 'pending')
 
 
 def update_results(hd, now):
@@ -621,7 +678,7 @@ def update_results(hd, now):
     for past, (jcd, rno), venue, dl in todo[:RESULT_MAX]:
         try:
             html = page('raceresult', jcd, rno, hd)
-            res = parse_result(html)
+            res = parse_result_details(html)
             if res:
                 save_sample(hd, 'raceresult', html)
         except Exception as e:
@@ -629,12 +686,53 @@ def update_results(hd, now):
             res = None
         if res is None:
             continue  # まだ出ていない。次の回にもう一度
-        tri, pay = res
         rows.append(dict(hd=hd, jcd=jcd, venue=venue, rno=rno, deadline=dl,
-                         tri=tri, tri_pay=pay, got_at=f'{now_jst():%H:%M}'))
+                         **res, got_at=f'{now_jst():%H:%M}'))
     if rows:
         append_rows(result_path(hd), RESULT_COLS, rows)
         print('結果を記録', len(rows), 'レース')
+
+
+def snapshot_features(frame, hd, jcd, rno, models, model_ids=None):
+    """Keep the exact pre-race values used by the model for replay and drift."""
+    import json
+    payload = dict(hd=hd, jcd=jcd, rno=rno, observed_at=now_jst().isoformat(),
+                   model_features=models[0].feature_name(), model_ids=model_ids,
+                   boats=json.loads(frame.to_json(orient='records')))
+    os.makedirs(LOGS, exist_ok=True)
+    with open(os.path.join(LOGS, f'features_{hd}.jsonl'), 'a', encoding='utf-8') as f:
+        f.write(json.dumps(payload, ensure_ascii=False, allow_nan=False) + '\n')
+
+
+def restore_deliveries(hd):
+    """Restore confirmed sent picks if the previous runner lost its final push."""
+    import glob
+    import json
+    existing = read_log(notify_path(hd))
+    ids = set(existing.loc[existing.status == SENT_OK, 'notify_id']) if existing is not None else set()
+    logged = read_log(log_path(hd))
+    bet_keys = {(str(r.jcd), str(r.rno), r.pick) for r in logged.itertuples()
+                if isinstance(r.pick, str) and r.pick} if logged is not None else set()
+    for path in glob.glob(os.path.join(LOGS, 'delivery', '*.json')):
+        try:
+            record = json.load(open(path, encoding='utf-8'))
+            receipt = record.get('receipt', {})
+            notice = receipt.get('notify', {})
+            if str(notice.get('hd')) != hd:
+                continue
+            if record.get('status') != SENT_OK:
+                continue
+            if notice.get('notify_id') not in ids:
+                notice.update(status=SENT_OK, reason='永続送信台帳から復元')
+                write_notify(hd, notice)
+            missing = [row for row in receipt.get('bets', []) if
+                       (str(row['jcd']), str(row['rno']), row['pick']) not in bet_keys]
+            if missing:
+                write_log(hd, missing)
+                bet_keys.update((str(row['jcd']), str(row['rno']), row['pick']) for row in missing)
+            ids.add(notice['notify_id'])
+        except (OSError, ValueError, KeyError):
+            print('送信台帳の復元を保留', os.path.basename(path))
 
 
 def main():
@@ -650,10 +748,13 @@ def main():
         return
 
     venues = []
+    restore_deliveries(hd)
     done = done_races(hd)
     upcoming = []
-    for jcd in today_venues(hd):
-        dls = deadlines(jcd, hd)
+    locations = today_venues(hd)
+    with ThreadPoolExecutor(4) as pool:
+        schedules = list(pool.map(lambda j: (j, deadlines(j, hd)), locations))
+    for jcd, dls in schedules:
         if not dls:
             continue  # 今日レースのない会場（前売りなど）は数えない
         venues.append(jcd)

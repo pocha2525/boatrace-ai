@@ -1,2 +1,4 @@
 logs/*.csv merge=union
 
+
+logs/*.jsonl merge=union

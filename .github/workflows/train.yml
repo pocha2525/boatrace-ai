@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 300
     env:
       PYTHONUNBUFFERED: '1'
+      GITHUB_TOKEN: ${{ github.token }}
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       RELAY_URL: ${{ secrets.RELAY_URL }}
     steps:

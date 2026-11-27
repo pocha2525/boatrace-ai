@@ -63,7 +63,7 @@ def features(df, rc):
     return df.merge(one, on=keys, how='left')
 
 
-def trifecta_score(models, ev):
+def trifecta_score(models, ev, temperature=1.0, details=False):
     """3連単の当てはまり（実際の着順の確率の対数の平均）と、本命の的中率"""
     keys = ['date', 'venue', 'race']
     ev = ev.sort_values(keys + ['boat'])
@@ -76,7 +76,7 @@ def trifecta_score(models, ev):
     q2 = np.clip(t2 - w, 1e-3, None)
     q3 = np.clip(t3 - t2, 1e-3, None)
     rank = ev['rank'].values.reshape(-1, 6)
-    lls, hits = [], []
+    lls, hits, dates = [], [], []
     for i in range(len(w)):
         r = rank[i]
         try:
@@ -90,8 +90,14 @@ def trifecta_score(models, ev):
                     if len({x, y, z}) == 3:
                         p[(x, y, z)] = (w[i, x] * q2[i, y] / (q2[i].sum() - q2[i, x])
                                         * q3[i, z] / (q3[i].sum() - q3[i, x] - q3[i, y]))
+        values = np.array(list(p.values())) ** (1.0 / temperature)
+        values /= values.sum()
+        p = dict(zip(p, values))
+        dates.append(int(ev['date'].values.reshape(-1, 6)[i, 0]))
         lls.append(np.log(max(p[(a, b, c)], 1e-9)))
         hits.append(max(p, key=p.get) == (a, b, c))
+    if details:
+        return lls, hits, dates
     return float(np.mean(lls)), float(np.mean(hits)) * 100, len(lls)
 
 
@@ -119,15 +125,53 @@ def add_all(df, rc):
     df = bfile.add_hist(df, rc, days)
     df = ot.add_hist(df, os.environ.get('OT_ROOT', 'oriten'))   # オリジナル展示の過去分
     df = cm.add_hist(df, [backfill.CM_ROOT, 'logs'])   # 選手コメント
-    bh = before.load_hist(backfill.ROOT)
+    historical = df.copy()
+    parts = [part for part in [before.load_hist(backfill.ROOT), before.load_hist('logs')] if len(part)]
+    bh = pd.concat(parts, ignore_index=True) if parts else before.load_hist(backfill.ROOT)
+    names = {'hd': 'date', 'jcd': 'venue', 'rno': 'race'}
+    bh = bh.rename(columns=names)
+    k = ['date', 'venue', 'race', 'boat']
+    cols = ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj', 'ex_st', 'ex_f', 'stab']
     if len(bh):
-        bh = bh.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race'})
-        bh['date'] = bh['date'].astype(int)
-        k = ['date', 'venue', 'race', 'boat']
-        cols = ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
-                'ex_st', 'ex_f', 'stab']
-        df = df.merge(bh[k + cols], on=k, how='left')
-        df = before.add_rel(df, ['date', 'venue', 'race'])
+        bh = bh.drop_duplicates(k, keep='last').rename(columns={
+            'racer': '_bf_racer', 'ex_course': '_ex_course',
+            'tenji': '_ex_tenji', 'wind': '_ex_wind', 'wave': '_ex_wave', 'wind_img': '_wind_img'})
+        keep = k + cols + ['_bf_racer', '_ex_course', '_ex_tenji', '_ex_wind', '_ex_wave', '_wind_img']
+        for c in keep:
+            if c not in bh:
+                bh[c] = np.nan
+        df = df.merge(bh[keep], on=k, how='left')
+        mismatch = df['_bf_racer'].notna() & (df['_bf_racer'] != df['racer'])
+        df.loc[mismatch, cols + ['_ex_course', '_ex_tenji', '_ex_wind', '_ex_wave']] = np.nan
+    else:
+        for c in cols + ['_ex_course', '_ex_tenji', '_ex_wind', '_ex_wave', '_wind_img']:
+            df[c] = np.nan
+    observed = df[['_ex_course', '_ex_tenji', '_ex_wind', '_ex_wave']].notna().all(axis=1)
+    df['_observed'] = observed.groupby([df.date, df.venue, df.race]).transform('all')
+    old_tenji = df.tenji.copy()
+    df['course'] = pd.to_numeric(df['_ex_course'], errors='coerce').fillna(df['boat']).astype(int)
+    df['tenji'] = df['_ex_tenji'].combine_first(df['tenji'])
+    # Final-race weather is unavailable before the race. Unknown stays NaN.
+    df['wind'], df['wave'] = df['_ex_wind'], df['_ex_wave']
+    df[['wd_x', 'wd_y']] = np.nan
+    known = df['_wind_img'].notna() & df['_ex_wind'].notna()
+    if known.any():
+        directions = [bfile.img_dir(v, i) for v, i in zip(df.loc[known, 'venue'], df.loc[known, '_wind_img'])]
+        df.loc[known, ['wd_x', 'wd_y']] = [
+            bfile.wind_xy(direction, speed) if direction is not None else (np.nan, np.nan)
+            for direction, speed in zip(directions, df.loc[known, '_ex_wind'])]
+    for keys, col, name in FEATS:
+        if 'course' in keys:
+            df[name] = train.past_lookup(historical, df, keys, col, name)
+    df['ss_tenji_d'] += df['tenji'] - old_tenji
+    trends = historical[['date', 'venue', 'course', 'vs_cw']].drop_duplicates(
+        ['date', 'venue', 'course'])
+    df = df.drop(columns=['vs_cw']).merge(trends, on=['date', 'venue', 'course'], how='left')
+    df = add_rel(df, ['date', 'venue', 'race'])
+    one = df[df.course == 1][['date', 'venue', 'race', 'rc_win_d']].drop_duplicates(
+        ['date', 'venue', 'race']).rename(columns={'rc_win_d': 'in_d'})
+    df = df.drop(columns=['in_d']).merge(one, on=['date', 'venue', 'race'], how='left')
+    df = before.add_rel(df, ['date', 'venue', 'race'])
     return df
 
 
@@ -150,11 +194,10 @@ def build_wind_map(rc):
     out = []
     for (v, img), g in m.groupby(['venue', 'img']):
         vc = g['wind_dir'].value_counts()
-        if vc.iloc[0] >= 3 and vc.iloc[0] / len(g) >= 0.5:
+        if vc.iloc[0] >= 10 and vc.iloc[0] / len(g) >= 0.9:
             out.append((int(v), int(img), vc.index[0], int(vc.iloc[0]), len(g)))
-    if out:
-        pd.DataFrame(out, columns=['venue', 'img', 'dir', 'match', 'n']).to_csv(
-            os.path.join(MODEL, 'wind_img_map.csv'), index=False)
+    pd.DataFrame(out, columns=['venue', 'img', 'dir', 'match', 'n']).to_csv(
+        os.path.join(MODEL, 'wind_img_map.csv'), index=False)
     return len(out)
 
 
@@ -171,6 +214,15 @@ def challenge(df, today):
     use_bf = ev_cov >= 0.8 and tr_days >= 60
     if use_bf:
         X2 = X2 + before.BEFORE
+    import evaluation
+    state_path = os.path.join(MODEL, 'evaluation_state.json')
+    holdout_from = int((today - datetime.timedelta(days=14)).strftime('%Y%m%d'))
+    raw_holdout = evaluation.fresh_rows(df, state_path, holdout_from)
+    if not len(raw_holdout) or raw_holdout['_observed'].mean() < 0.8:
+        raise ValueError('展示時点の進入・気象を照合できる新規評価データが80%以上必要です')
+    holdout = raw_holdout[raw_holdout['_observed']].copy()
+    if holdout['date'].nunique() < 5:
+        raise ValueError('再利用しない新しい評価日が5日分必要です')
     tr = df[(df['date'] >= train.TRAIN_FROM) & (df['date'] < cut)]
     ev = df[df['date'] >= cut]
     cand_dir = os.path.join(MODEL, 'candidate')
@@ -190,27 +242,74 @@ def challenge(df, today):
         print(y, '挑戦者 学習完了')
     champ = [lgb.Booster(model_file=os.path.join(MODEL, f'model_{y}.txt'))
              for y in TARGETS]
-    c_ll, c_hit, n = trifecta_score(champ, ev)
-    n_ll, n_hit, _ = trifecta_score(cand, ev)
-    win = n_ll - c_ll >= MIN_GAIN and n_hit >= c_hit
+    # Refit the reference on the same past-only cutoff. A saved champion may
+    # already have seen part of this evaluation window; do not compare in-sample.
+    reference = []
+    for y, old in zip(TARGETS, champ):
+        ds = lgb.Dataset(tr[old.feature_name()], tr[y], categorical_feature=['venue'])
+        reference.append(lgb.train(params, ds, num_boost_round=400))
+    validation = ev[ev['date'] < holdout_from]
+    temps = [0.85, 1.0, 1.15, 1.3, 1.6]
+    temperature = max(temps, key=lambda t: trifecta_score(cand, validation, t)[0])
+    # Compare comment features against an ablation on validation only. The
+    # final holdout is touched once, after this choice and temperature fitting.
+    cm_validation_ll = trifecta_score(cand, validation, temperature)[0]
+    without_cm = [name for name in X2 if name not in cm.CM]
+    ablation = []
+    for y in TARGETS:
+        ds = lgb.Dataset(tr[without_cm], tr[y], categorical_feature=['venue'])
+        ablation.append(lgb.train(params, ds, num_boost_round=400))
+    ablation_temperature = max(temps, key=lambda t: trifecta_score(ablation, validation, t)[0])
+    no_cm_validation_ll = trifecta_score(ablation, validation, ablation_temperature)[0]
+    use_cm = cm_validation_ll >= no_cm_validation_ll + MIN_GAIN
+    if not use_cm:
+        cand, X2, temperature = ablation, without_cm, ablation_temperature
+        for y, model in zip(TARGETS, cand):
+            model.save_model(os.path.join(cand_dir, f'model_{y}.txt'))
+    reference_temperature = max(temps, key=lambda t: trifecta_score(reference, validation, t)[0])
+    c_scores, c_hits, dates = trifecta_score(reference, holdout, reference_temperature, details=True)
+    n_scores, n_hits, _ = trifecta_score(cand, holdout, temperature, details=True)
+    check = evaluation.compare(c_scores, n_scores, dates, gain=MIN_GAIN)
+    c_ll, n_ll, n = float(np.mean(c_scores)), float(np.mean(n_scores)), len(c_scores)
+    c_hit, n_hit = float(np.mean(c_hits))*100, float(np.mean(n_hits))*100
+    win = check['approved'] and n_hit >= c_hit
+    # Consume even a failed comparison: repeated tries must not reuse holdout.
+    evaluation.consume(state_path, holdout['date'].max())
     imp = {}
     for y, m in zip(TARGETS, cand):
         for f_, v in zip(m.feature_name(), m.feature_importance('gain')):
             imp[f_] = imp.get(f_, 0) + v
     top = sorted(imp.items(), key=lambda x: -x[1])[:12]
-    res = dict(cut=cut, races=n, n_feats=len(X2), use_bf=int(use_bf),
+    res = dict(cut=cut, races=n, n_feats=len(X2), temperature=temperature,
+               use_cm=int(use_cm), cm_validation_ll=cm_validation_ll,
+               no_cm_validation_ll=no_cm_validation_ll,
+               holdout_low95=check['low95'], holdout_high95=check['high95'],
+               promotion_reason=check['reason'], use_bf=int(use_bf),
                ev_cov=round(float(ev_cov), 2), bf_days=int(tr_days),
                top=' '.join(k for k, _ in top), champ_ll=round(c_ll, 4), cand_ll=round(n_ll, 4),
                champ_hit=round(c_hit, 1), cand_hit=round(n_hit, 1),
                adopted=int(win))
     if win:
-        arc = os.path.join(MODEL, 'archive', f'{today:%Y%m%d}')
+        arc = os.path.join(MODEL, 'archive', f'{now_jst():%Y%m%d_%H%M%S}')
         os.makedirs(arc, exist_ok=True)
+        import json
+        calibration = os.path.join(MODEL, 'calibration.json')
+        if os.path.exists(calibration):
+            shutil.copy(calibration, arc)
+        else:
+            with open(os.path.join(arc, 'calibration.json'), 'w') as f:
+                json.dump({'temperature': 1.0}, f)
         for y in TARGETS:
             shutil.copy(os.path.join(MODEL, f'model_{y}.txt'), arc)
             shutil.copy(os.path.join(cand_dir, f'model_{y}.txt'),
                         os.path.join(MODEL, f'model_{y}.txt'))
+        import json
+        with open(os.path.join(MODEL, 'calibration.json'), 'w') as f:
+            json.dump({'temperature': temperature, 'trained_before': cut,
+                       'holdout_until': int(holdout['date'].max())}, f)
         now = now_jst()
+        with open(os.path.join(MODEL, 'trained_at.txt'), 'w') as f:
+            f.write(f'{now:%Y-%m-%d %H:%M} JST / 学習対象 {cut} より前 / {len(X2)}特徴量\n')
         with open(os.path.join(MODEL, 'history.csv'), 'a', encoding='utf-8') as f:
             f.write(f'{now:%Y%m%d%H%M},v{now:%m%d} 夜間更新,'
                     f'学習〜{cut}前日 / 直近{EVAL_DAYS}日 当てはまり{c_ll:.4f}→{n_ll:.4f}\n')
@@ -223,6 +322,11 @@ def main():
     today = now.date()
     yday = today - datetime.timedelta(days=1)
     full = os.environ.get('MANUAL') == '1' or today.weekday() == 0
+    import discover_sources
+    try:
+        discover_sources.main()
+    except Exception as e:
+        print('公式取得先の確認に失敗', type(e).__name__)
     train.download_all()
     download_b_all()
     # 成績ファイルの取りこぼしが多いと、成績表がおかしくなるので何も変えない
@@ -266,8 +370,10 @@ def main():
             r = challenge(add_all(df, rc), today)
             row.update({k: v for k, v in r.items() if k in row})
             det = os.path.join('logs', 'nightly_detail.csv')
-            pd.DataFrame([dict(date=row['date'], run_at=row['run_at'], **r)]).to_csv(
-                det, mode='a', header=not os.path.exists(det), index=False)
+            details = pd.DataFrame([dict(date=row['date'], run_at=row['run_at'], **r)])
+            if os.path.exists(det):
+                details = pd.concat([pd.read_csv(det), details], ignore_index=True)
+            details.to_csv(det, index=False)
             lines.append(f'新しい材料（今節・フライング歴・当日の前走・級別・全国/当地勝率・'
                          f'モーター/ボート2連率・年齢・体重・風向・一周/まわり足/直線・選手コメント'
                          f'{"・直前情報" if r["use_bf"] else ""}、計{r["n_feats"]}個）を入れたモデルを、'

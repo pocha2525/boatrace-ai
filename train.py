@@ -4,6 +4,7 @@ import glob
 import datetime
 from concurrent.futures import ThreadPoolExecutor
 
+import numpy as np
 import pandas as pd
 import lightgbm as lgb
 
@@ -50,6 +51,28 @@ def past(df, keys, col, name):
     cc = g.groupby(keys)['count'].cumsum() - g['count']
     g[name] = cs / cc.where(cc >= 5)
     return df.merge(g[k + [name]], on=k, how='left')
+
+
+def past_lookup(history, query, keys, col, name):
+    """Past actual-course statistics queried with the exhibition-time course.
+
+    A current row must never supply the course used to aggregate its own label.
+    merge_asof(exact=False) excludes the entire prediction day.
+    """
+    g = history.groupby(keys + ['date'])[col].agg(['sum', 'count']).reset_index()
+    g = g.sort_values('date')
+    g['total'] = g.groupby(keys)['sum'].cumsum()
+    g['samples'] = g.groupby(keys)['count'].cumsum()
+    g[name] = g['total'] / g['samples'].where(g['samples'] >= 5)
+    q = query[keys + ['date']].copy()
+    q['_order'] = np.arange(len(q))
+    for k in keys + ['date']:
+        q[k] = q[k].astype('int64')
+        g[k] = g[k].astype('int64')
+    joined = pd.merge_asof(q.sort_values('date'), g[keys + ['date', name]],
+                           on='date', by=keys, allow_exact_matches=False,
+                           direction='backward')
+    return joined.sort_values('_order')[name].to_numpy()
 
 
 def main():

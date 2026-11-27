@@ -51,18 +51,24 @@ def day_bets(hd):
         return None, 0
     races = log[['jcd', 'rno']].drop_duplicates().shape[0]
     bets = log[log['pick'].fillna('') != ''].copy()
-    bets = bets.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']],
-                      on=['jcd', 'rno'], how='left')
-    pending = int(bets['tri'].isna().sum())
-    bets = bets[bets['tri'].notna()].copy()  # 未確定は的中・不的中にしない
+    from settlement import settle
+    columns = ['jcd', 'rno', 'tri', 'tri_pay'] + [c for c in
+               ['tri_payouts', 'refund_boats', 'race_status'] if c in rc]
+    bets = bets.merge(rc[columns], on=['jcd', 'rno'], how='left')
+    outcomes = [settle(row['pick'], row) for _, row in bets.iterrows()]
+    bets['settlement'] = [x[0] for x in outcomes]
+    bets['hit'] = [x[1] for x in outcomes]
+    bets['ret'] = [x[2] for x in outcomes]
+    bets['tri'] = [x[3] for x in outcomes]
+    pending = int((bets['settlement'] == 'pending').sum())
+    bets = bets[bets['settlement'] != 'pending'].copy()
     bets['prob'] = pd.to_numeric(bets['prob'], errors='coerce')
     bets = bets.sort_values(['jcd', 'rno', 'prob'],
                             ascending=[True, True, False])
     bets['何点目'] = bets.groupby(['jcd', 'rno']).cumcount() + 1
     hist = model_history()
     bets['モデル'] = [version_of(r, hist) for _, r in bets.iterrows()]
-    bets['hit'] = (bets['pick'] == bets['tri']).astype(int)
-    bets['ret'] = bets['tri_pay'].where(bets['hit'] == 1, 0)
+    bets[['hit', 'ret']] = bets[['hit', 'ret']].astype(int)
     bets.attrs['pending'] = pending
     return bets, races
 
@@ -181,19 +187,26 @@ def judged_day(h):
         '払戻': t['tri_pay'].map(lambda x: str(int(x)) if pd.notna(x) else ''),
         '見送り理由': t['reason'].fillna('').where(t['status'] != '受付成功', ''),
     })
+    if 'tri_payouts' in t:
+        for index, payouts in t['tri_payouts'].items():
+            if isinstance(payouts, dict) and len(payouts) > 1:
+                out.loc[index, '結果'] = '/'.join(payouts)
+                out.loc[index, '払戻'] = '/'.join(str(p) for p in payouts.values())
     keys = list(zip(t['jcd'], t['rno']))
     got = [bought.get(k, set()) for k in keys]
     st = t['status'].tolist()
     out['判定'] = [('買い%d点' % len(g) if g else '買い') if s == '受付成功'
                    else '見送り' if s == '条件未達' else s for s, g in zip(st, got)]
-    out['本命当たり'] = (out['本命'] == out['結果']).map({True: '◎', False: '×'})
+    out['本命当たり'] = ['◎' if pick in res.split('/') else '×'
+                       for pick, res in zip(out['本命'], out['結果'])]
     mark = []
     for res, p1, p2, g in zip(out['結果'], out['本命'], out['2番手'], got):
         if res in (NO_TRI, MISSING):
             mark.append('-')
             continue
-        m = '本命◎' if res == p1 else '2番手◎' if p2 and res == p2 else '×'
-        mark.append(m + ('（的中）' if res in g else ''))
+        winners = set(res.split('/'))
+        m = '本命◎' if p1 in winners else '2番手◎' if p2 and p2 in winners else '×'
+        mark.append(m + ('（的中）' if winners.intersection(g) else ''))
     out['当たり'] = mark
     out.loc[out['結果'].isin([NO_TRI, MISSING]), '本命当たり'] = '-'
     return out.sort_values('締切')[JUDGED_COLS]
@@ -272,11 +285,15 @@ def main():
             '点数': n,
             '的中数': int(b['hit'].sum()),
             '投資': n * 100,
+            '返還点数': int((b['settlement'] == 'refunded').sum()),
             '払戻': int(b['ret'].sum()),
         })
     if not daily:
         print('集計できる記録がまだありません')
         return
+
+    import quality
+    quality.report(LOGS, results_for, hd)
 
     # 日ごとの成績表
     dd = pd.DataFrame(daily)
@@ -297,9 +314,9 @@ def main():
     ab = ab.rename(columns={
         'hd': '日付', 'venue': '会場', 'rno': 'R', 'deadline': '締切',
         'pick': '買い目', 'prob': '確率', 'odds': 'オッズ', 'ev': '期待値',
-        'tri': '結果', 'hit': '的中', 'ret': '払戻'})
+        'tri': '結果', 'hit': '的中', 'ret': '払戻', 'settlement': '精算'})
     cols = ['日付', '会場', 'R', '締切', '買い目', '何点目', '確率',
-            'オッズ', '期待値', '結果', '的中', '払戻', 'モデル']
+            'オッズ', '期待値', '結果', '的中', '払戻', 'モデル', '精算']
     ab[cols].to_csv(os.path.join(LOGS, 'all_bets.csv'), index=False)
 
     # 確率の答え合わせ（校正）と、1点目・2点目の比較
@@ -328,7 +345,7 @@ def main():
     for _, r in k.iterrows():
         lines.append(f' {int(r["何点目"])}点目: 的中{r["的中率%"]}% '
                      f'回収{r["回収率%"]}%（{int(r["点数"])}点）')
-    notify('成績レポート', '\n'.join(lines))
+    notify('成績レポート', '\n'.join(lines), notification_id='report-' + hd)
 
 
 if __name__ == '__main__':
