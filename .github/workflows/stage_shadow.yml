@@ -1,0 +1,40 @@
+name: stage-shadow
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repo-write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      PYTHONUNBUFFERED: '1'
+      OMP_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: shadow-data-${{ github.run_id }}
+          restore-keys: kdata-
+      - run: pip install -r requirements.txt
+      - run: git clone --depth 1 https://github.com/hassak0408/boat-oriten oriten
+      - run: python stage_shadow.py
+      - name: Save frozen candidate only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add model/shadow
+          git diff --cached --quiet && exit 0
+          git commit -m 'Stage frozen model for prospective return verification'
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          exit 1
