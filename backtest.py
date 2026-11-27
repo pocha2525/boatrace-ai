@@ -49,7 +49,7 @@ def complete(frame):
     """Exactly six distinct boats and one each of ranks 1..3; ties excluded."""
     def valid(g):
         return (sorted(g.boat.tolist()) == [1, 2, 3, 4, 5, 6] and
-                all((g['rank'] == n).sum() == 1 for n in (1, 2, 3)))
+                sorted(g['rank'].dropna().tolist()) == [1, 2, 3, 4, 5, 6])
     keys = [key for key, group in frame.groupby(KEYS) if valid(group)]
     keep = pd.MultiIndex.from_tuples(keys, names=KEYS)
     return frame.set_index(KEYS).loc[lambda x: x.index.isin(keep)].reset_index().sort_values(KEYS+['boat'])
@@ -112,7 +112,7 @@ def main():
                 train_rows=len(tr), eligible_evaluation_races=len(ev)//6,
                 excluded_evaluation_races=len(complete(frame[frame.date >= cut]))//6-len(ev)//6,
                 before_training_days=bf_days, before_features_enabled=bool(use_bf),
-                model_promoted=False, note='Historical diagnostic, not a fresh prospective holdout. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties and incomplete fields excluded.')
+                model_promoted=False, note='Historical diagnostic, not a fresh prospective holdout. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties, F/L, retirements and incomplete finishing fields excluded from this fixed-ticket experiment.')
     params = dict(objective='binary', learning_rate=.05, num_leaves=63,
                   bagging_fraction=.8, bagging_freq=1, feature_fraction=.8,
                   verbose=-1, num_threads=2, seed=20261127)
