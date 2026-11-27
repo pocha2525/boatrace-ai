@@ -5,6 +5,25 @@ import os
 from ticket_comparison import enrich
 
 
+def verified_conclusion(run_id, repository, conclusion):
+    if conclusion != 'unknown':
+        return conclusion
+    import requests
+    if not str(run_id).isdigit():
+        raise ValueError('Invalid workflow run ID')
+    try:
+        response = requests.get(f'https://api.github.com/repos/{repository}/actions/runs/{run_id}',
+                                headers={'Authorization': 'Bearer '+os.environ.get('GITHUB_TOKEN', '')},
+                                timeout=20)
+        response.raise_for_status()
+        run = response.json()
+        if run.get('status') == 'completed':
+            return run.get('conclusion') or 'unknown'
+    except (requests.RequestException, ValueError):
+        pass
+    return 'unknown'
+
+
 def message(summaries, run_id, repository, conclusion='success'):
     lines = []
     for d in sorted(summaries, key=lambda s: s['holdout_from']):
@@ -26,8 +45,10 @@ def message(summaries, run_id, repository, conclusion='success'):
                 lines.append(f"{label}: 全{v['races']}R／本命的中{v['top1_hit_pct']:.1f}%／固定1点回収{v['fixed1_roi_pct']:.1f}%")
     if not summaries:
         lines.append('結果を確定できませんでした。実行ログを確認します。')
-    elif conclusion != 'success':
+    elif conclusion in {'failure', 'timed_out', 'cancelled', 'action_required'}:
         lines.append('一部の実行が未完了です。上記は保存できた分のみです。')
+    elif conclusion != 'success':
+        lines.append('保存済みの結果を集計しています。実行の完了状態はこの通知では未照合です。')
     lines += ['※本命確率12%以上の同じ対象で、上位1点と上位2点を各100円購入した比較。探索用の過去検証で本番の期待値条件は未再現。少数例の100%超で採用せず、本番モデルは変更していません。',
               'https://github.com/'+repository+'/actions/runs/'+str(run_id)]
     return '\n'.join(lines)
@@ -38,9 +59,10 @@ def main():
     run_id = os.environ['BACKTEST_RUN_ID']
     paths = glob.glob('logs/backtest/*_'+run_id+'/summary.json')+glob.glob('logs/refine/*_'+run_id+'/summary.json')
     summaries = [enrich(json.load(open(p, encoding='utf8')), p) for p in paths]
-    text = message(summaries, run_id, os.environ['GITHUB_REPOSITORY'], os.environ.get('BACKTEST_CONCLUSION', 'unknown'))
-    result = send_notify('回収率改善の検証結果' if summaries else '検証結果を確定できず', text,
-                         notification_id='backtest-result-'+run_id+'-tickets-v2')
+    conclusion = verified_conclusion(run_id, os.environ['GITHUB_REPOSITORY'], os.environ.get('BACKTEST_CONCLUSION', 'unknown'))
+    text = message(summaries, run_id, os.environ['GITHUB_REPOSITORY'], conclusion)
+    result = send_notify('1点・2点の検証結果' if summaries else '検証結果を確定できず', text,
+                         notification_id='backtest-result-'+run_id+'-tickets-v3')
     print('通知受付:', result['status'])
     if result['status'] != SENT_OK:
         raise SystemExit('通知の受付を確認できませんでした')
