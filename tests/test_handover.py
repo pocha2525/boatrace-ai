@@ -65,7 +65,8 @@ def test_saved_models_can_predict_morning(monkeypatch, tmp_path):
     monkeypatch.setattr(predict, 'race_info', morning.info_morning)
     monkeypatch.setattr(predict, 'LOGS', str(tmp_path))
     models, tables = predict.load_model()
-    assert [len(x.feature_name()) for x in models] == [66, 66, 66]
+    assert all(set(common.X) <= set(model.feature_name()) for model in models)
+    assert len({tuple(model.feature_name()) for model in models}) == 1
     result = predict.predict(models, tables, 24, 8, '20261127', strict=False)
     probabilities = predict.tri_probs(result)
     assert np.isclose(sum(probabilities.values()), 1)
@@ -85,7 +86,7 @@ def test_backfill_retries_failed_pages(monkeypatch, tmp_path):
     monkeypatch.setattr(backfill.train, 'START', day)
     k = tmp_path / 'K.txt'; k.write_text('test')
     monkeypatch.setattr(backfill, 'k_path', lambda d: str(k))
-    monkeypatch.setattr(backfill, 'read_k', lambda p: ([], [{'venue': 11, 'race': 5}]))
+    monkeypatch.setattr(backfill, 'read_k', lambda p: ([dict(venue=11, race=5, boat=b, course=b) for b in range(1, 7)], [{'venue': 11, 'race': 5}]))
     monkeypatch.setattr(backfill, 'one', lambda args: [])
     used, done = backfill.main(budget=1)
     assert used == 1 and done == []
