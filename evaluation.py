@@ -1,14 +1,25 @@
 """One-use future holdouts and uncertainty for challenger promotion."""
 import json
+import glob
 import os
 import numpy as np
 
 
-def fresh_rows(frame, state_path, holdout_from):
+def fresh_rows(frame, state_path, holdout_from, history_roots=None):
     used = 0
     if os.path.exists(state_path):
         with open(state_path, encoding='utf-8') as f:
             used = int(json.load(f).get('used_until', 0))
+    # Once historical outcomes informed an experiment, they are no longer an
+    # independent holdout for automatic promotion, even if no model was saved.
+    if history_roots is None:
+        root = os.path.dirname(os.path.dirname(os.path.abspath(state_path)))
+        history_roots = [os.path.join(root, 'logs', name) for name in ('backtest', 'refine')]
+    for root in history_roots:
+        for path in glob.glob(os.path.join(root, '*', 'summary.json')):
+            with open(path, encoding='utf-8') as f:
+                summary = json.load(f)
+            used = max(used, int(summary.get('holdout_until', 0)))
     return frame[(frame.date >= holdout_from) & (frame.date > used)]
 
 
