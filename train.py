@@ -77,6 +77,12 @@ def past_lookup(history, query, keys, col, name):
 
 def main():
     os.makedirs(MODEL, exist_ok=True)
+    if all(os.path.exists(os.path.join(MODEL, f'model_{y}.txt')) for y in TARGETS):
+        # Manual retraining must use the same prospective adoption process.
+        # Only the initial bootstrap may create live models directly.
+        from stage_shadow import main as stage_candidate
+        stage_candidate()
+        return
     download_all()
     df, rc = load_all()
     if len(df) == 0:
