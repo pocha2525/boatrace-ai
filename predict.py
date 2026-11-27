@@ -18,7 +18,7 @@ import before
 import ot
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
-                    now_jst, get, page, notify, add_rel, send_notify,
+                    now_jst, get, get_direct, page, notify, add_rel, send_notify,
                     SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE)
 
 WINDOW_MIN = 15      # 締切まで何分以内のレースを予想するか（11/24 13→15）
@@ -193,7 +193,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
         print('直前情報を読めない', e)
         bf = []
     try:
-        otd = ot.fetch(get, jcd, rno, hd)   # オリジナル展示（一周・まわり足・直線）
+        otd = ot.fetch(get_direct, jcd, rno, hd)   # オリジナル展示（一周・まわり足・直線）
         if strict and otd:
             append_rows(os.path.join(LOGS, f'oriten_{hd}.csv'),
                         ['hd', 'jcd', 'rno', 'boat', 'lap', 'turn', 'straight'],

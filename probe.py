@@ -2,7 +2,7 @@
 見つかったページを logs/samples/venues/ に、調べた結果を logs/samples/venues/report.json に置く。"""
 import os, re, json, datetime
 from urllib.parse import urljoin, urlparse
-from common import get, now_jst, download_k, read_k
+from common import get_direct as get, now_jst, download_k, read_k
 
 SITES = {
     1: 'http://www.kiryu-kyotei.com', 2: 'https://www.boatrace-toda.jp',

@@ -121,6 +121,21 @@ def get(url, tries=3):
     return None
 
 
+def get_direct(url, tries=2, timeout=20):
+    """中継を使わずに直接読む（各レース場の公式サイト用。中継は boatrace.jp と mbrace だけ通す）"""
+    for i in range(tries):
+        try:
+            r = requests.get(url, headers=UA, timeout=timeout)
+            if r.status_code == 200:
+                return r
+            if r.status_code == 404:
+                return None
+        except requests.RequestException as e:
+            print('通信エラー', url, e)
+        time.sleep(2 * (i + 1))
+    return None
+
+
 def page(kind, jcd, rno, hd):
     """boatrace.jp のレースページ（HTML）を取得する。"""
     r = get(f'{BR}{kind}?rno={rno}&jcd={jcd:02d}&hd={hd}')
