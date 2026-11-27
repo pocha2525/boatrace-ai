@@ -1,0 +1,34 @@
+name: delivery-check
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: Check reservation and duplicate protection without notification
+        run: |
+          python - <<'PY'
+          import base64, json, os, requests
+          from delivery import Ledger
+          ledger = Ledger()
+          key = 'delivery-check-' + os.environ['GITHUB_RUN_ID']
+          claim = ledger.reserve(key)
+          assert claim is not None, '送信予約を永続保存できませんでした'
+          ledger.finish(claim, '確認済（通知なし）')
+          response = requests.get(claim['url'], headers=claim['headers'], timeout=20)
+          response.raise_for_status()
+          saved = json.loads(base64.b64decode(response.json()['content']))
+          assert saved['status'] == '確認済（通知なし）'
+          assert ledger.reserve(key) is None, '同じ通知IDを二重に予約できてしまいました'
+          print('永続予約・完了記録・二重予約防止を確認しました。通知は送っていません。')
+          PY
