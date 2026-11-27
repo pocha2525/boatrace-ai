@@ -13,7 +13,8 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: nightly
+  # 毎朝の分は1つずつ。Claude が動かす比較（push）は前の回を待たずにすぐ動く
+  group: nightly-${{ github.event_name == 'push' && github.sha || 'auto' }}
 jobs:
   nightly:
     runs-on: ubuntu-latest
