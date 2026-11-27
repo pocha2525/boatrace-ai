@@ -6,6 +6,7 @@
 """
 import os
 import glob
+import re
 
 import numpy as np
 import pandas as pd
@@ -66,9 +67,11 @@ def add_hist(df, root):
     h = load_hist(root)
     live = []
     for path in glob.glob(os.path.join('logs', 'oriten_*.csv')):
+        if not re.fullmatch(r'oriten_\d{8}\.csv', os.path.basename(path)):
+            continue  # oriten_check_* contains parser diagnostics, not boat times
         frame = pd.read_csv(path)
         frame = frame.rename(columns={'hd': 'date', 'jcd': 'venue', 'rno': 'race',
-                                      'lap': 'ot_lap', 'turn': 'ot_turn', 'straight': 'ot_str'})
+                                      'lane': 'boat', 'lap': 'ot_lap', 'turn': 'ot_turn', 'straight': 'ot_str'})
         columns = ['date', 'venue', 'race', 'boat', 'ot_lap', 'ot_turn', 'ot_str']
         for col in columns:
             frame[col] = pd.to_numeric(frame[col], errors='coerce')
