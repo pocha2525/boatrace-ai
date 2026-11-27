@@ -2,7 +2,25 @@
 見つかったページを logs/samples/venues/ に、調べた結果を logs/samples/venues/report.json に置く。"""
 import os, re, json, datetime
 from urllib.parse import urljoin, urlparse
-from common import get_direct as get, now_jst, download_k, read_k
+import requests
+from common import UA, now_jst, download_k, read_k
+
+ERR = {}
+
+
+class _R:
+    def __init__(self, c):
+        self.content = c
+
+
+def get(url, tries=1):
+    try:
+        r = requests.get(url, headers=UA, timeout=20)
+        ERR[url] = r.status_code
+        return _R(r.content) if r.status_code == 200 else None
+    except requests.RequestException as e:
+        ERR[url] = repr(e)[:150]
+        return None
 
 SITES = {
     1: 'http://www.kiryu-kyotei.com', 2: 'https://www.boatrace-toda.jp',
@@ -81,7 +99,7 @@ def main():
                 url = site + pth.format(d=d, r=6)
                 h = text(get(url, tries=1))
                 mk = marks(h)
-                res['tried'].append(dict(url=url, size=len(h), **{k: v_ for k, v_ in mk.items() if v_}))
+                res['tried'].append(dict(url=url, size=len(h), code=ERR.get(url), **{k: v_ for k, v_ in mk.items() if v_}))
                 if h and (mk['コメント'] or mk['まわり'] or mk['回り足'] or mk['整備']) and n < 6:
                     fn = f'{v:02d}_{n}.html'
                     open(os.path.join(OUT, fn), 'w', encoding='utf-8').write(h)
@@ -95,6 +113,7 @@ def main():
             if urlparse(full).netloc.replace('www.', '') == urlparse(site).netloc.replace('www.', '') \
                     and any(k in full.lower() for k in KEYW) and full not in links:
                 links.append(full)
+        res['top'] = ERR.get(site + '/')
         res['links'] = links[:80]
         for u in links[:25]:
             h = text(get(u, tries=1))
@@ -106,6 +125,7 @@ def main():
                 n += 1
         rep[v] = res
         print(v, d, len(res['hits']), [x['url'] for x in res['hits']][:4], flush=True)
+    rep['_at'] = str(now_jst())
     json.dump(rep, open(os.path.join(OUT, 'report.json'), 'w', encoding='utf-8'),
               ensure_ascii=False, indent=1)
 
