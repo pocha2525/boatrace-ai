@@ -214,3 +214,33 @@ def test_result_csv_schema_upgrade_keeps_previous_rows(monkeypatch, tmp_path):
     d = pd.read_csv(path, dtype=str)
     assert d.tri.tolist() == ['1-2-3', '1-3-2']
     assert pd.isna(d.iloc[0].refund_boats) and d.iloc[1].refund_boats == '6'
+
+
+def test_late_comment_does_not_replace_a_verified_capture(monkeypatch):
+    row = dict(hd=20261127, jcd=11, rno=5, boat=1, racer=5009, text='良い',
+               cm_pos=1., cm_neg=0., cm_score=1., cm_mot=np.nan, asof_verified=1)
+    monkeypatch.setattr(cm, 'load_hist', lambda roots: pd.DataFrame(
+        [row, dict(row, text='悪い', asof_verified=0)]))
+    query = pd.DataFrame([dict(date=20261127, venue=11, race=5, boat=1, racer=5009)])
+    result = cm.add_hist(query, [])
+    assert result.cm_score.iloc[0] == 1
+    query['racer'] = 5008
+    assert cm.add_hist(query, []).cm_score.isna().all()
+
+
+def test_unverified_legacy_comments_are_excluded_from_training(monkeypatch):
+    row = dict(hd=20261127, jcd=11, rno=5, boat=1, racer=5009, text='良い',
+               cm_pos=1., cm_neg=0., cm_score=1., cm_mot=np.nan)
+    monkeypatch.setattr(cm, 'load_hist', lambda roots: pd.DataFrame([row]))
+    query = pd.DataFrame([dict(date=20261127, venue=11, race=5, boat=1, racer=5009)])
+    assert cm.add_hist(query, []).cm_score.isna().all()
+
+
+def test_comment_capture_is_verified_only_before_deadline(monkeypatch, tmp_path):
+    now = common.now_jst()
+    monkeypatch.setattr(common, 'now_jst', lambda: now)
+    rows = {1: dict(reg=5009, text='良い', cm_pos=1, cm_neg=0, cm_score=1, cm_mot=np.nan)}
+    cm.append(str(tmp_path), '20261127', 11, 5, rows, deadline=now+common.datetime.timedelta(minutes=1))
+    cm.append(str(tmp_path), '20261127', 11, 6, rows, deadline=now-common.datetime.timedelta(minutes=1))
+    stored = pd.read_csv(tmp_path/'comment_20261127.csv')
+    assert stored.asof_verified.tolist() == [1, 0]
