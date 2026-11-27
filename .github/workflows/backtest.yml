@@ -1,0 +1,46 @@
+name: backtest
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: historical-backtest
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      PYTHONUNBUFFERED: '1'
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: kdata-backtest-${{ github.run_id }}
+          restore-keys: kdata-
+      - run: pip install -r requirements.txt
+      - run: git clone --depth 1 https://github.com/hassak0408/boat-oriten oriten
+      - run: python backtest.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: historical-backtest
+          path: logs/backtest
+      - name: Save diagnostic results only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add logs/backtest
+          git diff --cached --quiet && exit 0
+          git commit -m 'Save historical backtest results (no model promotion)'
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          exit 1
