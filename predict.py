@@ -201,7 +201,18 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
                               straight=v[2]) for k, v in sorted(otd.items())])
     except Exception as e:
         print('オリジナル展示を読めない', e)
+        ot.LAST['memo'] = f'エラー {e!r}'
         otd = {}
+    try:
+        if strict and jcd in ot.URLS:
+            append_rows(os.path.join(LOGS, f'oriten_check_{hd}.csv'),
+                        ['hd', 'jcd', 'rno', 'n', 'size', 'memo'],
+                        [dict(hd=hd, jcd=jcd, rno=rno, n=len(otd),
+                              size=ot.LAST.get('size', ''), memo=ot.LAST.get('memo', ''))])
+            if not otd and ot.LAST.get('html'):
+                save_sample(hd, f'oriten_{jcd:02d}', ot.LAST['html'])
+    except Exception as e:
+        print('記録できない', e)
     wxy = (np.nan, np.nan)
     if bf:
         nm = bfile.img_dir(jcd, bf[0].get('wind_img'))

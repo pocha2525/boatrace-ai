@@ -72,19 +72,31 @@ def add_hist(df, root):
     return add_rel(df, ['date', 'venue', 'race'])
 
 
+LAST = {}
+
+
 def fetch(get, jcd, rno, hd):
-    """予想用：その場の公式サイトから読む → {艇番: (一周, まわり足, 直線)}。出していない場は {}"""
+    """予想用：その場の公式サイトから読む → {艇番: (一周, まわり足, 直線)}。出していない場は {}
+    読めた・読めなかったの理由は LAST['memo'] に残す"""
     u = URLS.get(jcd)
+    LAST.clear()
     if not u:
+        LAST['memo'] = '公表なし/未対応'
         return {}
-    r = get(u.format(d=hd, r=rno, r2=f'{rno:02d}'), tries=1)
+    url = u.format(d=hd, r=rno, r2=f'{rno:02d}')
+    LAST['url'] = url
+    r = get(url, tries=1)
     if r is None or not r.content:
+        LAST['memo'] = '取得できず'
         return {}
     raw = r.content
+    LAST['size'] = len(raw)
     try:
         html = raw.decode('utf-8')
     except UnicodeDecodeError:
         html = raw.decode('cp932', errors='replace')
+    LAST['html'] = html
     from .parse import parse_page
-    rows, _ = parse_page(html)
+    rows, memo = parse_page(html)
+    LAST['memo'] = memo
     return {x['lane']: (x.get('lap'), x.get('turn'), x.get('straight')) for x in rows}
