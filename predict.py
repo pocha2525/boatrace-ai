@@ -289,6 +289,12 @@ def predict(bst, lk, jcd, rno, hd, strict=True, deadline=None):
     d['in_d'] = one.iloc[0] if len(one) else np.nan
     if strict:
         LAST['features_observed_at'] = snapshot_features(d, hd, jcd, rno, bst, lk.get('_model_ids'))
+        LAST['shadow'] = None
+        try:
+            import profit_gate
+            LAST['shadow'] = profit_gate.predict_frame(d, MODEL)
+        except Exception as e:
+            print('候補の並行予測を保留', type(e).__name__)
     w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]
     w = w / w.sum()
     t2 = t2 * 2 / t2.sum()
@@ -529,7 +535,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
                               tri_probs(pr), om, lk.get('_model_ids'),
                               dict(min_prob=MIN_PROB, ev1=EV_TH, ev2=EV_TH2,
                                    max_bets=MAX_BETS, safe_min=SAFE_MIN),
-                              LAST.get('features_observed_at'))
+                              LAST.get('features_observed_at'), shadow=LAST.get('shadow'))
     except (OSError, ValueError, TypeError) as e:
         print('オッズ検証記録を保存できない', type(e).__name__)
     res = combos(pr, om)  # 当たりやすい順

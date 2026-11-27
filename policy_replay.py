@@ -33,7 +33,7 @@ def select(probabilities, odds, min_prob=.12, ev1=1., ev2=.8, max_bets=2):
     return [ranked[0][0]]+[k for k, q, o in ranked[1:max_bets] if q*o >= ev2]
 
 
-def capture(logs, hd, jcd, rno, deadline, started, observed, probabilities, odds, model_ids, settings, features_observed_at=None):
+def capture(logs, hd, jcd, rno, deadline, started, observed, probabilities, odds, model_ids, settings, features_observed_at=None, shadow=None):
     p, o = numbers(probabilities, True), numbers(odds)
     full = len(p) == 120 and len(o) == 120 and abs(sum(p.values())-1) < 1e-6
     verified = full and started <= observed and observed <= deadline-datetime.timedelta(minutes=settings.get('safe_min', 2))
@@ -42,6 +42,14 @@ def capture(logs, hd, jcd, rno, deadline, started, observed, probabilities, odds
                features_observed_at=features_observed_at, model_ids=model_ids,
                asof_verified=bool(verified), complete_market=bool(full),
                probabilities=p, odds=o, policy=settings)
+    if shadow:
+        sp = numbers(shadow.get("probabilities", {}), True)
+        manifest = shadow.get("manifest", {})
+        if (len(sp) == 120 and abs(sum(sp.values())-1) < 1e-6
+                and manifest.get("baseline_ids") == model_ids
+                and manifest.get("created_at", "z") <= observed.isoformat()
+                and str(manifest.get("trained_before", "z")) <= str(hd)):
+            row["shadow"] = dict(probabilities=sp, manifest=manifest)
     os.makedirs(logs, exist_ok=True)
     with open(os.path.join(logs, f'market_{hd}.jsonl'), 'a', encoding='utf8') as f:
         f.write(json.dumps(row, ensure_ascii=False, allow_nan=False)+'\n')
@@ -73,11 +81,20 @@ def report(logs, results_for, until):
         settings = row.get('policy', {})
         base = dict(min_prob=settings.get('min_prob', .12), ev1=settings.get('ev1', 1.), ev2=settings.get('ev2', .8), max_bets=settings.get('max_bets', 2))
         policies = {'current_two': base, 'first_only': dict(base, max_bets=1), 'second_ev1': dict(base, ev2=1.)}
-        for name, policy in policies.items():
-            picks = select(row['probabilities'], row['odds'], **policy)
+        policies['four_ev1'] = dict(base, max_bets=4, ev2=1.)
+        variants = [(name, policy, row['probabilities'], row.get('model_ids', [])) for name, policy in policies.items()]
+        if row.get('shadow'):
+            variants.append(('shadow_current_two', base, row['shadow']['probabilities'], row['shadow']['manifest']['candidate_ids']))
+        for name, policy, probabilities, model_ids in variants:
+            picks = select(probabilities, row['odds'], **policy)
             settled = [settle(pick, outcome) for pick in picks]
             resolved = [x for x in settled if x[0] != 'pending']
+            actual = outcome.get('tri', '')
+            log_probability = math.log(max(probabilities.get(actual, 0), 1e-15)) if valid_pick(actual) else None
             records.append(dict(hd=hd, jcd=jcd, rno=rno, policy=name, picks=' '.join(picks),
+                                pair_id=f'{hd}-{jcd}-{rno}', observed_at=row['observed_at'],
+                                model_ids=json.dumps(model_ids,separators=(',',':')),
+                                log_probability=log_probability,
                                 bets=len(picks), pending=len(settled)-len(resolved),
                                 hits=sum(x[1] for x in resolved), refunds=sum(x[0]=='refunded' for x in resolved),
                                 investment=100*len(resolved), returned=sum(x[2] for x in resolved)))

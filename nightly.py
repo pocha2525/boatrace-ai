@@ -272,7 +272,12 @@ def challenge(df, today):
     check = evaluation.compare(c_scores, n_scores, dates, gain=MIN_GAIN)
     c_ll, n_ll, n = float(np.mean(c_scores)), float(np.mean(n_scores)), len(c_scores)
     c_hit, n_hit = float(np.mean(c_hits))*100, float(np.mean(n_hits))*100
-    win = check['approved'] and n_hit >= c_hit
+    quality_passed = check['approved'] and n_hit >= c_hit
+    import profit_gate
+    if quality_passed:
+        profit_gate.stage(MODEL, cand_dir, temperature, True, cut, now_jst().isoformat())
+    win = False  # Promotion requires subsequent paired market returns.
+    check['reason'] += '／締切前オッズによる候補の新規収支確認待ち'
     # Consume even a failed comparison: repeated tries must not reuse holdout.
     evaluation.consume(state_path, holdout['date'].max())
     imp = {}
@@ -289,30 +294,6 @@ def challenge(df, today):
                top=' '.join(k for k, _ in top), champ_ll=round(c_ll, 4), cand_ll=round(n_ll, 4),
                champ_hit=round(c_hit, 1), cand_hit=round(n_hit, 1),
                adopted=int(win))
-    if win:
-        arc = os.path.join(MODEL, 'archive', f'{now_jst():%Y%m%d_%H%M%S}')
-        os.makedirs(arc, exist_ok=True)
-        import json
-        calibration = os.path.join(MODEL, 'calibration.json')
-        if os.path.exists(calibration):
-            shutil.copy(calibration, arc)
-        else:
-            with open(os.path.join(arc, 'calibration.json'), 'w') as f:
-                json.dump({'temperature': 1.0}, f)
-        for y in TARGETS:
-            shutil.copy(os.path.join(MODEL, f'model_{y}.txt'), arc)
-            shutil.copy(os.path.join(cand_dir, f'model_{y}.txt'),
-                        os.path.join(MODEL, f'model_{y}.txt'))
-        import json
-        with open(os.path.join(MODEL, 'calibration.json'), 'w') as f:
-            json.dump({'temperature': temperature, 'trained_before': cut,
-                       'holdout_until': int(holdout['date'].max())}, f)
-        now = now_jst()
-        with open(os.path.join(MODEL, 'trained_at.txt'), 'w') as f:
-            f.write(f'{now:%Y-%m-%d %H:%M} JST / 学習対象 {cut} より前 / {len(X2)}特徴量\n')
-        with open(os.path.join(MODEL, 'history.csv'), 'a', encoding='utf-8') as f:
-            f.write(f'{now:%Y%m%d%H%M},v{now:%m%d} 夜間更新,'
-                    f'学習〜{cut}前日 / 直近{EVAL_DAYS}日 当てはまり{c_ll:.4f}→{n_ll:.4f}\n')
     shutil.rmtree(cand_dir, ignore_errors=True)
     return res
 
@@ -343,11 +324,15 @@ def main():
         raise SystemExit(1)
     df = prepare(df, rc)
     last = int(df['date'].max())
+    import profit_gate
+    profit_result = profit_gate.review(MODEL, 'logs', now.isoformat())
+    print('候補モデルの収支確認:', profit_result['reason'])
     write_cur(df)
     setsu.write_tables(df, MODEL)
     extra.write_tables(df, MODEL, f'{today:%Y%m%d}')
     lines = [f'選手・モーターの成績表と今節の成績表を {last // 10000}/{last // 100 % 100}/'
              f'{last % 100} までの結果で更新しました（{len(df):,}走）']
+    lines.append('候補モデルの収支確認: ' + profit_result['reason'] + ('（モデルを採用・旧版保存済み）' if profit_result['approved'] else ''))
     hot = setsu.hot_list(setsu.load_tables(MODEL), f'{today:%Y%m%d}')
     if hot:
         names = {}
@@ -365,7 +350,9 @@ def main():
     row = dict(date=f'{today:%Y%m%d}', run_at=f'{now:%H:%M}', data_until=last,
                starts=len(df), cut='', races='', champ_ll='', cand_ll='',
                champ_hit='', cand_hit='', adopted='')
-    if full:
+    if full and os.path.exists(os.path.join(MODEL, 'shadow', 'manifest.json')):
+        lines.append('固定候補の収支比較を継続中。比較中の候補を作り直す学習は省略します。')
+    elif full:
         try:
             r = challenge(add_all(df, rc), today)
             row.update({k: v for k, v in r.items() if k in row})
@@ -381,7 +368,7 @@ def main():
             lines.append(f'  当てはまり 今{r["champ_ll"]} → 新{r["cand_ll"]}（大きいほど良い）')
             lines.append(f'  本命の的中率 今{r["champ_hit"]}% → 新{r["cand_hit"]}%')
             lines.append('  → 新しいモデルに入れ替えました（前のモデルは保存済み）'
-                         if r['adopted'] else '  → 良くならなかったので、今のモデルのままです')
+                         if r['adopted'] else '  → 本番モデル維持：' + r.get('promotion_reason', '新規収支確認待ち'))
         except Exception as e:
             lines.append(f'新しいモデルの比較に失敗（今のモデルのまま）：{e!r}')
     try:

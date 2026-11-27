@@ -260,6 +260,12 @@ def main():
         policy_replay.report(LOGS, results_for, hd)
     except Exception as e:
         print('締切前オッズの再検証を保留', type(e).__name__)
+    manual_summary = None
+    try:
+        import manual_forecasts
+        manual_summary = manual_forecasts.report(LOGS, results_for, hd)
+    except Exception as e:
+        print('手動予想比較を保留', type(e).__name__)
     all_bets = []
     daily = []
     races_total = 0
@@ -331,6 +337,10 @@ def main():
     by_rank.to_csv(os.path.join(LOGS, 'by_rank.csv'), index=False)
 
     lines = []
+    if manual_summary is not None:
+        for r in manual_summary.itertuples():
+            if r.investment > 0:
+                lines.append(f'ChatGPT記録済予想 {r.policy}: {r.resolved_races}件 回収{r.roi_pct:.1f}%（AI全体と母集団は異なる）')
     pending_total = int(dd['未確定点数'].sum())
     if pending_total:
         lines.append(f'未確定{pending_total}点は集計保留（表示成績は確定分のみ）')
