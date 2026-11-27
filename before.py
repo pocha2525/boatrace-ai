@@ -80,6 +80,8 @@ def parse(html, hd, jcd, rno):
 
 
 def add_rel(d, keys=None):
+    if 'ex_st' not in d:
+        d['ex_st'] = np.nan
     g = d.groupby(keys) if keys else None
     if g is not None:
         d['ex_st_rank'] = g['ex_st'].rank()

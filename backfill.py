@@ -21,10 +21,34 @@ DONE = os.path.join(ROOT, 'done.txt')
 BUDGET = int(os.environ.get('BF_BUDGET', '3000'))
 
 
+def complete_races(path):
+    """6艇の展示ST・タイムがそろったレースだけ取得済みとする。"""
+    if not os.path.exists(path):
+        return set()
+    h = pd.read_csv(path).drop_duplicates(['jcd', 'rno', 'boat'], keep='last')
+    if not {'ex_st', 'tenji'} <= set(h.columns):
+        return set()
+    out = set()
+    for key, g in h.groupby(['jcd', 'rno']):
+        if set(g['boat']) == set(range(1, 7)) and g[['ex_st', 'tenji']].notna().all().all():
+            out.add(tuple(map(int, key)))
+    return out
+
+
 def done_days():
+    # 過去の「試行済み」を完了とした記録も、保存データから再確認する。
     if not os.path.exists(DONE):
         return set()
-    return set(open(DONE).read().split())
+    out = set()
+    for hd in open(DONE).read().split():
+        d = datetime.datetime.strptime(hd, '%Y%m%d').date()
+        if not os.path.exists(k_path(d)):
+            continue
+        _, races = read_k(k_path(d))
+        expected = {(r['venue'], r['race']) for r in races}
+        if expected and expected <= complete_races(before.path(ROOT, hd)):
+            out.add(hd)
+    return out
 
 
 def one(args):
@@ -48,11 +72,8 @@ def main(budget=BUDGET):
             d -= datetime.timedelta(days=1)
             continue
         _, races = read_k(k_path(d))
-        have = set()
         p = before.path(ROOT, hd)
-        if os.path.exists(p):
-            h = pd.read_csv(p)
-            have = set(zip(h['jcd'], h['rno']))
+        have = complete_races(p)
         todo = [(hd, r['venue'], r['race']) for r in races
                 if (r['venue'], r['race']) not in have]
         todo = todo[:budget - used]
@@ -63,10 +84,9 @@ def main(budget=BUDGET):
         before.append(ROOT, rows)
         ok = sum(1 for r in res if r)
         print(hd, '読んだ', len(todo), '取れた', ok)
-        # 実際に読めたレースが9割5分以上のときだけ「その日は完了」にする
-        # （読めなかったレースは、次の回にもう一度読む）
-        got = len(have) + ok
-        if len(have) + len(todo) >= len(races) and got >= 0.95 * len(races):
+        expected = {(r['venue'], r['race']) for r in races}
+        successful = complete_races(p)
+        if expected and expected <= have | successful:
             with open(DONE, 'a') as f:
                 f.write(hd + '\n')
             got_days.append(hd)
@@ -110,8 +130,7 @@ def comments(budget=CM_BUDGET):
                 got += bool(rows)
                 cm.append(CM_ROOT, hd, v, rno, rows)
                 time.sleep(1.0)
-            # 全レースを試し、8割以上読めたときだけ完了（コメントが無いレースもあるため）
-            if used < budget and got >= 0.8 * len(rs):
+            if got == len(rs):
                 with open(CM_DONE, 'a') as f:
                     f.write(key + '\n')
             print('コメント', key, got, '/', len(rs))

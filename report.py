@@ -53,7 +53,8 @@ def day_bets(hd):
     bets = log[log['pick'].fillna('') != ''].copy()
     bets = bets.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']],
                       on=['jcd', 'rno'], how='left')
-    bets = bets[bets['tri'].notna()]  # 中止・返還は除く
+    pending = int(bets['tri'].isna().sum())
+    bets = bets[bets['tri'].notna()].copy()  # 未確定は的中・不的中にしない
     bets['prob'] = pd.to_numeric(bets['prob'], errors='coerce')
     bets = bets.sort_values(['jcd', 'rno', 'prob'],
                             ascending=[True, True, False])
@@ -62,6 +63,7 @@ def day_bets(hd):
     bets['モデル'] = [version_of(r, hist) for _, r in bets.iterrows()]
     bets['hit'] = (bets['pick'] == bets['tri']).astype(int)
     bets['ret'] = bets['tri_pay'].where(bets['hit'] == 1, 0)
+    bets.attrs['pending'] = pending
     return bets, races
 
 
@@ -125,7 +127,7 @@ def fmt(n_races, b):
 
 
 JUDGED = os.path.join(LOGS, 'judged_all.csv')
-NO_TRI = '不成立・返還'   # レースはあったが3連単の結果が無い（中止・返還など）
+NO_TRI = '3連単未確認'   # 結果行はあるが、返還/中止は組番の欠損だけで断定しない
 MISSING = '結果未取得'    # 成績ファイルにまだ無い（あとでもう一度照合する）
 JUDGED_COLS = ['日付', '締切', '会場', 'R', '判定', '朝の候補',
                '本命', '本命オッズ', '本命期待値', '2番手', '2番手オッズ', '2番手期待値',
@@ -176,7 +178,7 @@ def judged_day(h):
         '2番手オッズ': t['odds'].map(lambda s: part(s, 1)),
         '2番手期待値': t['evs'].map(lambda s: part(s, 1)),
         '結果': t['tri'].fillna(MISSING),
-        '払戻': t['tri_pay'].fillna(0).astype(int),
+        '払戻': t['tri_pay'].map(lambda x: str(int(x)) if pd.notna(x) else ''),
         '見送り理由': t['reason'].fillna('').where(t['status'] != '受付成功', ''),
     })
     keys = list(zip(t['jcd'], t['rno']))
@@ -209,7 +211,7 @@ def update_judged(hd):
             old = None   # 列が増えたので全部作り直す
         else:
             # 古い表記「中止・返還」と「結果未取得」が残る日は、照合し直す
-            redo = set(old.loc[old['結果'].isin(['中止・返還', MISSING]), '日付'])
+            redo = set(old.loc[old['結果'].isin(['中止・返還', '不成立・返還', '未確定', NO_TRI, MISSING]) | old['結果'].isna(), '日付'])
             keep = old[old['日付'].isin(redo)]   # 照合し直せなかったら元に戻す
             old = old[~old['日付'].isin(redo)]
             done = {d.replace('/', '') for d in old['日付']}
@@ -229,6 +231,9 @@ def update_judged(hd):
             new.append(keep[keep['日付'].str.replace('/', '') == h])
     if not new:
         return
+    if old is not None:
+        refreshed = {d for x in new for d in x['日付']}
+        old = old[~old['日付'].isin(refreshed)]
     parts = ([old] if old is not None else []) + [x.astype(str) for x in new]
     pd.concat(parts, ignore_index=True)[JUDGED_COLS].to_csv(JUDGED, index=False)
     print('判定の記録に追加', sum(len(x) for x in new), '行')
@@ -263,6 +268,7 @@ def main():
         daily.append({
             '日付': f'{h[:4]}/{h[4:6]}/{h[6:]}',
             '予想レース数': n_races,
+            '未確定点数': b.attrs.get('pending', 0),
             '点数': n,
             '的中数': int(b['hit'].sum()),
             '投資': n * 100,
@@ -303,6 +309,9 @@ def main():
     by_rank.to_csv(os.path.join(LOGS, 'by_rank.csv'), index=False)
 
     lines = []
+    pending_total = int(dd['未確定点数'].sum())
+    if pending_total:
+        lines.append(f'未確定{pending_total}点は集計保留（表示成績は確定分のみ）')
     if day is not None:
         lines.append(f'{hd[4:6]}/{hd[6:]}: ' + fmt(races_day, day))
     lines.append('累計: ' + fmt(races_total, ab.rename(

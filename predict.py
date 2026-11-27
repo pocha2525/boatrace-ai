@@ -3,6 +3,8 @@ import os
 import re
 import csv
 import datetime
+import threading
+from functools import wraps
 from itertools import permutations
 
 import pandas as pd
@@ -20,7 +22,7 @@ import cm
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, get_direct, page, notify, add_rel, send_notify,
-                    SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE)
+                    SENT_OK, SENT_FAIL, SENT_UNKNOWN, SENT_NONE, ThreadState)
 
 WINDOW_MIN = 15      # 締切まで何分以内のレースを予想するか（11/24 13→15）
 # 本命モード：本命がはっきりしたレースで、当たりやすい3連単を最大2点
@@ -29,9 +31,8 @@ EV_TH = 1.0          # 一番当たりやすい買い目の期待値がこれ以
 EV_TH2 = 0.8         # 2点目（確率2位）の期待値がこれ以上なら追加（11/25 1.0→0.8）
 MIN_PROB = 0.12      # 一番当たりやすい買い目の確率がこれ以上
 MAX_BETS = 2         # 1レースあたりの最大点数
-LAST = {}  # 直前に予想したレースの進入・確率（通知の表示用）
-# レースごとの取得したページ（朝の候補は4並列なので、レースごとに分けて持つ）
-HTML = {}
+LAST = ThreadState()  # レース処理の状態はスレッドごとに分離
+HTML = ThreadState()  # Claude修正のレース別ページも保持
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
             'prob', 'odds', 'ev', 'run_at']
 
@@ -119,8 +120,8 @@ def race_info(jcd, rno, hd):
     if sorted(crs) != [1, 2, 3, 4, 5, 6]:
         crs = {}
     w = re.findall(r'LabelData">\s*([\d.]+)\s*(m|cm)\s*<', b)
-    wind = next((float(v) for v, u in w if u == 'm'), 0.0)
-    wave = next((float(v) for v, u in w if u == 'cm'), 0.0)
+    wind = next((float(v) for v, u in w if u == 'm'), float('nan'))
+    wave = next((float(v) for v, u in w if u == 'cm'), float('nan'))
     LAST['html_before'] = b
     HTML[(jcd, rno)] = {'before': b}
     rl = page('racelist', jcd, rno, hd)
@@ -177,6 +178,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     """各艇の 1着・2着・3着 の確率を返す: (艇番, w, q2, q3)
     strict=True（締切前）：展示タイム・進入が6艇分そろわなければ見送り
     strict=False（朝の候補）：進入は枠なりとして暫定で計算"""
+    LAST.clear()
     ids, tj, crs, wind, wave, mot, rl_ids = race_info(jcd, rno, hd)
     reason = check_race(ids, tj, crs, mot, rl_ids, strict)
     LAST['skip'] = reason
@@ -192,14 +194,14 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
         print('出走表の数字を読めない', e)
         rl = {}
     try:
-        bf = before.parse(pages.get('before') or '', hd, jcd, rno)
+        bf = before.parse(pages.get('before') or '', hd, jcd, rno) if strict else []
         if strict:
             before.append(LOGS, bf)   # 直前情報を記録（あとで学習に使う）
     except Exception as e:
         print('直前情報を読めない', e)
         bf = []
     try:
-        otd = ot.fetch(get_direct, jcd, rno, hd)   # オリジナル展示（一周・まわり足・直線）
+        otd = ot.fetch(get_direct, jcd, rno, hd) if strict else {}   # オリジナル展示（一周・まわり足・直線）
         if strict and otd:
             append_rows(os.path.join(LOGS, f'oriten_{hd}.csv'),
                         ['hd', 'jcd', 'rno', 'boat', 'lap', 'turn', 'straight'],
@@ -220,7 +222,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     except Exception as e:
         print('記録できない', e)
     try:
-        cmd = cm.fetch(get_direct, jcd, rno, hd, pages.get('racelist') or '')   # 選手コメント
+        cmd = cm.fetch(get_direct, jcd, rno, hd, pages.get('racelist') or '') if strict else {}
         if strict:
             cm.append(LOGS, hd, jcd, rno, cmd)
     except Exception as e:
@@ -339,7 +341,8 @@ def read_log(path):
     if not os.path.exists(path):
         return None
     t = pd.read_csv(path, dtype=str)
-    t = t[t['hd'] != 'hd']
+    key = 'hd' if 'hd' in t.columns else 'notify_id'
+    t = t[t[key] != key]
     return t
 
 
@@ -360,6 +363,18 @@ def notify_path(hd):
     return os.path.join(LOGS, f'notify_{hd}.csv')
 
 
+_LOG_LOCK = threading.RLock()
+
+
+def locked_log(fn):
+    @wraps(fn)
+    def wrapped(*args, **kwargs):
+        with _LOG_LOCK:
+            return fn(*args, **kwargs)
+    return wrapped
+
+
+@locked_log
 def append_rows(path, cols, rows):
     os.makedirs(LOGS, exist_ok=True)
     new = not os.path.exists(path)
@@ -417,6 +432,7 @@ def send_skip_notice(name, rno, dl, nid, reason, res):
     return send_notify(f'見送り {name} {rno}R', '\n'.join(lines))['status']
 
 
+@locked_log
 def save_entries(hd, jcd, rno, ids):
     """出走の記録（当日の前走結果を作るため）。1レース1回だけ書く"""
     p = os.path.join(LOGS, f'entries_{hd}.csv')
@@ -559,7 +575,6 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
 RESULT_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'tri', 'tri_pay',
                'got_at']
 RESULT_WAIT_MIN = 12    # 締切からこの分数たったら結果を見に行く
-RESULT_GIVEUP_MIN = 180  # 締切からこの分数たっても取れなければあきらめる
 RESULT_MAX = 8          # 1回の実行で見に行く最大レース数（時間をかけすぎない）
 TRI_PAT = re.compile(r'3連単\s*([1-6])\s*-\s*([1-6])\s*-\s*([1-6])\s*'
                      r'[¥￥]\s*([\d,]+)')
@@ -589,6 +604,7 @@ def update_results(hd, now):
     got = set()
     r = read_log(result_path(hd))
     if r is not None:
+        r = r[r['tri'].str.fullmatch(r'[1-6]-[1-6]-[1-6]', na=False)]
         got = {(int(j), int(n)) for j, n in zip(r['jcd'], r['rno'])}
     todo = []
     for _, x in t.iterrows():
@@ -611,9 +627,9 @@ def update_results(hd, now):
         except Exception as e:
             print('結果を読めない', jcd, rno, e)
             res = None
-        if res is None and past < RESULT_GIVEUP_MIN:
+        if res is None:
             continue  # まだ出ていない。次の回にもう一度
-        tri, pay = res if res else ('取得できず', '')
+        tri, pay = res
         rows.append(dict(hd=hd, jcd=jcd, venue=venue, rno=rno, deadline=dl,
                          tri=tri, tri_pay=pay, got_at=f'{now_jst():%H:%M}'))
     if rows:
