@@ -1,0 +1,33 @@
+// JavaScript Document
+
+/* ***********************
+スマートフォンサイトへの誘導
+************************ */
+/* 常滑では施行者様より確認画面を表示しないでほしいと要望のためコメントアウト	*/
+var ua = navigator.userAgent;		//ユーザーエージェント
+var host = window.location.host;	//ホスト
+var referrer = document.referrer;	//リファラー
+if ( ua.indexOf("iPhone") > 0 || ua.indexOf("iPod") > 0 || (ua.indexOf("Android") > 0 && ua.indexOf("Mobile")>0) ) {
+	if(referrer.indexOf(host)<0){
+		//if(confirm("スマートフォン用サイトを表示しますか？")) {
+			location.href = "/sp/";
+		//}
+	}
+}
+
+
+$(function(){
+
+	const el  = document.getElementsByClassName("c_header_menu_wrapper");
+	el[0].addEventListener("touchstart", function() {}, true);
+
+	/////////////////////////////////////////////////
+	// ページトップへスクロール
+	/////////////////////////////////////////////////
+	var pt = $("#js-scroll-top");
+	pt.on("click",function(e){
+		e.stopPropagation();
+		$("html,body").animate({"scrollTop" : 0}, 500);
+	});
+	
+});

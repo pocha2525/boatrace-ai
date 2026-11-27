@@ -1,0 +1,257 @@
+
+// ====================================================
+// 埼玉支部 HEADLINES 他場での活躍選手 他場での出場選手
+// ====================================================
+
+var racerActiveBlock = null;
+var racerParticipationBlock = null;
+
+// ファイルロード時に関数を読み込む
+$(document).ready(function () {
+    // テーブルの値の変更はクリック時に行う ファイルロード時に呼び出しても動作しない
+    // 埼玉支部HEADLINESのエリアを更新する
+    getXmlRacerActive();
+    getXmlRacerParticipation();
+
+
+    // クリックイベントは、スライドを実装するうえで必要になる可能性があるのでコメントアウトで残しておく
+    // $(document).on("click",  "#act01-03", function(){
+    //   getXmlRaceTableAll3();
+    // });
+
+});
+
+// 他場での活躍選手xml取得
+function getXmlRacerActive() {
+    download('./xml/racer_active.xml', 'xml', function (xml) {
+        racerActiveBlock = xml;
+        setDataRacerActive();
+    });
+}
+
+// 他場での出場選手xml取得
+function getXmlRacerParticipation() {
+    download('./xml/racer_participation.xml', 'xml', function (xml) {
+        racerParticipationBlock = xml;
+        setDataRacerParticipation();
+    });
+}
+
+// 他場での活躍選手のデータをセット
+// ToDo 複数のデータがあった場合、スライドで表示させるかどれか一つをランダムで表示するかは未定
+function setDataRacerActive() {
+
+    let html = "<div id='tajyo1' class='carousel slide tajyo1' data-ride='carousel'>"
+       + "<h4 class='tajyo_h'><span class='tajyo_t yellow'>他場での<br class='sm_hidden'>活躍</span></h4>"
+       + "</div>";
+    $(html).replaceAll('.tajyo1');
+
+    $(racerActiveBlock).find("table").find("record").each(function (index) {
+
+      let jouName = 'ボートレース' + $(this).find("jname").text();
+      let title = $(this).find("title").text();
+      let grade = $(this).find("grade").text();
+      let playerName = $(this).find("name").text();
+      let result = $(this).find("kbnname").text();
+      let pictureUrl = 'https://www.boatrace.jp/racerphoto/' + $(this).find("toban").text() + '.jpg';
+      let gradeNum = $(this).find("gcd").text();
+      // gradeによってcssで装飾するiconのクラスを変更 G1ならicon_G1,それ以外はicon_other
+      var gradeIcon = gradeNum == 1 ? 'icon_G1' : 'icon_other';
+      switch(gradeNum) {
+        case "0":
+          gradeIcon = 'icon_SG';
+          grade = 'SG';
+        break;
+        case "1":
+        case "10":
+          gradeIcon = 'icon_G1';
+          grade = 'GI';
+        break;
+        case "2":
+          gradeIcon = 'icon_G2';
+          grade = 'GⅡ';
+        break;
+        case "3":
+        case "6":
+        case "11":
+          gradeIcon = 'icon_G3';
+          grade = 'GⅢ';
+        break;
+        case "4":
+        case "7":
+        case "8":
+        case "9":
+          gradeIcon = 'icon_other';
+          grade = '一般';
+        break;
+        default:
+          gradeIcon = 'icon_other';
+          grade = '一般';
+        break;
+      }
+
+      // HTMLを生成 
+      // ToDo class="tajyo_syu icon_G1"など、モックに記述されていたクラス名をそのまま埋め込んでいる個所があるので必要があれば修正する
+      if(index==0) {
+        let html = "<div id='tajyo1' class='carousel slide tajyo1' data-ride='carousel'>"
+           + "<h4 class='tajyo_h'><span class='tajyo_t yellow'>他場での<br class='sm_hidden'>活躍</span></h4>"
+           + "<ol class='carousel-indicators'>"
+           + "<li data-target='#tajyo1' data-slide-to='0' class='active'></li>"
+           + "</ol>"
+           + "<div class='carousel-inner'>"
+           + "<div class='carousel-item active'>"
+             +  "<div class='tajyo_wrap'>"
+             +  "<div class='tajyo_info'>"
+               +   "<p class='tajyo_race'>"
+                 +  "<span class='tajyo_race_jo b'>" + jouName + "</span>"
+                 +  "<span class='tajyo_syu " + gradeIcon + "'>" + grade + "</span>"
+                 +  "<span class='tajyo_race_name'>" + title + "</span>"
+                 +  "<span class='tajyo_race_player'>" + playerName + "選手</span>"
+                 +  "<span class='tajyo_race_seiseki'>" + result + "</span>"
+               +    "</p>"
+               + "</div>"
+              + "<div class='tajyo_photo'><img src='" + pictureUrl + "' alt='" + playerName + "'></div>"
+            + "</div>"
+          + "</div>"
+        + "</div>"
+        + "<a class='carousel-control-prev' href='#tajyo1' role='button' data-slide='prev'>"
+        +    "<span class='carousel-control-prev-icon' aria-hidden='true'></span>"
+        +    "<span class='sr-only'>Previous</span>"
+        +  "</a>"
+        +  "<a class='carousel-control-next' href='#tajyo1' role='button' data-slide='next'>"
+        +   "<span class='carousel-control-next-icon' aria-hidden='true'></span>"
+        +    "<span class='sr-only'>Next</span>"
+        +  "</a>"
+       + "</div>";
+        
+        $(html).replaceAll('.tajyo1');
+      } else {
+        $(".tajyo1").find("ol[class='carousel-indicators']").append("<li data-target='#tajyo1' data-slide-to='" + index + "'></li>");
+        
+        $(".tajyo1").find("div[class='carousel-inner']").append("<div class='carousel-item'>"
+             + "<div class='tajyo_wrap'>"
+             + "<div class='tajyo_info'>"
+               + "<p class='tajyo_race'>"
+                 + "<span class='tajyo_race_jo b'>" + jouName + "</span>"
+                 + "<span class='tajyo_syu " + gradeIcon + "'>" + grade + "</span>"
+                 + "<span class='tajyo_race_name'>" + title + "</span>"
+                 + "<span class='tajyo_race_player'>" + playerName + "選手</span>"
+                 + "<span class='tajyo_race_seiseki'>" + result + "</span>"
+               + "</p>"
+             + "</div>"
+             + "<div class='tajyo_photo'><img src='" + pictureUrl + "' alt='" + playerName + "'></div>"
+           + "</div>"
+         + "</div>");
+      }
+      
+    });
+}
+
+// 他場での出場選手のデータをセット
+// ToDo 複数のデータがあった場合、スライドで表示させるかどれか一つをランダムで表示するかは未定
+function setDataRacerParticipation() {
+
+    let html = "<div id='tajyo2' class='carousel slide tajyo2' data-ride='carousel'>"
+         + "<h4 class='tajyo_h'><span class='tajyo_t'>他場<br class='sm_hidden'>"
+             +    "あっせん</span></h4>"
+       + "</div>";
+    $(html).replaceAll('.tajyo2');
+
+    $(racerParticipationBlock).find("table").find("record").each(function (index) {
+
+      let jouName = 'ボートレース' + $(this).find("jname").text();
+      let title = $(this).find("title").text();
+      let grade = $(this).find("grade").text();
+      let playerName = $(this).find("name").text();
+      let pictureUrl = 'https://www.boatrace.jp/racerphoto/' + $(this).find("toban").text() + '.jpg';
+      let gradeNum = $(this).find("gcd").text();
+      // gradeによってcssで装飾するiconのクラスを変更 G1ならicon_G1,それ以外はicon_other
+      var gradeIcon = gradeNum == 1 ? 'icon_G1' : 'icon_other';
+      switch(gradeNum) {
+        case "0":
+          gradeIcon = 'icon_SG';
+          grade = 'SG';
+        break;
+        case "1":
+        case "10":
+          gradeIcon = 'icon_G1';
+          grade = 'GI';
+        break;
+        case "2":
+          gradeIcon = 'icon_G2';
+          grade = 'GⅡ';
+        break;
+        case "3":
+        case "6":
+        case "11":
+          gradeIcon = 'icon_G3';
+          grade = 'GⅢ';
+        break;
+        case "4":
+        case "7":
+        case "8":
+        case "9":
+          gradeIcon = 'icon_other';
+          grade = '一般';
+        break;
+        default:
+          gradeIcon = 'icon_other';
+          grade = '一般';
+        break;
+      }
+      
+      if(index==0) {
+        // HTMLを生成 
+        // ToDo class="tajyo_syu icon_other"など、モックに記述されていたクラス名をそのまま埋め込んでいる個所があるので必要があれば修正する
+        let html = "<div id='tajyo2' class='carousel slide tajyo2' data-ride='carousel'>"
+             + "<h4 class='tajyo_h'><span class='tajyo_t'>他場<br class='sm_hidden'>"
+             +    "あっせん</span></h4>"
+             + "<ol class='carousel-indicators'>"
+               + "<li data-target='#tajyo2' data-slide-to='0' class='active'></li>"
+             + "</ol>"
+             + "<div class='carousel-inner'>"
+               + "<div class='carousel-item active'>"
+                 + "<div class='tajyo_wrap'>"
+                   + "<div class='tajyo_info'>"
+                     + "<p class='tajyo_race'>"
+                       + "<span class='tajyo_race_jo b'>" + jouName + "</span>"
+                       + "<span class='tajyo_syu " + gradeIcon + "'>" + grade + "</span>"
+                       + "<span class='tajyo_race_name'>" + title + "</span>"
+                       + "<span class='tajyo_race_player'>" + playerName + "選手</span>"
+                     + "</p>"
+                   + "</div>"
+                   + "<div class='tajyo_photo'><img src='" + pictureUrl + "' alt='" + playerName + "'></div>"
+                 + "</div>"
+               + "</div>"
+             + "</div>"
+             + "<a class='carousel-control-prev' href='#tajyo2' role='button' data-slide='prev'>"
+               + "<span class='carousel-control-prev-icon' aria-hidden='true'></span>"
+               + "<span class='sr-only'>Previous</span>"
+             + "</a>"
+             + "<a class='carousel-control-next' href='#tajyo2' role='button' data-slide='next'>"
+               + "<span class='carousel-control-next-icon' aria-hidden='true'></span>"
+               + "<span class='sr-only'>Next</span>"
+             + "</a>"
+           + "</div>";
+        
+        $(html).replaceAll('.tajyo2');
+      } else {
+        $(".tajyo2").find("ol[class='carousel-indicators']").append("<li data-target='#tajyo2' data-slide-to='" + index + "'></li>");
+        
+        $(".tajyo2").find("div[class='carousel-inner']").append("<div class='carousel-item'>"
+                 + "<div class='tajyo_wrap'>"
+                   + "<div class='tajyo_info'>"
+                     + "<p class='tajyo_race'>"
+                       + "<span class='tajyo_race_jo b'>" + jouName + "</span>"
+                       + "<span class='tajyo_syu " + gradeIcon + "'>" + grade + "</span>"
+                       + "<span class='tajyo_race_name'>" + title + "</span>"
+                       + "<span class='tajyo_race_player'>" + playerName + "選手</span>"
+                     + "</p>"
+                   + "</div>"
+                   + "<div class='tajyo_photo'><img src='" + pictureUrl + "' alt='" + playerName + "'></div>"
+                 + "</div>"
+               + "</div>");
+      }
+     
+    });
+}

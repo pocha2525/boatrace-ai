@@ -1,0 +1,1348 @@
+@charset "utf-8";
+
+/* ===========================================
+ * トップページ
+ * ======================================== */
+main {
+	width: 100%;
+}
+
+.top_box_content {
+	box-shadow: 0px 3px 6px #00000029;
+}
+
+.top_sub_ttl_color {
+	color: var(--MAIN_COLOR, #2160AF);
+}
+
+/* ===========================================
+ * レース情報エリア
+ * ======================================== */
+.top_raceinfo_content {
+	display: flex;
+	flex-direction: column;
+	background: url(/cdn/pc/images/common/hamanako_bg1.jpg) no-repeat top center;
+	background-size: cover;
+	padding-top: 24px;
+	gap: 32px;
+}
+
+/* 薄暮時 */
+.top_raceinfo_content.hakubo{
+	background: url(/cdn/pc/images/common/hamanako_twilight1.jpg) no-repeat top center;
+	background-size: cover;
+}
+/*-------------------------
+ * 緊急お知らせの表示 
+-------------------------*/
+.top_main_caution {
+	display: flex;
+	flex-direction: column;
+	background: #FFFFFF;
+	border: 2px solid #EF0E0E;
+	font-weight: bold;
+}
+
+.top_main_caution h3 {
+	display: flex;
+	height: 52px;
+	justify-content: center;
+	align-items: center;
+	background: #EF0E0E;
+	color: #FFFFFF;
+	font-size: 22px;
+}
+
+.top_main_caution .top_caution_content {
+	padding: 22px 165px;
+	font-size: 16px;
+}
+
+/*-------------------------
+ * マーキー表示エリア
+-------------------------*/
+.top_marquee_recommend_wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.c_header_msg .c_header_msg_content {
+	display: flex;
+	background: #FFFFFF;
+	border-radius: 24px;
+	align-items: center;
+}
+
+.c_header_msg_content .c_header_msg_title {
+	display: flex;
+	width: 120px;
+	background: var(--MAIN_COLOR, #2160AF);
+	height: 40px;
+	color: #FFFFFF;
+	font-size: 16px;
+	font-weight: bold;
+	border-radius: 24px 0 0 24px;
+	align-items: center;
+	justify-content: center;
+}
+
+.c_header_msg_content .c_header_msg_marquee {
+	width: 1100px;
+	height: 40px;
+	overflow: hidden;
+	font-weight: bold;
+}
+
+.c_header_msg_content .c_header_msg_marquee p {
+	display: inline-block;
+	padding-left: 1110px;
+	min-width: 1110px;
+	line-height: 40px;
+	animation-timing-function: linear;
+	animation-iteration-count: infinite;
+	white-space: nowrap;
+}
+
+.c_header_msg_marquee p a {
+	text-decoration: underline;
+	color: inherit;
+}
+
+@keyframes marquee {
+	from {
+		transform: translate(0%);
+	}
+
+	to {
+		transform: translate(-100%);
+	}
+}
+
+/* おすすめバナー */
+.top_recommend_banner_content .top_recommend_banner_list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+
+.top_recommend_banner_content>.top_recommend_banner img {
+	display: block;
+	width: 100%;
+}
+
+.top_recommend_banner_content .top_recommend_banner_list .top_recommend_banner img {
+	display: block;
+	width: 592px;
+	height: 176px;
+	border-radius: 8px;
+}
+
+/*-------------------------
+ * レース情報エリア
+-------------------------*/
+.top_raceinfo_content .top_raceinfo_inner_content {
+	margin-bottom: 219px;
+}
+
+/* イベント情報ボタン */
+.top_raceinfo_inner_content .raceinfo_eventinfo_button_area {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.top_raceinfo_inner_content .raceinfo_eventinfo_button_area .event_button {
+	display: flex;
+	width: 181px;
+	height: 40px;
+	padding: 7px 20.36px 8px;
+	align-items: center;
+	gap: 8.62px;
+	background: var(--MAIN_COLOR, #2160AF);
+	box-shadow: 0px 3px 6px #00000029;
+	border-radius: 64px;
+}
+
+.top_raceinfo_inner_content .raceinfo_eventinfo_button_area .event_button .event_carender_img {
+	width: 23px;
+	height: 23px;
+	margin-top: 6px;
+}
+
+.top_raceinfo_inner_content .raceinfo_eventinfo_button_area .event_button .event_button_text {
+	color: #FFFFFF;
+	font-size: 17px;
+	font-weight: bold;
+}
+
+/* レース情報 */
+.top_raceinfo_wrapper {
+	position: relative;
+	display: flex;
+	gap: 24px;
+	margin-top: 16px;
+	align-items: flex-start;
+}
+
+.top_raceinfo_wrapper::after {
+	content: '';
+	position: absolute;
+	z-index: 5;
+	background: url(/cdn/pc/images/top/swacky_01.svg) no-repeat;
+	background-size: 158.94px 189.11px;
+	width: 158.94px;
+	height: 189.11px;
+	right: 10.89px;
+	bottom: -245.89px;
+}
+
+/*-------------------------
+ * レース情報エリア左側コンテンツ
+-------------------------*/
+.top_raceinfo_content .top_raceinfo_content_left {
+	width: 376px;
+	background: #FFFFFF;
+	border-radius: 16px;
+}
+
+/* ボタン エリア */
+.top_raceinfo_content_left .top_raceinfo_btn_area {
+	padding: 22px 0 24px;
+}
+
+.is_kaisai .top_raceinfo_btn_area h2 {
+	height: 40px;
+	padding: 0 24px;
+	font-size: 24px;
+	font-weight: bold;
+}
+
+/* Live エリア */
+.is_kaisai .top_raceinfo_live_area {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 22px;
+	gap: 18px;
+}
+
+.is_kaisai .top_raceinfo_live_area .top_raceinfo_ttl {
+	font-size: 28px;
+}
+
+.raceinfo_is-kaisai_haishin {
+	position: relative;
+	display: flex;
+	height: 284px;
+	align-items: center;
+	flex-direction: column;
+	padding: 20px 0 24px;
+	background: #22328E;
+}
+
+.is_kaisai .top_raceinfo_videoarea {
+	position: relative;
+	display: flex;
+	width: 328px;
+	height: 184px;
+}
+
+.is_kaisai .top_raceinfo_videoarea .js-videoarea {
+	position: absolute;
+	display: none;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	background-repeat: no-repeat;
+	background: #121212;
+	background-image: url(/cdn/pc/images/top/racelive_img01.png);
+	background-size: 328px 184px;
+	border-radius: 8px;
+}
+
+.is_kaisai .top_raceinfo_videoarea .js-videoarea.selected {
+	display: block;
+}
+
+.is_kaisai .top_raceinfo_livearea .playbtn {
+	position: absolute;
+	display: flex;
+	background-image: url(/cdn/pc/images/top/top_replay_button.svg);
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 48.02px;
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+}
+
+.is_kaisai .top_raceinfo_livearea iframe {
+	display: none;
+}
+
+.is_kaisai .top_raceinfo_livearea.play iframe {
+	display: block;
+}
+
+.top_raceinfo_content_left .top_raceinfo_livearea .playbtn:hover {
+	opacity: 0.6;
+	transition: 0.2s opacity;
+}
+
+.top_raceinfo_content_left .top_raceinfo_livearea.play .playbtn {
+	display: none;
+}
+
+.top_raceinfo_content_left .top_raceinfo_livearea .top_raceinfo_livearea_iframe {
+	border: 0 none transparent;
+	width: 100%;
+	height: 100%;
+}
+
+.top_raceinfo_content_left .top_raceinfo_youtubearea iframe {
+	width: 100%;
+	height: 100%;
+	border-radius: 8px;
+}
+
+/* リプレイボタン */
+.is_kaisai .top_raceinfo_reply_content {
+	position: absolute;
+	width: 112px;
+	height: 40px;
+	top: -20px;
+	right: 24px;
+	background: var(--MAIN_BLACK, #313131);
+	border-radius: 10px 10px 0 0;
+}
+
+.is_kaisai .top_raceinfo_reply_content .top_raceinfo_videoarea_reply {
+	position: relative;
+	display: flex;
+	margin-left: 12px;
+	height: 40px;
+	color: #FFFFFF;
+	font-size: 16px;
+	font-weight: bold;
+	background: var(--MAIN_BLACK, #313131);
+	border-radius: 10px 10px 0 0;
+	align-items: center;
+}
+
+.is_kaisai .top_raceinfo_reply_content .top_raceinfo_videoarea_reply::after {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/top_replay_button.svg) no-repeat;
+	background-size: 24px;
+	width: 24px;
+	height: 24px;
+	right: 8px;
+}
+
+.is_kaisai .top_raceinfo_livebtn .raceinfo_livebtnlist {
+	display: flex;
+	width: 328px;
+	height: 58px;
+	border-radius: 8px;
+	background: #FFFFFF;
+}
+
+.is_kaisai .top_raceinfo_livebtn .raceinfo_livebtnlist .raceinfo_livebtn {
+	display: flex;
+	width: 164px;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	color: var(--MAIN_BLACK, #313131);
+	font-size: 13px;
+	font-weight: bold;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_live {
+	border: 2px solid #E33773;
+	border-bottom: 4px solid #E33773;
+	border-radius: 8px 0 0 8px;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_live span {
+	position: relative;
+	line-height: 1;
+	padding-left: 37px;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_live span::before {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/live_prediction.svg) no-repeat;
+	background-size: 24.91px 17.7px;
+	width: 24.91px;
+	height: 17.7px;
+	top: -1.5px;
+	left: 6.86px;
+}
+
+.is_kaisai .top_raceinfo_livebtn .raceinfo_livebtnlist .raceinfo_livebtn_single {
+	width: 328px;
+}
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_live_single {
+	border-radius: 8px;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_youtube {
+	border: 2px solid #E33773;
+	border-bottom: 4px solid #E33773;
+	border-right: 3px solid #E33773;
+	border-radius: 0 8px 8px 0;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_youtube span {
+	position: relative;
+	line-height: 1;
+	padding-left: 14.6px;
+}
+
+.is_kaisai .top_raceinfo_livebtn ul .raceinfo_livebtn.raceinfo_livebtn_youtube span::before {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/live_youtube.svg) no-repeat;
+	background-size: 21.5px 17.43px;
+	width: 21.5px;
+	height: 17.43px;
+	top: -1.5px;
+	left: -22px;
+}
+
+.top_raceinfo_content_left .top_raceinfo_livebtn ul .raceinfo_livebtn.disabled {
+	background: #6A6A6A;
+}
+
+.top_raceinfo_content_left .raceinfo_btnlist {
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+	margin-top: 2px;
+	align-items: center;
+	gap: 8px;
+}
+
+.top_raceinfo_content_left .raceinfo_btnlist>li {
+	width: 328px;
+	height: 88px;
+}
+
+/* インターネット投票 */
+.top_raceinfo_content_left .raceinfo_btnlist .raceinfo_btn_net {
+	width: 100%;
+	height: 88px;
+	border-radius: 8px;
+}
+
+.top_raceinfo_content_left .raceinfo_btnlist .top_raceinfo_banner img{
+	border-radius: 8px;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin-top: 16px;
+	gap: 8px;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .par-btn01 {
+	position: relative;
+	display: flex;
+	width: 160px;
+	height: 108px;
+	flex-direction: column;
+	border: 2px solid var(--MAIN_COLOR, #2160AF);
+	border-radius: 8px;
+	align-items: center;
+	text-align: center;
+	padding-top: 16px;
+	gap: 6px;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .par-btn01::after {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/ico_circle_arrow_b_right.svg) no-repeat;
+	background-size: 16px 16px;
+	width: 16px;
+	height: 16px;
+	right: 16px;
+	top: 16px;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .par-btn01 img {
+	width: 40px;
+	height: 40px;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .par-btn01 span {
+	display: flex;
+	height: 38px;
+	color: var(--MAIN_BLACK, #313131);
+	font-size: 14px;
+	font-weight: bold;
+	line-height: 18px;
+	align-items: center;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .col-tag_new {
+	position: absolute;
+	font-size: 10px;
+	border-radius: 2px;
+	left: 1rem;
+	top: 1rem;
+	height: 2rem !important;
+	color: #FFFFFF !important;
+}
+
+/* リアルタイム水面気象状況 */
+.top_raceinfo_suimen_area {
+	display: flex;
+	flex-direction: column;
+	margin-top: 24px;
+	gap: 17px;
+}
+
+.top_raceinfo_suimen_area .sumimen_info_area {
+	display: flex;
+	width: 328px;
+	height: 184px;
+	margin: 0 auto;
+}
+
+.top_raceinfo_suimen_area .sumimen_info_area a {
+	width: 100%;
+	height: 100%;
+}
+
+.top_raceinfo_suimen_area .sumimen_info_area iframe {
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+.top_raceinfo_suimen_area .sumimen_info_area img {
+	width: 100%;
+}
+
+.top_raceinfo_btn_area .raceinfo_btn_area .col-tag_new {
+	position: absolute;
+	font-size: 1rem;
+	border-radius: 0.2rem;
+	left: 1rem;
+	top: 1rem;
+	height: 1.8rem !important;
+	color: #FFFFFF !important;
+}
+
+/* トップバナーエリア */
+.top_raceinfo_wrapper .top_raceinfo_bottom_area {
+	width: 100%;
+	padding: 24px;
+	background: var(--MAIN_COLOR, #2160AF);
+	border-radius: 0 0 16px 16px;
+}
+
+.top_raceinfo_banner_list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.top_raceinfo_banner_list li .top_raceinfo_banner,
+.top_raceinfo_banner_list li .top_raceinfo_banner img {
+	display: block;
+}
+
+.top_raceinfo_banner_list li .top_raceinfo_banner img {
+	width: 100%;
+	border-radius: 8px;
+}
+
+/*-------------------------
+ * レース情報エリア右側コンテンツ
+-------------------------*/
+.top_raceinfo_content .top_raceinfo_content_right {
+	width: 800px;
+	background: #FFFFFF;
+	border-radius: 16px;
+}
+
+/* 開催まであと〇日 */
+.top_raceinfo_content_right .raceinfo_countdown .countdown_header {
+	display: flex;
+	width: 800px;
+	height: 44px;
+	background: var(--MAIN_COLOR, #2160AF);
+	align-items: center;
+	padding: 9px 24px 9px 32px;
+	color: #FFFFFF;
+	font-size: 18px;
+	font-weight: bold;
+	border-radius: 16px 16px 0 0;
+}
+
+.top_raceinfo_content_right .raceinfo_countdown .countdown_header .countdown_day {
+	margin: 0 2px;
+	font-size: 24px;
+}
+
+/*-------------------------
+ * レース情報エリア 非開催
+-------------------------*/
+.top_raceinfo_content .is_hikaisai .top_raceinfo_content_right {
+	min-height: 864px;
+}
+
+/* 展望コンテンツ */
+.par-racetitle_group.type_2 {
+	position: relative;
+	display: flex;
+	width: 746px;
+	padding-top: 3px;
+	margin: 16px 33px 15.5px 21px;
+	align-items: center;
+	gap: 11px;
+}
+
+.top_raceinfo_content .top_raceinfo_wrapper.is_hikaisai .raceinfo_countdownday {
+	width: 72px;
+	height: 32px;
+}
+
+.top_raceinfo_content .top_raceinfo_wrapper.is_hikaisai .par-icon_racedays_group .par-racedays_wrapper {
+	position: absolute;
+	display: flex;
+	height: 44px;
+	top: -60px;
+	right: -9px;
+}
+
+/* 日程 */
+.raceinfo_countdownday .racedays_group {
+	display: flex;
+	margin: 0;
+	justify-content: flex-end;
+	align-items: center;
+	color: #FFFFFF;
+	font-weight: bold;
+	gap: 2px;
+}
+
+/* 月 */
+.raceinfo_countdownday .racedays_group .item_month {
+	margin: 0 6px 0 14px;
+	font-size: 16px;
+}
+
+.raceinfo_countdownday .racedays_group .item_month .item_month_num {
+	margin-right: 2px;
+	font-size: 24px;
+}
+
+/* 日 */
+.par-racetitle_group .racedays_group .day {
+	display: flex;
+	width: 24px;
+	height: 44px;
+	flex-direction: column;
+	margin: 0;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+}
+
+.raceinfo_countdownday .racedays_group .date_wrapper {
+	display: flex;
+	line-height: 1;
+}
+
+/* 曜日 */
+.raceinfo_countdownday .racedays_group .day .weekday {
+	display: block;
+	width: 16px;
+	height: 16px;
+	background: #FFFFFF;
+	color: var(--MAIN_BLACK, #313131);
+	border-radius: 50%;
+	text-align: center;
+	font-size: 10px;
+}
+
+.par-racetitle_group .par-racetitle {
+	font-size: 24px;
+	font-weight: bold;
+	line-height: 32px;
+}
+
+/* トップページ展望 */
+.top_raceinfo_tenbo_area .top_tenbo_block {
+	padding: 0 41px 34px 23px;
+}
+
+.top_raceinfo_tenbo_area .top_tenbo_block>p {
+	height: 62.25px;
+	padding: 15.5px 0 13.75px;
+	color: var(--MAIN_COLOR, #2160AF);
+	border-top: 1px solid var(--MAIN_BLACK, #313131);
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list {
+	display: flex;
+	margin-bottom: 23.75px;
+	gap: 8px;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li {
+	display: flex;
+	height: 236.5px;
+	flex-direction: column;
+	align-items: center;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li .player_image,
+.top_raceinfo_tenbo_area .series_leader_list li .player_image img {
+	width: 116px;
+	height: 164px;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li .player_kyu_toban {
+	display: flex;
+	height: 14px;
+	align-items: center;
+	font-size: 10px;
+	margin-top: 9.5px;
+	gap: 8px;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li .player_kyu_toban .par-ico_kyubetu {
+	width: 28px;
+	height: 14px;
+	color: #FFFFFF;
+	font-weight: bold;
+	text-align: center;
+	border-radius: 8px;
+	line-height: 13px;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li .player_name {
+	height: 24px;
+	margin-top: 7.5px;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.top_raceinfo_tenbo_area .series_leader_list li .shibu_name {
+	height: 17px;
+	font-size: 12px;
+}
+
+.top_raceinfo_tenbo_area .tenbo_article {
+	margin-bottom: 24px;
+}
+
+.top_raceinfo_tenbo_area .tenbo_article .tenbo_title {
+	margin-bottom: 16px;
+	font-size: 24px;
+	font-weight: bold;
+	line-height: 35px;
+}
+
+.top_raceinfo_tenbo_area .tenbo_article .tenbo_comment {
+	height: 154px;
+	overflow: hidden;
+}
+
+.top_raceinfo_tenbo_area .top_raceinfo_btn_area .raceinfo_btnlist {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.top_raceinfo_tenbo_area .top_raceinfo_btn_area .raceinfo_btnlist .par-btn01 {
+	position: relative;
+	display: flex;
+	width: 240px;
+	height: 80px;
+	padding-left: 24px;
+	justify-content: start;
+	align-items: center;
+	border: 2px solid var(--MAIN_COLOR, #2160AF);
+	border-radius: 8px;
+	gap: 16px;
+}
+
+.top_raceinfo_tenbo_area .top_raceinfo_btn_area .raceinfo_btnlist .par-btn01::after {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/ico_circle_arrow_b_right.svg) no-repeat;
+	background-size: 16px 16px;
+	width: 16px;
+	height: 16px;
+	right: 16px;
+}
+
+.top_raceinfo_tenbo_area .top_raceinfo_btn_area .raceinfo_btnlist .par-btn01 img {
+	width: 40px;
+	height: 40px;
+}
+
+.top_raceinfo_tenbo_area .top_raceinfo_btn_area .raceinfo_btnlist .par-btn01 span {
+	display: flex;
+	color: var(--MAIN_BLACK, #313131);
+	font-weight: bold;
+}
+
+/*-------------------------
+ * レース情報エリア 開催
+-------------------------*/
+.is_kaisai .par-racetitle_group .par-icon_racedays_group {
+	position: relative;
+	display: flex;
+	height: 44px;
+	padding-right: 24px;
+	justify-content: space-between;
+	background: var(--MAIN_COLOR, #2160AF);
+	border-radius: 16px 16px 0 0;
+}
+
+.raceinfo_countdownday .par-icon_area {
+	display: flex;
+}
+
+.is_kaisai .raceinfo_countdownday .par-ico_grade.has_nthday {
+	display: flex;
+	width: 95px;
+	height: 44px;
+	border-radius: 16px 0 0 0;
+	justify-content: center;
+	align-items: center;
+}
+
+.raceinfo_countdownday .par-ico_kaisai_nthday {
+	display: flex;
+	width: 95px;
+	height: 44px;
+	justify-content: center;
+	align-items: center;
+	background: #E33773;
+	color: #FFFFFF;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+/* カレントデイ */
+.par-racetitle_group .racedays_group .day.current {
+	background: var(--MAIN_BLACK, #313131);
+}
+
+.par-racetitle_group.type_1 .par-title_wrapper {
+	padding-top: 3px;
+	margin: 16px 24px 20px 21px;
+}
+
+/*-------------------------
+ * レース情報エリア 中止
+-------------------------*/
+.raceinfo_countdownday .racedays_group .day.cancel .item_day:after {
+	content: '';
+	position: absolute;
+	display: block;
+	top: 7px;
+	left: -1px;
+	width: calc(100% + 2px);
+	height: 2px;
+	background: #FFFFFF;
+}
+
+/* ===========================================
+ * スライダーバナーエリア 
+ * ======================================== */
+.top_slider_inner_content {
+	position: relative;
+}
+
+.top_slider_banner_content {
+	position: relative;
+	z-index: 1;
+	height: 377px;
+}
+
+.top_slider_banner_content::before {
+	content: '';
+	position: absolute;
+	background-image: url(/cdn/pc/images/top/bg_wave.png);
+	background-repeat: repeat-x;
+	background-size: 1600px 416px;
+	width: 100%;
+	height: 416px;
+	top: -19px;
+}
+
+.top_slider_banner_wrapper {
+	position: relative;
+	height: 100%;
+	padding: 70px 0 67px;
+}
+
+.top_slider_inner_content .top_slider_list {
+	height: 100%;
+	overflow: hidden;
+}
+
+.top_slider_list li {
+	width: 400px;
+}
+
+.top_slider_list a,
+.top_slider_list span {
+	display: block;
+	width: 384px;
+	margin: 0 auto;
+}
+
+.top_slider_list li img {
+	width: 384px;
+	height: 240px;
+}
+
+/* スライダードット */
+.top_slider_controls {
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	margin-top: 24px;
+}
+
+/* スライダー前・後ボタン */
+.top_slider_controls .top_slider_prev {
+	position: absolute;
+	display: inline-block;
+	width: 40px;
+	height: 40px;
+	text-indent: -9999px;
+	border-radius: 50%;
+	cursor: pointer;
+	background: url(/cdn/pc/images/top/ico_circle_arrow_left.svg) no-repeat;
+	background-size: 40px 40px;
+	top: 50%;
+	left: -1px;
+	transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+}
+
+.top_slider_controls .top_slider_next {
+	position: absolute;
+	display: inline-block;
+	width: 40px;
+	height: 40px;
+	text-indent: -9999px;
+	border-radius: 50%;
+	cursor: pointer;
+	background: url(/cdn/pc/images/top/ico_circle_arrow_right.svg) no-repeat;
+	background-size: 40px 40px;
+	top: 50%;
+	right: -1px;
+	transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+}
+
+.top_slider_dots .slick-dots>li.slick-active>button {
+	background: #FFFFFF;
+}
+
+.top_slider_dots .slick-dots>li:hover,
+.top_slider_dots .slick-dots>li:focus {
+	opacity: .7;
+}
+
+/* スライダー無しの場合 */
+.top_slider_inner_content .top_slider_list.is_not_slider {
+	display: flex;
+	justify-content: center;
+}
+
+/* ===========================================
+ * NEWS・X・公式SNSエリア
+ * ======================================== */
+.top_news_cal_wrapper {
+	background: url(/cdn/pc/images/top/hamanako_bg3.jpg), url(/cdn/pc/images/top/hamanako_bg2.jpg);
+	background-size: 100% 1401px, 100% 1126px;
+	background-position: left bottom, right top;
+	background-repeat: no-repeat, no-repeat;
+	height: 2509px;
+}
+.top_news_cal_wrapper.hakubo {
+	background: url(/cdn/pc/images/top/hamanako_twilight3.jpg), url(/cdn/pc/images/top/hamanako_twilight2.jpg);
+	background-color: #FFFFFF;
+	background-size: 100% 1401px, 100% 1126px;
+	background-position: left bottom, right top;
+	background-repeat: no-repeat, no-repeat;
+
+}
+.top_information_content .top_information_wrapper {
+	display: flex;
+	flex-direction: column;
+	padding: 99px 0 65px;
+	gap: 154px;
+}
+
+.top_information_content .top_news_info_content {
+	display: flex;
+	align-items: flex-start;
+	gap: 50px;
+}
+
+.top_news_wrapper .top_news_content,
+.top_X_wrapper .top_X_content {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.top_news_wrapper .top_news_content {
+	width: 690px;
+}
+
+.top_X_wrapper .top_X_content {
+	width: 460px;
+}
+
+/* タイトル */
+.top_information_content .top_news_area_ttl {
+	height: 46px;
+	color: #121212;
+	font-size: 32px;
+	font-weight: bold;
+}
+
+.top_news_content .top_news_inner_content {
+	height: 600px;
+}
+
+.top_news_content .top_news_inner_content>ul {
+	display: flex;
+	width: 100%;
+	text-align: center;
+	justify-content: space-between;
+	border-bottom: 3px solid var(--MAIN_COLOR, #2160AF);
+}
+
+.top_news_content .top_news_inner_content>ul>li {
+	display: inline-block;
+	width: 225px;
+}
+
+.top_news_content .top_news_inner_content>ul>li>a {
+	position: relative;
+	display: flex;
+	width: 100%;
+	height: 54px;
+	font-weight: bold;
+	background: #FFFFFF;
+	border-radius: 8px 8px 0px 0px;
+	align-items: center;
+	justify-content: center;
+}
+
+.top_news_content .top_news_inner_content>ul>li.selected>a {
+	color: #FFFFFF;
+	background: var(--MAIN_COLOR, #2160AF);
+}
+
+.top_news_content .top_news_inner_content>ul>li.selected>a::after {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/common/ico_arrow_w_down.svg) no-repeat;
+	background-size: 12px 7px;
+	width: 12px;
+	height: 7px;
+	bottom: 3px;
+}
+
+.top_news_content .top_news_inner_content .tagHidden{
+	visibility: hidden;
+}
+
+/* Newsリスト */
+.top_news_content .top_news_inner_content .news_tab_content_wrapper {
+	height: 543px;
+	background: #FFFFFF;
+	box-shadow: 0px 3px 6px #00000029;
+	border-radius: 0px 0px 16px 16px;
+}
+
+.top_news_content .top_news_inner_content .news_tab_content {
+	position: relative;
+	display: none;
+	width: 100%;
+}
+
+.top_news_content .news_tab_content.selected {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.top_news_content .news_tab_content .news_list {
+	display: flex;
+	width: 100%;
+	height: 451px;
+	flex-direction: column;
+	overflow-y: auto;
+	padding: 27px 51.9px 0 20px;
+	margin-bottom: 24px;
+	gap: 24px;
+}
+
+.top_news_content .news_tab_content .news_list li:not(.__nodata) {
+	display: flex;
+    flex-direction: column;
+	border-bottom: 1px dashed var(--MAIN_GRAY, #BABABA);
+	gap: 7px;
+}
+
+.top_news_content .news_tab_content .news_list .news_date_tag {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+}
+
+.top_news_content .news_tab_content .news_list .news_date {
+	color: #999999;
+}
+
+.top_news_content .news_tab_content .news_list .news_icon_text {
+	padding-bottom: 32px;
+}
+
+.top_news_content .news_tab_content .news_list .news_icon_text {
+	text-decoration: underline;
+}
+
+.top_news_content .news_tab_content .news_list .info_text {
+	color: var(--MAIN_BLACK, #313131);
+	font-size: 20px;
+	font-weight: bold;
+	line-height: 29px;
+	opacity: 0.9;
+}
+
+/* sorry */
+.top_news_content .news_tab_content .sorry {
+	padding-left: 31px;
+}
+
+/* 一覧ボタン */
+.top_news_content .news_tab_content .news_link .news_list_link {
+	width: 176px;
+	height: 40px;
+	padding-right: 8px;
+	border-radius: 64px;
+	font-size: 18px;
+}
+
+/* X */
+.top_X_wrapper .top_X_content .top_X_inner_content {
+	width: 460px;
+	height: 600px;
+	background: #FFFFFF;
+	border: 1px solid rgb(207, 217, 222);
+	;
+	box-shadow: 0px 3px 5px #10457C29;
+	border-radius: 16px;
+}
+
+.top_X_wrapper .top_X_content .top_X_inner_content img{
+	border-radius: 16px;
+}
+
+/* SNSリスト */
+.top_sns_content {
+	padding-left: 52px;
+}
+
+.top_sns_content .top_sns_list {
+	display: flex;
+	width: 720px;
+	background: #FFFFFF;
+	border: 2px solid var(--MAIN_COLOR, #2160AF);
+	padding: 26px 0;
+	margin: 0 auto;
+	border-radius: 16px;
+	align-items: center;
+	justify-content: center;
+	gap: 36px;
+}
+
+.top_sns_content .top_sns_list .top_sns_text {
+	color: #121212;
+	font-size: 32px;
+	font-weight: bold;
+}
+
+/* ===========================================
+ * 開催日程エリア
+ * ======================================== */
+.top_calendar_content {
+	padding: 147px 0 144px;
+}
+
+.top_calendar_content .top_calendar_wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.top_calendar_content .top_calendar_ttl {
+	position: relative;
+	height: 46px;
+	color: var(--MAIN_BLACK, #313131);
+	font-size: 32px;
+	font-weight: bold;
+}
+
+.top_calendar_content .top_calendar_ttl::after {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/top/swacky_02.svg) no-repeat;
+	background-size: 301px 194px;
+	width: 301px;
+	height: 194px;
+	right: 0;
+	bottom: 5px;
+}
+
+.top_calendar_content .top_calendar_inner_content {
+	border-radius: 16px;
+	background: #FFFFFF;
+}
+
+/* 開催日程未登録 */
+.top_calendar_content .sorry_contents {
+	height: 1040px;
+}
+
+.top_calendar_content .sorry_contents .sorry {
+	padding-top: 200px;
+	margin-top: 0;
+}
+
+/* JS SNSリスト */
+.sns-list-area {
+	position: fixed;
+	z-index: 10;
+	top: 0;
+	left: 112px;
+}
+
+.sns-list-area .inner {
+	position: relative;
+}
+
+.sns-list-area .inner #sns-list {
+	position: absolute;
+	width: 96px;
+	height: 484px;
+	top: 336px;
+	right: -16px;
+	background: #FFFFFF;
+	border: 2px solid var(--MAIN_COLOR, #2160AF);
+	border-radius: 8px;
+	text-align: center;
+	padding-top: 9px;
+}
+
+.sns-list-area .inner #sns-list .title {
+	height: 26px;
+	color: #121212;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.sns-list-area .inner #sns-list ul {
+	display: flex;
+	flex-direction: column;
+	padding: 8px 0 16px;
+	gap: 8px;
+}
+
+.sns-list-area .inner #sns-list li {
+	height: 64px;
+}
+
+.sns-list-area .inner #sns-list img {
+	width: 64px;
+	height: 64px;
+}
+
+/* ******* ↑ ここまで浜名湖用CSS 最後このコメントは消してください********************************************************************************************************************************* */
+
+
+.news_tab_content .news_list .news_icon_text {
+	/* display: flex; */
+	/* width: 100%; */
+	/* background: rgba(217, 217, 217, 0.00); */
+	/* align-items: center; */
+	/* gap: 16px; */
+}
+
+.news_tab_content .news_list .news_text {
+	/* display: flex; */
+	/* flex-direction: column; */
+	/* align-items: flex-start; */
+}
+
+.news_tab_content .news_list .news_text .information_link {
+	/* text-decoration: underline; */
+}
+
+.news_tab_content .news_list .news_text .info_text {
+	/* color: var(--MAIN_BLACK, #222); */
+	/* font-size: 16px; */
+	/* font-weight: normal; */
+}
+
+.news_tab_content .news_list .news_link-icon {
+	/* display: flex; */
+	/* align-items: center; */
+	/* padding-right: 10px; */
+}
+
+.news_tab_content .news_list .news_link-icon img {
+	/* width: 16px; */
+	/* height: 16px; */
+}
+
+.top_calendar_content .top_calendar:not(._wait) .top_calendar_inner_content {
+	/* border-left: 1px solid #bbbbbb; */
+	/* border-right: 1px solid #bbbbbb; */
+	/* border-bottom: 1px solid #bbbbbb; */
+}
+
+.top_calendar_content .js-cal_html.cal_html[data-display="false"] {
+	/* display: none; */
+}
+
+.top_calendar_content .js-cal_html.cal_html[display="true"] {
+	/* display: block; */
+}
+
+/* ボタン */
+.top_calendar_content .top_calendar_btn_area {
+	/* width: 100%; */
+	/* text-align: center; */
+}
+
+.top_calendar_content .top_calendar_btn_area .par-btn01 {
+	/* width: 300px; */
+	/* height: 34px; */
+	/* line-height: 32px; */
+}

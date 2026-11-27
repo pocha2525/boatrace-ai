@@ -1,0 +1,71 @@
+// =========================================
+// 出走表コメント
+// =========================================
+
+var xmlRacerComment = null;
+
+//XML,TMPLファイル取得用
+function downloadcomment(target, option, done, fail) {
+    $.ajax(target, option=='xml'?{type: 'get', dataType: 'xml'}:{type: 'get', dataType: 'html', scriptCharset: 'UTF-8'})
+    .done(done)
+    .fail(fail);
+}
+
+// ファイルロード時に関数を読み込む
+$(document).ready( function(){
+  // テーブルの値の変更はクリック時に行う ファイルロード時に呼び出しても動作しない
+  // 出走表 全国過去3節成績を表示する為の関数
+  $(document).on("click",  "#act02-02", function(){
+    getXmlRacerComment();
+  });
+});
+
+//運用ファイル取得
+function getXmlRacerComment() {
+    //システム用XML取得
+    downloadcomment('./xml/kaisai/' + DATE + '/race_table_comment_' + zero2(RACE_NO) + '.xml', 'xml', function(xml) {
+      //$("#racer_comment_message").css('z-index','-1');
+      $("#main_open_pc #disp02-02 .data_table").show();
+      $("#main_open_pc #disp02-02 #comment_message").hide();
+      $("#main_open_sp #disp02-02 .data_table").show();
+      $("#main_open_sp #disp02-02 #comment_message").hide();
+      //ドキュメントを格納
+      xmlRacerComment = xml;
+      setDataRacerComment();
+    }, function() {
+      showRacerCommentMessage();
+      //$("#racer_comment_message").css('z-index','2');
+      $("#main_open_pc #disp02-02 #comment_message").show();
+      $("#main_open_pc #disp02-02 .data_table").hide();
+      $("#main_open_sp #disp02-02 #comment_message").show();
+      $("#main_open_sp #disp02-02 .data_table").hide();
+      $("*[name=comment_message]").html("開催日の朝10時ごろ更新予定です。");
+    });
+}
+
+function showRacerCommentMessage() {
+  // データなしメッセージ表示要素の基準となる横幅
+  var sumLeft = 0;
+  var sumWidth = 0;
+
+  $("#disp02-02").find(".data_table").find("thead").find("th").each(function(i, val) {
+    // 現在の成績～早見までの幅を取得
+    if (i >= 0 && i <= 3) {
+      sumLeft += $(val).width();
+    }
+    if (i >= 4 && i <= 4) {
+      sumWidth += $(val).width();
+    }
+  });
+  $("#racer_comment_message").width(sumWidth - 30);
+  $("#racer_comment_message").css("left", sumLeft + 30);
+}
+  
+//記者寸評の表示
+function setDataRacerComment() {
+  var RacerComment = $(xmlRacerComment).find("table").find("record");
+  $(RacerComment).each(function(i, RacerCommentInfo) {
+      var teiban = $(RacerCommentInfo).find("teiban").text();
+      $("*[name=comment" + teiban + "]").html($(RacerCommentInfo).find("comment").text());
+  })
+}

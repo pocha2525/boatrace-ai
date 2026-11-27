@@ -1,0 +1,171 @@
+@charset "UTF-8";
+
+/*******************************************/
+/** PC・SP 共通カラー
+/*******************************************/
+:root {
+	--MAIN_BLACK: #313131;
+	--MAIN_COLOR: #2160AF;
+	--MAIN_GRAY: #BABABA;
+}
+
+
+/**********************************
+ 艇のカラー
+***********************************/
+.tei_color1{background-color: var(--TEI_COLOR_1, #FFFFFF) !important; color: #313131 !important;}
+.tei_color2{background-color: var(--TEI_COLOR_2, #646464) !important; color: #FFFFFF !important;}
+.tei_color3{background-color: var(--TEI_COLOR_3, #EB3C5E) !important; color: #FFFFFF !important;}
+.tei_color4{background-color: var(--TEI_COLOR_4, #4D97EF) !important; color: #FFFFFF !important;}
+.tei_color5{background-color: var(--TEI_COLOR_5, #F6E058) !important; color: #313131 !important;}
+.tei_color6{background-color: var(--TEI_COLOR_6, #55BC42) !important; color: #FFFFFF !important;}
+
+/**********************************
+ 艇のサブカラー
+***********************************/
+.tei_sub_color1{background-color: #FFFFFF !important;}
+.tei_sub_color2{background-color: #646464 !important;}
+.tei_sub_color3{background-color: #FCE5E8 !important;}
+.tei_sub_color4{background-color: #E7F1F8 !important;}
+.tei_sub_color5{background-color: #FDF3CA !important;}
+.tei_sub_color6{background-color: #EAF7DD !important;}
+
+/**********************************
+ 買い目カラー
+***********************************/
+.col-num_1,
+.ico_num.num1,
+.ico_num.imp-num1{ /* 1 */
+	color: #313131;
+	border-radius: var(----margin_xs, 4px);
+	border: 1px solid var(--BASE_LINE, #D9D9D9);
+	background: #FFF;
+}
+.col-num_2,
+.ico_num.num2,
+.ico_num.imp-num2{ /* 2 */
+	color: #ffffff;
+	border-radius: var(----margin_xs, 4px);
+	background: var(--TEI_COLOR_2, #646464);
+}
+.col-num_3,
+.ico_num.num3,
+.ico_num.imp-num3{ /* 3 */
+	color: #ffffff;
+	border-radius: var(----margin_xs, 4px);
+	background: var(--TEI_COLOR_3, #DC505A);
+}
+.col-num_4,
+.ico_num.num4,
+.ico_num.imp-num4{ /* 4 */
+	color: #ffffff;
+	border-radius: var(----margin_xs, 4px);
+	background: var(--TEI_COLOR_4, #32A0D2);
+}
+.col-num_5,
+.ico_num.num5,
+.ico_num.imp-num5{ /* 5 */
+	color: #222222;
+	border-radius: var(----margin_xs, 4px);
+	background: var(--TEI_COLOR_5, #F0C816);
+}
+.col-num_6,
+.ico_num.num6,
+.ico_num.imp-num6{ /* 6 */
+	color: #ffffff;
+	border-radius: var(----margin_xs, 4px);
+	background: var(--TEI_COLOR_6, #78B446);
+}
+
+/**********************************
+ グレードアイコン
+***********************************/
+.col-SG, .col-sg, .par-ico_grade.col-SG, .par-ico_grade.col-sg, .ico-grade.SG, .ico-grade.sg, .com-grade.sg, .com-grade.SG, .ico-grade02.SG, .grade-color_sg, .grade-before_sg:before{background-color: #E25954 !important;color: #FFFFFF;}
+.col-G1, .col-g1, .par-ico_grade.col-G1, .par-ico_grade.col-g1, .ico-grade.G1, .ico-grade.g1, .com-grade.g1, .com-grade.G1, .ico-grade02.G1, .grade-color_g1, .grade-before_g1:before{background-color: #F4B244 !important;color: #FFFFFF;}
+.col-G2, .col-g2, .par-ico_grade.col-G2, .par-ico_grade.col-g2, .ico-grade.G2, .ico-grade.g2, .com-grade.g2, .com-grade.G2, .ico-grade02.G2, .grade-color_g2, .grade-before_g2:before{background-color: #DFD145 !important;color: #FFFFFF;}
+.col-G3, .col-g3, .par-ico_grade.col-G3, .par-ico_grade.col-g3, .ico-grade.G3, .ico-grade.g3, .com-grade.g3, .com-grade.G3, .ico-grade02.G3, .grade-color_g3, .grade-before_g3:before{background-color: #69BE82 !important;color: #FFFFFF;}
+.col-IP, .col-ip, .par-ico_grade.col-IP, .par-ico_grade.col-ip, .ico-grade.IP, .ico-grade.ip, .com-grade.ip, .com-grade.IP, .ico-grade02.IP, .grade-color_ip, .grade-before_ip:before{background-color: #68BCE6 !important;color: #FFFFFF;}
+
+
+/**********************************
+ N日目の背景色
+***********************************/
+.color-day  {background-color: #ffe477;}
+
+/**********************************
+ 中止など alert時の色
+***********************************/
+/* 背景色 */
+.bg-color-alert{
+	background-color: #e60617 !important;
+	color: #ffffff;
+}
+
+/* 赤いテキスト */
+.u-accent {
+	color: #CD1400 !important;
+}
+
+/**********************************
+ 曜日の色
+***********************************/
+/* font color */
+/* 平日 */
+.font-days-state
+{color: #000000;}
+/* 土曜日 */
+.font-days-state-6,
+.font-days-state[data-day="6"]
+{color: #4595d5 !important;}
+/* 日曜日 */
+.font-days-state-0,
+.font-days-state[data-day="0"],
+.font-days-state[data-day="7"]/*祝日番号*/
+{color: #F15A7E !important;}
+
+/* background color */
+/* 平日 */
+.days-state
+{background-color: #121212;}
+/* 土曜日 */
+.days-state-6,
+.days-state[data-day="6"]
+{background-color: #33A9E7 !important; color: #FFFFFF !important;}
+/* 日曜日 */
+.days-state-0,
+.days-state[data-day="0"]
+{background-color: #E33773 !important; color: #FFFFFF !important;}
+/* 祝日 */
+.days-state-7,
+.days-state[data-day="7"]/*祝日番号*/
+{background-color: #E33773 !important; color: #FFFFFF !important;}
+
+/***********************************
+ 新着情報 NEW 重要事項 INFO UP EVENT
+***********************************/
+.col-tag_new{background-color: #33CC7A;color: #FFFFFF;}
+.col-tag_up{background-color: #FF9D00;color: #FFFFFF;}
+.col-tag_important{background-color: #E25954;color: #FFFFFF;}
+.col-tag_orale{background-color: #4D97EF;color: #FFFFFF;}
+.col-tag_event{background-color: #2160AF;color: #FFFFFF;}
+.col-tag_info{background-color: #22328E;color: #FFFFFF;}
+.col-tag_youtube{background-color: #FF0000;color: #FFFFFF;}
+
+/***********************************
+ 級別アイコン背景
+***********************************/
+.col-kyu_A1{background-color: #F15A7E !important;}
+.col-kyu_A2{background-color: #55BC42 !important;}
+.col-kyu_B1{background-color: #F6E058 !important; color: #313131 !important;}
+.col-kyu_B2{background-color: #FF9D00 !important;}
+
+/***********************************
+ コメントタグアイコン背景
+***********************************/
+.col-comment_tag_red{background-color: #F15A7E !important;}
+.col-comment_tag_orange{background-color: #FF9A11 !important;}
+.col-comment_tag_green{background-color: #33CC7A !important;}
+.col-comment_tag_blue{background-color: #22328E !important;}
+.col-comment_tag_skyblue{background-color: #4D97EF !important;}
+.col-comment_tag_purple{background-color: #884898 !important;}
+.col-comment_tag_pink{background-color: #F8ABA6 !important;}

@@ -1,0 +1,130 @@
+
+// =========================================
+// レース番号切り替え
+// =========================================
+
+
+// ToDo xmlから終了したレースの番号及び現在のレース番号を取得できる場合、初期値についてはidから判別する必要は無くなる
+// 全ての要素の読み込みが終わった際に、初期選択されているレース番号を取得する
+// document.readyでは要素を取得出来ない為、window.on loadを使用する
+//$(window).on('load', function () {
+//    let initial_id = $(document).find('.race_tab').find('.race_active').attr('id');
+//    RACE_NO = initial_id.replace(/[^0-9]/g, '');
+//});
+
+// ファイルロード時に関数を読み込む
+$(document).ready(function () {
+
+    $(document).on("click", ".race_num", function () {
+        let clickHayami = $(this).attr("name");
+        //console.log(clickHayami);
+        let hayamiNum = clickHayami.substring(4);
+        if (hayamiNum.slice(0, 1) == 0) {
+            hayamiNum = hayamiNum.slice(1, 2);
+        }
+        //console.log(hayamiNum);
+        //console.log(clickHayami);
+        // タブの部分の.race_activeを制御する
+        for (let i = 1; i <= 11; i++) {
+            if (i == hayamiNum) {
+                $("#" + clickHayami).addClass("race_active");
+                //console.log("#" + clickHayami);
+            } else {
+                $("#" + clickHayami).removeClass("race_active");
+                //console.log("#" + clickHayami);
+            }
+        }
+        // 欠場者のteibanを格納するグローバル変数を初期化
+        KETSUJO_LIST = [];
+        // クリックされたボタンのnameであるraceXXXの部分から、数字だけを取得
+        let name = $(this).attr('name');
+        RACE_NO = name.replace(/[^0-9]/g, '');
+        
+        //getXmlRaceTable();
+        //getXmlRaceTableForecast();
+        $(".race_active").removeClass("race_active");
+        $("#" + clickHayami).addClass("race_active");
+        getXmlSystem();
+        //getXmlRaceTable();
+        setEventCustom();
+        // 現在参照されているHTML要素 tab_01を判別し、参照先によって処理を分ける
+        let tab_01 = $('.tab_01.data_tab.tab_active').attr('id');
+        switch (tab_01) {
+            case 'act01':
+                // 出走表
+                let tab_02_1 = getTab02Id('#disp01');
+                if (tab_02_1 == 'act01-01') {
+                    // tab02の出走表については、レース番号をクリックした時点で処理をしている為現時点では記述無し
+                } else if (tab_02_1 == 'act01-02') {
+                    // 節間成績のxmlを更新
+                    getXmlRaceTableSeries();
+                } else if (tab_02_1 == 'act01-03') {
+                    // 全国過去3節のxmlを更新
+                    getXmlRaceTableAll3();
+                } else if (tab_02_1 == 'act01-04') {
+                    // 戸田過去3節のxmlを更新
+                    getXmlRaceTableToda();
+                } else if (tab_02_1 == 'act01-05') {
+                    // モーター3節のxmlを更新
+                    getXmlRaceTableMoter3();
+                } else if (tab_02_1 == 'act01-06') {
+                    // 枠番別過去10走のxmlを更新
+                    getXmlRaceTable10Race();
+                } else if (tab_02_1 == 'act01-07') {
+                    // 得点率早見表のxmlを更新
+                    getXmlRaceTablePoint();
+                } else {
+                    // tab02を取得できなかった場合の処理を必要であれば記述
+                }
+                break;
+            case 'act02':
+                // 直前情報
+                let tab_02_2 = getTab02Id('#disp02');
+                if (tab_02_2 == 'act02-01') {
+                    // 直前情報xmlを更新
+                    getXmlRaceTableBefore();
+                } else if (tab_02_2 == 'act02-02') {
+                    // 選手コメントxmlを更新
+                    getXmlRacerComment();
+                } else if (tab_02_2 == 'act02-03') {
+                    // オリジナル展示xmlを更新
+                    getXmlRaceTableOriginal();
+                } else {
+                    // tab02を取得できなかった場合の処理を必要であれば記述
+                }
+                break;
+            case 'act03':
+                // オッズ
+                let tab_02_3 = getTab02Id('#disp03');
+                
+                switch(tab_02_3){
+                  case 'act03-01':
+                  case 'act03-02':
+                  case 'act03-03':
+                  case 'act03-04':
+                  case 'act03-05':
+                  case 'act03-06':
+                    // 3連単/複、２連単/複、単勝/複勝、拡連複を一括更新
+                    getXmlOdds();
+                  break;
+                  default:
+                  break;
+                }
+                
+                break;
+            case 'act04':
+                // AI予想のxmlを更新
+                getXmlRaceTableAi();
+                break;
+            default:
+                // 参照しているタブを取得できなかった場合はtab_01出走表 tab_02btn出走表を表示する
+        }
+
+    });
+
+});
+
+// tab_02btnのidを取得する クラス名がtab_01を跨いでも同一の為、親要素のクラス名を判別に使用する
+function getTab02Id(parent_class) {
+    return $(parent_class).find('.tab_02btn.data_tab.active').attr('id');
+}

@@ -1,0 +1,260 @@
+
+// ===========================================================================================
+// 節間成績
+//
+// 開催日数についてはseries_info.jsで定義されたKIKANを参照する
+// レースの区部を判別するrcdはxmlから取得できない為、KIKANの数字を最終日とする（準優日は判別不可）
+// ===========================================================================================
+
+var raceTableSeriesBlock = null;
+
+// ファイルロード時に関数を読み込む
+$(document).ready(function () {
+    // テーブルの値の変更はクリック時に行う ファイルロード時に呼び出しても動作しない
+    $(document).on("click", "#act01-02", function () {
+        getXmlRaceTableSeries();
+    });
+
+});
+
+// 節間成績のxml取得
+function getXmlRaceTableSeries() {
+    download('./xml/kaisai/' + DATE + "/race_table_series_" + zero2(RACE_NO) + ".xml", 'xml', function (xml) {
+        raceTableSeriesBlock = xml;
+        setDataRaceTableSeries();
+        console.log(KIKAN);
+    });
+}
+
+// 節間成績のデータをセット
+function setDataRaceTableSeries() {
+    // 開催日数に対応したテーブルのthになるよう修正 <tr id="setukan-tr">内のすべての要素をhtmlごと入れ替え
+    if (KIKAN != 7) {
+        let html = '<th name="custom-head-name"></th>';
+        for (let i = 1; i <= 7; i++) {
+            if (KIKAN == i) {
+                let finalTh = "<th colspan='2' id='setukan-day" + i + "' style='border-right:none'>最終日</th>";
+                html += finalTh;
+                // 開催日数が7日に満たない場合は、最終日以降を空で埋めてforループを抜ける
+                for (let j = i + 1; j <= 7; j++) {
+                    let th = "<th colspan='2' id='setukan-day" + j + "' style='width:0px;border-left:none;border-top:none;border-right:none;'></th>";
+                    html += th;
+                    for (let l = 1; l <= 6; l++) {
+                    $("*[name=setukan-sinnyu" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+
+                    $("*[name=setukan-st" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+
+                    $("*[name=setukan-chaku" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+                    }
+                }
+                break;
+            } else {
+                i == 1 ? html += "<th colspan='2' id='setukan-day" + i + "'>初日</th>" : html += "<th colspan='2' id='setukan-day" + i + "'>" + i + "日目</th>";
+            }
+        }
+        $("#setukan-tr").html(html);
+
+        // 出走表カスタマイズ部分のテーブルの頭を更新 機能しないためコメントアウト
+        for (i = 1; i <= 7; i++) {
+            if (i == KIKAN) {
+                $("#custom-setukan-day" + i).html("最終日");
+                $("#custom-setukan-day" + i).css("border-right", "none");
+            } else if (i > KIKAN) {
+                $("#custom-setukan-day" + i).html("");
+                $("#custom-setukan-day" + i).css("border", "none");
+                $("#custom-setukan-day" + i).css("border-bottom", "1px solid #dee2e6");
+            }
+        }
+        // let head1 = "<th colspan=\"2\" name=\"zenkoku-and-toda-view\">勝率<br>2連率</th>" +
+        // "<th name=\"custom_motor\">No.<br>2連率</th><th name=\"custom_boat\">No.<br>2連率</th>;
+        // let head2 = "<!-- 全国過去3節 --><th class=\"zenkoku-view\">グレード / 場 / 期間<br>成績</th><th class=\"zenkoku-view\">グレード / 場 / 期間<br>成績</th>" +
+        // "<th class=\"zenkoku-view\">グレード / 場 / 期間<br>成績</th><!-- 戸田過去3節 --><th class=\"toda-view\">グレード / 期間<br>成績</th>" +
+        // "<th class=\"toda-view\">グレード / 期間<br>成績</th><th class=\"toda-view\">グレード / 期間<br>成績</th><!-- モーター3節 -->" +
+        // "<th class=\"motor-view\">グレード / 選手名 / 級別<br>成績</th><th class=\"motor-view\">グレード / 選手名 / 級別<br>成績</th>" +
+        // "<th class=\"motor-view\">グレード / 選手名 / 級別<br>成績</th><!-- 枠番別過去10走 --><th class=\"wakuban-view\"></th>" +
+        // "<th class=\"wakuban-view\">1走前</th><th class=\"wakuban-view\">2走前</th><th class=\"wakuban-view\">3走前</th>" +
+        // "<th class=\"wakuban-view\">4走前</th><th class=\"wakuban-view\">5走前</th><th class=\"wakuban-view\">6走前</th>" +
+        // "<th class=\"wakuban-view\">7走前</th><th class=\"wakuban-view\">8走前</th><th class=\"wakuban-view\">9走前</th>" +
+        // "<th class=\"wakuban-view\">10走前</th><!-- 得点率早見表 --><th class=\"tokuten-view\">得点</th><th class=\"tokuten-view\">得点率</th><th class=\"tokuten-view\">順位</th>";
+        // $("#syussou-setukan-head").html(head1 + html + head2);
+    }
+    if (KIKAN == 7 && FDATE == '20230604' ) {
+        let html = '<th name="custom-head-name"></th>';
+        for (let i = 1; i <= 7; i++) {
+            if (KIKAN == i) {
+                let finalTh = "<th colspan='2' id='setukan-day" + i + "' style='border-right:none'>最終日</th>";
+                html += finalTh;
+                // 開催日数が7日に満たない場合は、最終日以降を空で埋めてforループを抜ける
+                for (let j = i + 1; j <= 7; j++) {
+                    let th = "<th colspan='2' id='setukan-day" + j + "' style='width:0px;border-left:none;border-top:none;border-right:none;'></th>";
+                    html += th;
+                    for (let l = 1; l <= 6; l++) {
+                    $("*[name=setukan-sinnyu" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-sinnyu" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+
+                    $("*[name=setukan-st" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-st" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+
+                    $("*[name=setukan-chaku" + l + "-" + (j - 1) + "-1]").css({"border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + (j - 1) + "-2]").css({"border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + j + "-1]").css({"border-left":"none","border-right":"none"});
+                    $("*[name=setukan-chaku" + l + "-" + j + "-2]").css({"border-left":"none","border-right":"none"});
+                    }
+                }
+                break;
+            } else {
+                i == 1 ? html += "<th colspan='2' id='setukan-day" + i + "'>順延</th>" : i == 2 ? html += "<th colspan='2' id='setukan-day" + i + "'>初日</th>" : html += "<th colspan='2' id='setukan-day" + i + "'>" + ( i - 1 ) + "日目</th>";
+            }
+        }
+        $("#setukan-tr").html(html);
+
+        // 出走表カスタマイズ部分のテーブルの頭を更新 機能しないためコメントアウト
+        for (i = 1; i <= 7; i++) {
+            if (i == KIKAN) {
+                $("#custom-setukan-day" + i).html("最終日");
+                $("#custom-setukan-day" + i).css("border-right", "none");
+            } else if (i > KIKAN) {
+                $("#custom-setukan-day" + i).html("");
+                $("#custom-setukan-day" + i).css("border", "none");
+                $("#custom-setukan-day" + i).css("border-bottom", "1px solid #dee2e6");
+            }
+        }
+	}
+
+    $(raceTableSeriesBlock).find("table").each(function () {
+        $(this).find("record").each(function () {
+            var no = $(this).find("teiban").text();
+            // 進入のレコード
+            $("*[name=setukan-sinnyu" + no + "-1-1]").html($(this).find("sin1-1").text());
+            $("*[name=setukan-sinnyu" + no + "-1-2]").html($(this).find("sin1-2").text());
+            $("*[name=setukan-sinnyu" + no + "-2-1]").html($(this).find("sin2-1").text());
+            $("*[name=setukan-sinnyu" + no + "-2-2]").html($(this).find("sin2-2").text());
+            $("*[name=setukan-sinnyu" + no + "-3-1]").html($(this).find("sin3-1").text());
+            $("*[name=setukan-sinnyu" + no + "-3-2]").html($(this).find("sin3-2").text());
+            $("*[name=setukan-sinnyu" + no + "-4-1]").html($(this).find("sin4-1").text());
+            $("*[name=setukan-sinnyu" + no + "-4-2]").html($(this).find("sin4-2").text());
+            $("*[name=setukan-sinnyu" + no + "-5-1]").html($(this).find("sin5-1").text());
+            $("*[name=setukan-sinnyu" + no + "-5-2]").html($(this).find("sin5-2").text());
+            $("*[name=setukan-sinnyu" + no + "-6-1]").html($(this).find("sin6-1").text());
+            $("*[name=setukan-sinnyu" + no + "-6-2]").html($(this).find("sin6-2").text());
+            $("*[name=setukan-sinnyu" + no + "-7-1]").html($(this).find("sin7-1").text());
+            $("*[name=setukan-sinnyu" + no + "-7-2]").html($(this).find("sin7-2").text());
+            $("*[name=setukan-sinnyu" + no + "-1-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-1-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-1-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-2-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-2-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-3-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-3-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-4-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-4-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-5-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-5-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-6-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-6-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-7-1]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+            $("*[name=setukan-sinnyu" + no + "-7-2]").removeClass(function(index, className) {
+                return (className.match(/\bwaku\S+/g) || []).join(' ');
+            });
+//            $("*[name=setukan-sinnyu" + no + "-1-1]").addClass("waku" + $(this).find("sin1-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-1-2]").addClass("waku" + $(this).find("sin1-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-2-1]").addClass("waku" + $(this).find("sin2-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-2-2]").addClass("waku" + $(this).find("sin2-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-3-1]").addClass("waku" + $(this).find("sin3-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-3-2]").addClass("waku" + $(this).find("sin3-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-4-1]").addClass("waku" + $(this).find("sin4-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-4-2]").addClass("waku" + $(this).find("sin4-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-5-1]").addClass("waku" + $(this).find("sin5-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-5-2]").addClass("waku" + $(this).find("sin5-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-6-1]").addClass("waku" + $(this).find("sin6-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-6-2]").addClass("waku" + $(this).find("sin6-2").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-7-1]").addClass("waku" + $(this).find("sin7-1").text() + "");
+//            $("*[name=setukan-sinnyu" + no + "-7-2]").addClass("waku" + $(this).find("sin7-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-1-1]").addClass("waku" + $(this).find("teiban1-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-1-2]").addClass("waku" + $(this).find("teiban1-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-2-1]").addClass("waku" + $(this).find("teiban2-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-2-2]").addClass("waku" + $(this).find("teiban2-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-3-1]").addClass("waku" + $(this).find("teiban3-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-3-2]").addClass("waku" + $(this).find("teiban3-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-4-1]").addClass("waku" + $(this).find("teiban4-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-4-2]").addClass("waku" + $(this).find("teiban4-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-5-1]").addClass("waku" + $(this).find("teiban5-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-5-2]").addClass("waku" + $(this).find("teiban5-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-6-1]").addClass("waku" + $(this).find("teiban6-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-6-2]").addClass("waku" + $(this).find("teiban6-2").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-7-1]").addClass("waku" + $(this).find("teiban7-1").text() + "");
+            $("*[name=setukan-sinnyu" + no + "-7-2]").addClass("waku" + $(this).find("teiban7-2").text() + "");
+            // STのレコード
+            $("*[name=setukan-st" + no + "-1-1]").html($(this).find("st1-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-1-2]").html($(this).find("st1-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-2-1]").html($(this).find("st2-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-2-2]").html($(this).find("st2-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-3-1]").html($(this).find("st3-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-3-2]").html($(this).find("st3-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-4-1]").html($(this).find("st4-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-4-2]").html($(this).find("st4-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-5-1]").html($(this).find("st5-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-5-2]").html($(this).find("st5-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-6-1]").html($(this).find("st6-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-6-2]").html($(this).find("st6-2").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-7-1]").html($(this).find("st7-1").text().replace("0.", "."));
+            $("*[name=setukan-st" + no + "-7-2]").html($(this).find("st7-2").text().replace("0.", "."));
+            // 着のレコード
+            $("*[name=setukan-chaku" + no + "-1-1]").html($(this).find("chaku1-1").text());
+            $("*[name=setukan-chaku" + no + "-1-2]").html($(this).find("chaku1-2").text());
+            $("*[name=setukan-chaku" + no + "-2-1]").html($(this).find("chaku2-1").text());
+            $("*[name=setukan-chaku" + no + "-2-2]").html($(this).find("chaku2-2").text());
+            $("*[name=setukan-chaku" + no + "-3-1]").html($(this).find("chaku3-1").text());
+            $("*[name=setukan-chaku" + no + "-3-2]").html($(this).find("chaku3-2").text());
+            $("*[name=setukan-chaku" + no + "-4-1]").html($(this).find("chaku4-1").text());
+            $("*[name=setukan-chaku" + no + "-4-2]").html($(this).find("chaku4-2").text());
+            $("*[name=setukan-chaku" + no + "-5-1]").html($(this).find("chaku5-1").text());
+            $("*[name=setukan-chaku" + no + "-5-2]").html($(this).find("chaku5-2").text());
+            $("*[name=setukan-chaku" + no + "-6-1]").html($(this).find("chaku6-1").text());
+            $("*[name=setukan-chaku" + no + "-6-2]").html($(this).find("chaku6-2").text());
+            $("*[name=setukan-chaku" + no + "-7-1]").html($(this).find("chaku7-1").text());
+            $("*[name=setukan-chaku" + no + "-7-2]").html($(this).find("chaku7-2").text());
+        });
+    });
+}

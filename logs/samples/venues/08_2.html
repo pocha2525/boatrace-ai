@@ -1,0 +1,1000 @@
+@charset "utf-8";
+
+/* ===========================================
+ * 共通パーツ
+ * ======================================== */
+/*-------------------------
+ * 共通アイコン
+-------------------------*/
+.is-morning {
+	background: url(/cdn/pc/images/common/ico_morning.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-day {
+	background: url(/cdn/pc/images/common/ico_day.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-summer {
+	background: url(/cdn/pc/images/common/ico_summer.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-night {
+	background: url(/cdn/pc/images/common/ico_night.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-midnight {
+	background: url(/cdn/pc/images/common/ico_midnight.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-ladies {
+	background: url(/cdn/pc/images/common/ico_ladies.svg) no-repeat 50% 50%;
+	background-size: 16px;
+}
+
+.is-pdf {
+	background: url(/cdn/pc/images/common/ico_pdf_s.svg) no-repeat 50% 50%;
+	background-size: 13px;
+}
+
+/* ********** */
+/* グレードアイコン */
+/* ********** */
+.par-ico_grade {
+	display: inline-flex;
+    justify-content: center;
+    vertical-align: middle;
+    width: 48px;
+    height: 20px;
+	line-height: 21px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    box-sizing: border-box;
+}
+
+/* ********** */
+/* 級別背景アイコン */
+/* ********** */
+.par-ico_kyubetu {
+	display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 28px;
+    height: 14px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+/* コメントタグアイコン */
+/* ********** */
+.par-ico_comment_tag {
+	display: inline-block;
+	width: 27px;
+	height: 18px;
+	border-radius: 4px;
+	font-size: 12px;
+	font-weight: bold;
+	text-align: center;
+	line-height: 18px;
+	color: #ffffff;
+}
+
+/*-------------------------
+ * ニュース系タグアイコン
+-------------------------*/
+.par-news_label {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 3px;
+}
+
+.par-news_label>span {
+	height: 18px;
+	text-align: center;
+	font-size: 10px;
+	font-weight: bold;
+	line-height: 18px;
+	border-radius: 2px;
+}
+
+.par-news_label .tag_type1 {
+	width: 32px;
+}
+
+.par-news_label .tag_type2 {
+	width: 64px;
+}
+
+/* ********** */
+/* 共通出目アイコン */
+/* ********** */
+.par-icon_wrap {
+	/* display: inline-block; */
+	/* vertical-align: middle; */
+	/* white-space: nowrap; */
+	font-size: 12px;
+	/* line-height: 1; */
+}
+
+.par-icon_num {
+	display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: normal;
+    width: 23px;
+    height: 23px;
+    line-height: 23px;
+}
+
+.par-icon_num.col-num_1 {
+	/* padding-right: 0.1rem; */
+}
+
+.par-icon_num.col-num_2,
+.par-icon_num.col-num_3,
+.par-icon_num.col-num_4,
+.par-icon_num.col-num_5,
+.par-icon_num.col-num_6 {
+	/* line-height: 1.8rem; */
+}
+
+/* ハイフンアイコン */
+.par-icon_mark {
+	display: inline-block;
+	vertical-align: middle;
+	width: 12px;
+	line-height: 1;
+	text-align: center;
+	font-size: 12px;
+	font-weight: normal;
+	padding-bottom: 2px;
+}
+
+/* ********** */
+/* 共通ソートアイコン */
+/* ********** */
+/* ソートアイコン */
+i.par-ico_sort {
+	position: relative;
+	display: inline-block;
+	width: 18px;
+	height: 18px;
+	background-color: #ffffff;
+	border: 1px solid var(--MAIN_COLOR, #003288);
+	box-sizing: border-box;
+	border-radius: 3px;
+}
+
+/* ********** ソートボタン下向き未選択 ********** */
+.guide i.par-ico_sort,
+.par-sort_wrapper i.par-ico_sort{
+	background-image: url("/cdn/pc/images/datafile/btn_w_down.svg");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* ********** ソートボタン上向き未選択 ********** */
+.par-sort_wrapper i.par-ico_sort.asc_sort{
+	background-image: url("/cdn/pc/images/datafile/btn_w_up.svg");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* ********** ソートボタン下向き選択中 ********** */
+.par-sort_wrapper.selected i.par-ico_sort{
+	background-image: url("/cdn/pc/images/datafile/btn_blue_down.svg");
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+/* ********** ソートボタン上向き選択中 ********** */
+.par-sort_wrapper.selected i.par-ico_sort.asc_sort{
+	background-image: url("/cdn/pc/images/datafile/btn_blue_down.svg");
+    background-position: center center;
+    background-repeat: no-repeat;
+    transform: rotate(180deg);
+}
+
+/* ソート部分Wrapper */
+.par-sort_wrapper {
+	position: relative;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	text-decoration: none;
+	align-content: center;
+	justify-content: center;
+	align-items: center;
+}
+
+.par-sort_wrapper span {
+	display: inline-block;
+	vertical-align: middle;
+	color: var(--MAIN_WHITE, #FFF);
+	font-weight: normal;
+}
+
+.par-sort_wrapper i.par-ico_sort {
+	/* margin-left: 7px; */
+}
+
+.par-sort_wrapper.selected i.par-ico_sort {
+	background-color: #4494D5;
+	border: 1px solid var(--gray);
+}
+
+.par-sort_wrapper.selected i.par-ico_sort.desc_sort:after {
+	left: 0.3rem;
+}
+
+.par-sort_wrapper.selected i.par-ico_sort.asc_sort:after {
+	border-bottom: 5px solid #ffffff;
+	bottom: 4px;
+}
+
+/* SELECT BOX */
+/* セレクトボックス */
+.par-select01 {
+	position: relative;
+	width: 236px;
+	height: 30px;
+}
+
+.par-select01 option {
+	/* font-weight: bold; */
+}
+
+.par-select01 .selectbox {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	z-index: 15;
+	-webkit-appearance: none;
+	cursor: pointer;
+}
+
+.par-select01 .selectbox_view {
+	position: absolute;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	line-height: 30px;
+	border: solid 1px #bbbbbb;
+	padding: 0px 10px;
+	box-sizing: border-box;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+p.selectbox_view::before {
+	/* content: ''; */
+	/* position: absolute; */
+	/* display: inline-block; */
+	/* vertical-align: middle; */
+	/* width: 25px; */
+	/* height: 49px; */
+	/* right: 0; */
+	/* bottom: 0; */
+	/* background-color: var(--red); */
+}
+
+p.selectbox_view::after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 0;
+	right: 6px;
+	top: 42%;
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-top: 9px solid #22328E;
+}
+
+/*-------------------------
+ * 共通テーブル
+-------------------------*/
+.par-table01 {
+	width: 100%;
+	font-weight: bold;
+}
+
+.par-table01 th,
+.par-table01 td {
+	border: 1px solid #7C7C7C;
+	vertical-align: middle;
+	text-align: center;
+	font-size: 14px;
+}
+
+.par-table01 th {
+	background: var(--MAIN_COLOR, #003288);
+	color: #FFFFFF;
+	border: 1px solid #5270A4;
+	border-top: none;
+	height: 7rem;
+}
+
+/* normal & group */
+.par-table01.normal tbody tr:nth-of-type(odd) td,
+.par-table01.group tbody:nth-of-type(odd) tr td {
+	/* background-color: #ffffff; */
+}
+
+.par-table01.normal tbody tr:nth-of-type(even) td,
+.par-table01.group tbody:nth-of-type(even) tr td {
+	/* background-color: var(--BASE_BACKGROUND03, #e5f5ff); */
+}
+
+.bg_missed {
+	opacity: 0.3;
+}
+
+.missed_txt {
+	position: absolute;
+	font-size: large;
+	font-weight: bold;
+
+}
+
+/*-------------------------
+ * コメントテーブル
+-------------------------*/
+.comment-table01 {
+	width: 100%;
+	font-weight: bold;
+	border-spacing: 10%;
+	border-collapse: separate;
+    border-spacing: 5px 5px;
+}
+
+.comment-table01 tbody,
+.comment-table01 tr,
+.comment-table01 td {
+	border: none;
+}
+
+.comment-table01.tag {
+	vertical-align: top;
+	width: 0;
+}
+.comment-table01.comment {
+	vertical-align: top;
+	text-align:left;
+}
+
+.comment-table01.comment .comment_text {
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+}
+
+/*-------------------------
+ * 共通タブ
+-------------------------*/
+/* par-tab01 */
+.par-tab01 {
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	text-align: center;
+	border-bottom: 3px solid #000000;
+	gap: 10.67px;
+}
+
+.par-tab01 .par-tab_li {
+	position: relative;
+	display: flex;
+	width: 218.18px;
+	height: 54px;
+	background: #FFFFFF;
+	border-radius: 8px 8px 0 0;
+}
+
+.par-tab01 .par-tab_li.selected {
+	background: var(--MAIN_COLOR, #003288);
+}
+
+.par-tab01 .par-tab_li .par-tab_item {
+	position: relative;
+}
+
+.par-tab01 .par-tab_li.selected .par-tab_item:hover {
+	opacity: 1;
+}
+
+.par-tab01 .par-tab_li .par-tab_item .par-tab_item_cell {
+	display: flex;
+	width: 218.18px;
+	height: 54px;
+	justify-content: center;
+	align-items: center;
+	color: var(--MAIN_COLOR, #003288);
+	font-weight: bold;
+}
+
+.par-tab01 .par-tab_li.selected .par-tab_item .par-tab_item_cell {
+	color: #FFFFFF;
+}
+
+.par-tab01 .par-tab_li.selected .par-tab_item .par-tab_item_cell::after {
+	/* content: ''; */
+	/* position: absolute; */
+	/* background: url(/cdn/pc/images/common/ico_arrow_w_down.svg) no-repeat; */
+	/* background-size: 12px 7px; */
+	/* width: 12px; */
+	/* height: 7px; */
+	/* bottom: 3px; */
+}
+
+/* par-tab01 左寄せ */
+.par-tab01.tab_align_left {
+	justify-content: flex-start;
+}
+
+/* par-tab02 */
+.par-tab02 {
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	text-align: center;
+	border-bottom: 2px solid #003288;
+	gap: 8px;
+	padding: 0 40px;
+}
+
+.par-tab02 .par-tab_li {
+	display: flex;
+	width: 123px;
+	height: 50px;
+	background-color: #FFFFFF;
+	border: 2px solid var(--MAIN_COLOR, #003288);
+	border-bottom: 0;
+}
+
+.par-tab02 .par-tab_li .par-tab_item {
+	display: flex;
+	width: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    padding: 0 8px;
+    flex: 1 0 0;
+}
+
+.par-tab02 .par-tab_li.selected {
+	border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background: var(--MAIN_COLOR, #003288);
+}
+
+.par-tab02 .par-tab_li.selected .par-tab_item {
+	height: 53px;
+	border-radius: 7px 7px 0 0;
+}
+
+.par-tab02 .par-tab_li .par-tab_item .par-tab_item_cell {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #003288;
+	font-weight: bold;
+	font-size:17px;
+}
+
+.par-tab02 .par-tab_li.selected .par-tab_item .par-tab_item_cell {
+	display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    color: #FFFFFF;
+	font-size:17px;
+}
+
+.par-tab02 .par-tab_li:has(+.par-tab_li.selected) {
+	border-top-right-radius: 10px;
+	border-top-left-radius: 10px;
+}
+
+.par-tab02 .par-tab_li.selected+.par-tab_li {
+	border-top-right-radius: 10px;
+	border-top-left-radius: 10px;
+}
+
+.par-tab02 .par-tab_li {
+	border-top-right-radius: 10px;
+	border-top-left-radius: 10px;
+}
+
+
+/* par-tab03 */
+.par-tab03 {
+	display: flex;
+	width: 100%;
+	height: 4rem;
+	text-align: center;
+	margin: 0 2.5rem ;
+	gap: 1rem;
+	/* border-bottom: 2px solid #F4BD08; */
+}
+
+/* par-tab03 左寄せ */
+.par-tab03.tab_align_left {
+	justify-content: flex-start;
+	gap:5px;
+	border-bottom: 2px solid #000000;
+}
+
+.par-tab03.tab_align_left .par-tab_li {
+	border: 2px solid #000000;
+}
+
+.par-tab03 .par-tab_li {
+	position: relative;
+	display: flex;
+	width: 10rem;
+	height: 4rem;
+	background-color: #FFFFFF;
+	border: 2px solid var(--MAIN_COLOR, #003288);
+	border-radius: 6px;
+}
+
+.par-tab03 .par-tab_li.selected {
+	background: #FF9D00;
+	border: 2px solid #FF9D00;
+}
+
+
+.par-tab03 .par-tab_li:not(:last-child).selected::after {
+	background-color: #F4BD08;
+}
+
+.par-tab03 .par-tab_li .par-tab_item .par-tab_item_cell {
+	display: flex;
+	width: 9.6rem;
+	height: 100%;
+	justify-content: center;
+	align-items: center;
+	color: var(--MAIN_COLOR, #003288);
+	font-size: 1.6rem;
+	font-weight: bold;
+}
+
+/*-------------------------
+ * 共通ボタン
+-------------------------*/
+.par-btn01 {
+	position: relative;
+	display: flex;
+	width: 320px;
+	height: 54px;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid var(--BASE_LINE, #D9D9D9);
+	color: var(--MAIN_BLACK, #222);
+	font-weight: bold;
+	font-size: 16px;
+	line-height: 1;
+	border-radius: 8px;
+}
+
+.par-btn01.left-arrow::before,
+.par-btn01.right-arrow::before {
+	content: "";
+	position: absolute;
+	width: 16px;
+	height: 16px;
+}
+
+.par-btn01.left-arrow::before {
+	background-image: url(/cdn/pc/images/common/ico_circle_arrow_b_left.svg);
+	left: 16px;
+	transform: rotate(90deg);
+}
+
+.par-btn01.right-arrow::before {
+	background-image: url(/cdn/pc/images/common/ico_circle_arrow_b_right.svg);
+	right: 16px;
+}
+
+.par-btn01.right-arrow::before {
+	/* border-width: 5px 0 5px 7px; */
+	/* border-color: transparent transparent transparent #4494d5; */
+	/* left: auto; */
+	/* right: 12px; */
+}
+
+.par-btn02 {
+	position: relative;
+	display: flex;
+	width: 192px;
+	height: 48px;
+	justify-content: center;
+	align-items: center;
+	margin: 0 auto;
+	background: var(--MAIN_COLOR, #003288);
+	color: #FFFFFF;
+	font-size: 16px;
+	font-weight: bold;
+}
+.par-btn02.left-arrow::before {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/common/ico_circle_arrow_w_left.svg) no-repeat;
+	background-size: 16px;
+	width: 16px;
+	height: 16px;
+	top: 50%;
+	left: 16px;
+	transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+}
+
+.par-btn02.right-arrow::before {
+	content: '';
+	position: absolute;
+	background: url(/cdn/pc/images/common/ico_circle_arrow_w.svg) no-repeat;
+	background-size: 16px;
+	width: 16px;
+	height: 16px;
+	top: 50%;
+	right: 16px;
+	transform: translateY(-50%);
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+}
+
+.par-btn02.disabled {
+	/* background-color: #cccccc; */
+}
+
+/* リプレイボタン */
+.replay_link {
+	display: inline-block;
+	width: 28px;
+	height: 28px;
+	background-color: #1F9BFF;
+	border-radius: 15px;
+	background-image: url(/cdn/pc/images/common/ico_replay.svg);
+	background-size: 18px 18px;
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+/* ********** */
+/* 共通リンク */
+/* ********** */
+.par-link01 {
+	color: var(--MAIN_COLOR, #003288);
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+/*-------------------------
+ * 共通タイトル
+-------------------------*/
+.par-title01 {
+	position: relative;
+	width: 100%;
+	min-height: 48px;
+	font-size: 24px;
+	font-weight: bold;
+	color: #FFFFFF;
+	background: var(--MAIN_COLOR, #003288);
+	border-radius: 6px;
+	padding: 6px 24px 7px 16px;
+}
+
+.par-title02 {
+	position: relative;
+	width: 100%;
+	min-height: 35px;
+	font-size: 24px;
+	font-weight: bold;
+	color: var(--MAIN_COLOR, #003288);
+}
+
+.par-title03 {
+	position: relative;
+	width: 100%;
+	min-height: 46px;
+	font-size: 20px;
+	font-weight: bold;
+	padding-bottom: 9.5px;
+}
+
+.par-title03::after {
+	content: '';
+	position: absolute;
+	width: 80px;
+	height: inherit;
+	left: 0;
+	bottom: -1.5px;
+	border-bottom: 2px solid var(--MAIN_COLOR, #003288);
+}
+
+/*-------------------------
+ * 共通レースタイトル
+-------------------------*/
+.par-racetitle_group .par-ico_grade {
+	display: block;
+	width: 72px;
+	height: 32px;
+	border-radius: 32px;
+	text-align: center;
+	font-size: 20px;
+	font-weight: bold;
+	line-height: 1.6;
+}
+
+.par-racetitle_group.type_3 .par-icon_area {
+	display: flex;
+}
+
+.par-racetitle_group .par-ico_grade.has_nthday {
+	/* border-top-right-radius: 0; */
+	/* border-bottom-right-radius: 0; */
+}
+
+.par-racetitle_group .par-ico_kaisai_nthday {
+	/* display: inline-block; */
+	/* width: 70px; */
+	/* height: 28px; */
+	/* line-height: 28px; */
+	/* text-align: center; */
+	/* font-size: 16px; */
+	/* font-weight: bold; */
+	/* background-color: #eeeeee; */
+	/* border-top-right-radius: 6px; */
+	/* border-bottom-right-radius: 6px; */
+}
+
+.par-racetitle_group .par-racetitle {
+	/* margin-top: 5px; */
+	/* font-weight: bold; */
+	/* font-size: 26px; */
+	/* line-height: 1.6; */
+}
+
+/* 日程 */
+.par-racetitle_group .racedays_group {
+	vertical-align: middle;
+	font-size: 0;
+}
+
+.par-racetitle_group .racedays_group .date_wrapper {
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+}
+
+/* 月 */
+.par-racetitle_group .racedays_group .item_month {
+	position: relative;
+	display: inline-block;
+	font-size: 12px;
+	font-weight: bold;
+	margin-top: 0;
+	text-align: center;
+	vertical-align: top;
+	line-height: 1;
+}
+
+/* 日 */
+.par-racetitle_group .racedays_group .day {
+	position: relative;
+	display: inline-block;
+	margin: 0;
+}
+
+.par-racetitle_group .racedays_group .day:last-child {
+	margin-right: 0;
+}
+
+.par-racetitle_group .racedays_group .day .item_day {
+	position: relative;
+	display: block;
+	font-size: 2.2rem;
+	/* font-weight: bold; */
+	text-align: center;
+	line-height: 1;
+}
+
+/* 曜日 */
+.par-racetitle_group .racedays_group .day .weekday {
+	/* display: block;
+	width: 18px;
+	height: 18px; */
+	/* line-height: 1.75; */
+	color: #fff;
+	/* background-color: #121212; */
+	font-size: 11px;
+	font-weight: bold;
+	border-radius: 50%;
+	text-align: center;
+	margin: 3px auto 0;
+}
+
+/* カレントデイ */
+.par-racetitle_group:not(.type_3) .racedays_group .day.current {
+	/* background-color: #f8ecef; */
+}
+
+/* 中止 */
+.par-racetitle_group .racedays_group .day.cancel .item_day:after {
+	content: '';
+	display: block;
+	position: absolute;
+	top: 6px;
+	left: -2px;
+	width: calc(100% + 4px);
+	height: 2px;
+	background: var(--MAIN_WHITE, #FFF);
+}
+
+/* 共通レースタイトル（type_1） */
+.par-racetitle_group.type_1 {
+	/* width: 100%; */
+	/* height: 170px; */
+	/* padding: 10px 40px 0; */
+}
+
+.par-racetitle_group.type_1 .par-title_wrapper {
+	/* display: flex; */
+	/* align-items: center; */
+	/* height: 110px; */
+}
+
+.par-racetitle_group.type_1 .par-racetitle,
+.par-racetitle_group.type_2 .par-racetitle {
+	/* display: block; */
+	/* width: 100%; */
+	color: var(--MAIN_COLOR, #003288);
+}
+
+/* 共通レースタイトル（type_2） */
+.par-racetitle_group.type_2 {
+	/* width: 100%; */
+	/* height: 178px; */
+	/* padding: 10px 40px 0; */
+}
+
+.par-racetitle_group.type_2 .par-title_wrapper {
+	/* display: flex; */
+	/* align-items: center; */
+	/* height: 110px; */
+}
+
+/* 共通レースタイトル（type_3） */
+.par-racetitle_group.type_3 {
+	display: flex;
+	justify-content: space-between;
+	background: var(--MAIN_COLOR, #003288);
+	border-radius: 16px 16px 0 0;
+	color: #FFFFFF;
+	width: 1200px;
+	height: 134px;
+	align-items: center;
+}
+
+.par-racetitle_group.type_3 .par-title_wrapper {
+	display: flex;
+	align-items: center;
+	margin-left: 40px;
+}
+
+.par-racetitle_group.type_3 .par-ico_grade {
+	display: inline-block;
+	width: 67px;
+	height: 33px;
+	border-radius: 40px;
+	/* color:var(--MAIN_BLACK, #000000); */
+	text-align: center;
+	font-size: 20px;
+	font-style: normal;
+	font-weight: bold;
+	line-height: 33px;
+}
+
+.par-racetitle_group.type_3 .par-ico_grade.has_nthday {
+	border-radius: 40px 0 0 40px;
+	background: #ffffff !important;
+    color: #003388;
+}
+
+.par-racetitle_group.type_3 .par-ico_kaisai_nthday {
+	display: inline-block;
+	width: 67px;
+	height: 33px;
+	text-align: center;
+	border-radius: 0 40px 40px 0;
+	background: #dd0000;
+	color: #FFFFFF;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: bold;
+	line-height: 33px;
+}
+
+
+.par-racetitle_group.type_3 .par-racetitle {
+	margin-left: 16px;
+	color: #FFFFFF;
+	font-size: 24px;
+	font-style: normal;
+	font-weight: bold;
+	line-height: 24px;
+}
+
+.par-racetitle_group.type_3 .par-racedays_wrapper {
+	width: 372px;
+}
+
+.par-racetitle_group.type_3 .racedays_group {
+	display: flex;
+	justify-content: center;
+	height: 54px;
+}
+
+.par-racetitle_group.type_3 .day {
+	display: flex;
+	align-items: center;
+}
+
+.par-racetitle_group.type_3 .day .item_month {
+	display: inline-block;
+	margin-right: 20px;
+	margin-left: 12px;
+	color: #FFFFFF;
+	font-size: 24px;
+	font-style: normal;
+	font-weight: normal;
+	line-height: 12px;
+}
+
+.par-racetitle_group.type_3 .day .item_month:first-child {
+	margin-left: 0px;
+}
+
+.par-racetitle_group.type_3 .day .date_wrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 16px;
+	margin-right: 28px;
+	margin-top: 4px;
+}
+
+.par-racetitle_group.type_3 .day .item_day {
+	display: inline-block;
+	color: #FFFFFF;
+	text-align: center;
+	font-size: 26px;
+	font-style: normal;
+	font-weight: normal;
+	line-height: 16px;
+}
+
+.par-racetitle_group.type_3 .day .weekday {
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	padding-top: 5px;
+	color: #FFFFFF;
+	text-align: center;
+	font-size: 11px;
+	font-style: normal;
+	font-weight: bold;
+	line-height: 10px;
+}
