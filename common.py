@@ -7,6 +7,8 @@ import time
 import datetime
 import tempfile
 import unicodedata
+import threading
+from collections.abc import MutableMapping
 
 import requests
 
@@ -44,6 +46,32 @@ X = ['boat', 'course', 'venue', 'tenji', 'tenji_diff', 'tenji_rank',
      'rv_win', 'm_top2', 'vc_win', 'vc_top2', 'vc_top3',
      'rwin_rank', 'top3_rank', 'in_d', 'wind', 'wave']
 TARGETS = ['win', 'top2', 'top3']
+
+
+class ThreadState(MutableMapping):
+    """レース処理の状態をスレッド間で共有しない。"""
+    def __init__(self):
+        self.local = threading.local()
+
+    def _data(self):
+        if not hasattr(self.local, 'data'):
+            self.local.data = {}
+        return self.local.data
+
+    def __getitem__(self, key):
+        return self._data()[key]
+
+    def __setitem__(self, key, value):
+        self._data()[key] = value
+
+    def __delitem__(self, key):
+        del self._data()[key]
+
+    def __iter__(self):
+        return iter(self._data())
+
+    def __len__(self):
+        return len(self._data())
 
 
 def add_rel(d, keys=None):

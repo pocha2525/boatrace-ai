@@ -25,6 +25,8 @@ AHEAD_MIN = 10   # 締切までこの分数より短いレースは、候補に�
 def info_morning(jcd, rno, hd):
     """出走表から、選手とモーターだけを読む（predict.race_info と同じ形で返す）"""
     html = page('racelist', jcd, rno, hd)
+    predict.LAST['html_racelist'] = html
+    predict.LAST['html_before'] = ''
     ids = list(dict.fromkeys(re.findall(r'toban=(\d{4})', html)))[:6]
     s = BeautifulSoup(html, 'html.parser')
     h2 = s.select('td.is-lineH2')
