@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "created_at": "2026-11-28T07:10:39.600713+09:00",
+  "trained_before": 20261128,
+  "baseline_ids": [
+    "1cf3abb4cc60383ebfc9a2892480567ebdc992ea8a601c2cdc9e72f270cee7ec",
+    "ad05375eff414e66a345cd6d047a3d8822ee90db165d9cbf97f8acdcbd893164",
+    "f2fb849bb34c832ea3c46989ecd20457cac19eaaae813cceb28fe4e3ed4a607d"
+  ],
+  "candidate_ids": [
+    "cdf92b110c2ed36f8453e06c571101f61df2652836dc9988c51474eb7a766ac4",
+    "32e43df4a78b0adab5666064b30616ad18f4c2e9e58e750bba6b3b17c1032dea",
+    "7775780049e3ab2f704ae182963ff492af0dfd72ed7da27c17b06825e3f46f9a"
+  ],
+  "temperature": 1.0,
+  "historical_quality_passed": false,
+  "policy": "current_two",
+  "min_days": 28,
+  "min_races": 200,
+  "rule": "paired-day-bootstrap-v1"
+}
