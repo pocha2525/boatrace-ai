@@ -1,7 +1,7 @@
 name: backtest-notify
 on:
   workflow_run:
-    workflows: [backtest]
+    workflows: [backtest, refine]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -19,6 +19,7 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       BACKTEST_RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+      BACKTEST_CONCLUSION: ${{ github.event.workflow_run.conclusion || 'unknown' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,32 +27,4 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
       - name: Send the verified diagnostic summary once
-        run: |
-          python - <<'PY'
-          import glob, json, os
-          from common import send_notify, SENT_OK
-          run_id = os.environ['BACKTEST_RUN_ID']
-          paths = glob.glob('logs/backtest/*_' + run_id + '/summary.json')
-          link = 'https://github.com/' + os.environ['GITHUB_REPOSITORY'] + '/actions/runs/' + run_id
-          if paths:
-              d = json.load(open(paths[-1], encoding='utf8'))
-              name = d['chosen_on_validation']
-              baseline, candidate = d['metrics']['baseline_66_refit'], d['metrics'][name]
-              lines = [f"評価 {d['holdout_from']}〜{d['holdout_until']} / {candidate['races']}R",
-                       '同じ学習期限で再学習した66項目モデルとの比較']
-              for label, v in [('基準', baseline), ('候補', candidate)]:
-                  lines.append(f"{label} {v['features']}項目: 本命的中{v['top1_hit_pct']:.1f}% / 2点内的中{v['top2_hit_pct']:.1f}%")
-                  lines.append(f" 固定1点回収{v['fixed1_roi_pct']:.1f}% / 固定2点回収{v['fixed2_roi_pct']:.1f}%")
-              check = d['comparison']
-              improved = check['approved'] and candidate['top1_hit_pct'] >= baseline['top1_hit_pct']
-              lines += ['判定: ' + ('改善基準を満たしました（本番モデルの変更なし）' if improved else '改善を確認できず（本番モデルの変更なし）'),
-                        '※過去データの診断。固定買いの回収率で、本番の期待値買いは未再現。F/L・同着等は除外。', link]
-              title = 'バックテスト結果'
-          else:
-              title = 'バックテスト結果を確定できず'
-              lines = ['結果ファイルが保存されていません。的中率や回収率は未確定です。', link]
-          result = send_notify(title, '\n'.join(lines), notification_id='backtest-result-' + run_id)
-          print('通知受付:', result['status'])
-          if result['status'] != SENT_OK:
-              raise SystemExit('通知の受付を確認できませんでした')
-          PY
+        run: python notify_evaluation.py
