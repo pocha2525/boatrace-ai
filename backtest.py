@@ -69,7 +69,9 @@ def metrics(p, truth, pay):
                 fixed2_roi_pct=float((pay*hit2).sum()/(len(p)*2)),
                 selected12_n=n_selected,
                 selected12_hit_pct=float(hit1[selected].mean()*100) if n_selected else None,
-                selected12_roi_pct=float((pay[selected]*hit1[selected]).sum()/n_selected) if n_selected else None), ll, hit1, order
+                selected12_roi_pct=float((pay[selected]*hit1[selected]).sum()/n_selected) if n_selected else None,
+                selected12_two_hit_pct=float(hit2[selected].mean()*100) if n_selected else None,
+                selected12_two_roi_pct=float((pay[selected]*hit2[selected]).sum()/(n_selected*2)) if n_selected else None), ll, hit1, order
 
 
 def main():
