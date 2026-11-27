@@ -88,10 +88,13 @@ def assess(detail, manifest):
         return base
     if not manifest.get('historical_quality_passed'):
         columns=['log_probability_base','log_probability_cand']
-        if not set(columns).issubset(pairs) or len(pairs)<500 or pairs[columns].isna().any().any():
+        if not set(columns).issubset(pairs):
+            return dict(base,reason='新規の確率精度と収支の両方を確認するデータ不足')
+        quality_pairs=pairs.dropna(subset=columns)
+        if len(quality_pairs)<500:
             return dict(base,reason='新規の確率精度と収支の両方を確認するデータ不足')
         from evaluation import compare
-        quality=compare(pairs.log_probability_base,pairs.log_probability_cand,pairs.hd_base,gain=.002)
+        quality=compare(quality_pairs.log_probability_base,quality_pairs.log_probability_cand,quality_pairs.hd_base,gain=.002)
         if not quality['approved']:
             return dict(base,reason='新規期間の確率精度の改善を確認できない')
     cols=['investment_base','returned_base','investment_cand','returned_cand']
