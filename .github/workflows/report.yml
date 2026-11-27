@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 20
     env:
       PYTHONUNBUFFERED: '1'
+      GITHUB_TOKEN: ${{ github.token }}
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
       RELAY_URL: ${{ secrets.RELAY_URL }}
     steps:
@@ -43,3 +44,8 @@ jobs:
             echo "保存失敗（${i}回目）"; sleep $((i * 5))
           done
           echo "保存に3回失敗しました"; exit 1
+
+      - name: sync sheet after saved commit
+        run: python sync_sheet.py
+        env:
+          SHEET_HOOK: ${{ secrets.SHEET_HOOK }}
