@@ -1,0 +1,2 @@
+date,run_at,cut,races,n_feats,use_bf,ev_cov,bf_days,top,champ_ll,cand_ll,champ_hit,cand_hit,adopted
+20261127,18:58,20261030,4061,66,0,0.71,0,rc_top2 rc_top3 rc_win course b_nat_win_d vc_top3 vc_win tenji_diff vc_top2 venue ss_rank in_d,-3.9079,-3.8849,9.1,9.2,1
