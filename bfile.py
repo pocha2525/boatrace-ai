@@ -55,9 +55,18 @@ def download_b(d):
     return path
 
 
-ROW = re.compile(
-    r'^([1-6]) (\d{4})(.{4})(\d{2})(.{2})(\d{2})([AB][12])\s*([\d.]+)\s+([\d.]+)'
-    r'\s+([\d.]+)\s+([\d.]+)\s+(\d+)\s+([\d.]+)\s+(\d+)\s+([\d.]+)')
+HEAD = re.compile(r'^([1-6]) (\d{4})(.{4})(\d{2})(.{2})(\d{2})([AB][12])')
+# 級別のあとは固定幅（全国勝率5・2連率6・当地勝率5・2連率6・モーターNo3・2連率6・ボートNo3・2連率6）。
+# 100.00 のように桁が埋まると数字どうしがくっつくので、空白ではなく幅で切る
+WIDTHS = [5, 6, 5, 6, 3, 6, 3, 6]
+
+
+def _cut(rest):
+    out, i = [], 0
+    for w in WIDTHS:
+        out.append(rest[i:i + w].strip())
+        i += w
+    return out
 
 
 def parse_b_text(text, date):
@@ -75,16 +84,17 @@ def parse_b_text(text, date):
             continue
         if race is None:
             continue
-        m = ROW.match(raw)
+        m = HEAD.match(raw)
         if m:
             g = m.groups()
+            v = [_f(x) for x in _cut(raw[m.end():])]
             rows.append({'date': date, 'venue': venue, 'race': race,
                          'boat': int(g[0]), 'racer': int(g[1]),
                          'b_age': float(g[3]), 'b_wt': float(g[5]),
                          'b_cls': CLS[g[6]],
-                         'b_nat_win': float(g[7]), 'b_nat_2r': float(g[8]),
-                         'b_loc_win': float(g[9]), 'b_loc_2r': float(g[10]),
-                         'b_mot_2r': float(g[12]), 'b_boat_2r': float(g[14])})
+                         'b_nat_win': v[0], 'b_nat_2r': v[1],
+                         'b_loc_win': v[2], 'b_loc_2r': v[3],
+                         'b_mot_2r': v[5], 'b_boat_2r': v[7]})
     return rows
 
 
