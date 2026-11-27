@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 
 import setsu
+import extra
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, page, notify, add_rel, send_notify,
@@ -60,6 +61,8 @@ def load_model():
         lk[n] = {tuple(r[:-1]): r[-1] for r in t[ks + [n]].values.tolist()}
     # 今節の成績表（夜間の改善で毎朝作り直す。無ければ「初日」扱い）
     lk['_setsu'] = setsu.load_tables(MODEL)
+    # フライング歴（夜間の改善で毎朝作り直す）
+    lk['_f'] = extra.load_f(MODEL)
     return bst, lk
 
 
@@ -112,7 +115,9 @@ def race_info(jcd, rno, hd):
     w = re.findall(r'LabelData">\s*([\d.]+)\s*(m|cm)\s*<', b)
     wind = next((float(v) for v, u in w if u == 'm'), 0.0)
     wave = next((float(v) for v, u in w if u == 'cm'), 0.0)
+    LAST['html_before'] = b
     rl = page('racelist', jcd, rno, hd)
+    LAST['html_racelist'] = rl
     rl_ids = list(dict.fromkeys(re.findall(r'toban=(\d{4})', rl)))[:6]
     r = BeautifulSoup(rl, 'html.parser')
     h2 = r.select('td.is-lineH2')
@@ -169,6 +174,8 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     LAST['skip'] = reason
     if reason:
         return None
+    save_entries(hd, jcd, rno, ids)
+    done = extra.today_results(LOGS, hd)   # 今日すでに終わったレースの着
     yr = int(hd[:4])
 
     def g(n, *k):
@@ -195,6 +202,8 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
         # 今節の材料（今節の材料を使うモデルのときだけ予想に使われる）
         r.update(setsu.lookup(lk.get('_setsu', ({}, {})), rid, jcd, c,
                               r['tenji'], r.get('vc_win'), hd))
+        # フライング歴・当日の前走（その材料を使うモデルのときだけ予想に使われる）
+        r.update(extra.lookup(lk.get('_f', {}), done, rid, jcd, rno, hd))
         rows.append(r)
     d = add_rel(pd.DataFrame(rows).astype(float))
     one = d.loc[d['course'] == 1, 'rc_win_d']
@@ -339,6 +348,31 @@ def send_skip_notice(name, rno, dl, nid, reason, res):
     return send_notify(f'見送り {name} {rno}R', '\n'.join(lines))['status']
 
 
+def save_entries(hd, jcd, rno, ids):
+    """出走の記録（当日の前走結果を作るため）。1レース1回だけ書く"""
+    p = os.path.join(LOGS, f'entries_{hd}.csv')
+    if os.path.exists(p):
+        t = pd.read_csv(p, dtype=str)
+        if ((t['jcd'] == str(jcd)) & (t['rno'] == str(rno))).any():
+            return
+    append_rows(p, ['hd', 'jcd', 'rno', 'boat', 'racer'],
+                [dict(hd=hd, jcd=jcd, rno=rno, boat=i + 1, racer=r)
+                 for i, r in enumerate(ids)])
+
+
+def save_sample(hd, kind, html):
+    """公式ページの見本を1日1回だけ残す（新しい材料の読み取り方を確かめるため）"""
+    if not html:
+        return
+    d = os.path.join(LOGS, 'samples')
+    p = os.path.join(d, f'{hd}_{kind}.html')
+    if os.path.exists(p):
+        return
+    os.makedirs(d, exist_ok=True)
+    with open(p, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+
 def remain(dl):
     return (dl - now_jst()).total_seconds() / 60
 
@@ -348,6 +382,11 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     name = VENUES.get(jcd, str(jcd))
     nid = f'{hd}-{jcd:02d}-{rno:02d}'  # 通知ID（1レース1通知）
     pr = predict(bst, lk, jcd, rno, hd)
+    try:
+        save_sample(hd, 'beforeinfo', LAST.get('html_before'))
+        save_sample(hd, 'racelist', LAST.get('html_racelist'))
+    except Exception as e:
+        print('見本を保存できない', e)
     base = {'hd': hd, 'jcd': jcd, 'venue': name, 'rno': rno,
             'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}'}
     mark = '○' if cand else ''
@@ -496,7 +535,10 @@ def update_results(hd, now):
     rows = []
     for past, (jcd, rno), venue, dl in todo[:RESULT_MAX]:
         try:
-            res = parse_result(page('raceresult', jcd, rno, hd))
+            html = page('raceresult', jcd, rno, hd)
+            res = parse_result(html)
+            if res:
+                save_sample(hd, 'raceresult', html)
         except Exception as e:
             print('結果を読めない', jcd, rno, e)
             res = None

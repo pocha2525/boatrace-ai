@@ -18,6 +18,7 @@ import lightgbm as lgb
 from common import MODEL, FEATS, X, TARGETS, now_jst, notify, add_rel, k_path
 import train
 import setsu
+import extra
 
 EVAL_DAYS = 28       # 比べる期間（どちらのモデルも学習に使っていない直近の日数）
 MIN_GAIN = 0.002     # 3連単の当てはまり（1レース平均の対数）がこれ以上良くなったら入れ替え
@@ -92,7 +93,7 @@ def trifecta_score(models, ev):
 def challenge(df, today):
     """挑戦者モデルを作り、直近28日で今のモデルと比べる。良ければ入れ替える"""
     cut = int((today - datetime.timedelta(days=EVAL_DAYS)).strftime('%Y%m%d'))
-    X2 = X + setsu.SETSU   # 今の材料 ＋ 今節の材料
+    X2 = X + setsu.SETSU + extra.EXTRA   # 今の材料 ＋ 今節 ＋ フライング歴・当日の前走
     tr = df[(df['date'] >= train.TRAIN_FROM) & (df['date'] < cut)]
     ev = df[df['date'] >= cut]
     cand_dir = os.path.join(MODEL, 'candidate')
@@ -155,6 +156,7 @@ def main():
     last = int(df['date'].max())
     write_cur(df)
     setsu.write_tables(df, MODEL)
+    extra.write_tables(df, MODEL, f'{today:%Y%m%d}')
     lines = [f'選手・モーターの成績表と今節の成績表を {last // 10000}/{last // 100 % 100}/'
              f'{last % 100} までの結果で更新しました（{len(df):,}走）']
     hot = setsu.hot_list(setsu.load_tables(MODEL), f'{today:%Y%m%d}')
@@ -176,9 +178,10 @@ def main():
                champ_hit='', cand_hit='', adopted='')
     if full:
         try:
-            r = challenge(setsu.add_hist(features(df, rc)), today)
+            r = challenge(extra.add_hist(setsu.add_hist(features(df, rc))), today)
             row.update(r)
-            lines.append(f'今節の材料を足した新しいモデルを、直近{EVAL_DAYS}日（{r["races"]}レース）で比較：')
+            lines.append(f'新しい材料（今節・フライング歴・当日の前走）を入れたモデルを、'
+                         f'直近{EVAL_DAYS}日（{r["races"]}レース）で比較：')
             lines.append(f'  当てはまり 今{r["champ_ll"]} → 新{r["cand_ll"]}（大きいほど良い）')
             lines.append(f'  本命の的中率 今{r["champ_hit"]}% → 新{r["cand_hit"]}%')
             lines.append('  → 新しいモデルに入れ替えました（前のモデルは保存済み）'
