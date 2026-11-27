@@ -18,7 +18,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087133+09:00",
+    "checked_at": "2026-11-28T05:08:16.401176+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -34,7 +34,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087166+09:00",
+    "checked_at": "2026-11-28T05:08:16.401193+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -55,7 +55,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087170+09:00",
+    "checked_at": "2026-11-28T05:08:16.401198+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "未設定",
     "comment_sample_boats": 6,
@@ -76,7 +76,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087175+09:00",
+    "checked_at": "2026-11-28T05:08:16.401203+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -91,22 +91,29 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087179+09:00",
+    "checked_at": "2026-11-28T05:08:16.401207+09:00",
     "comment_adapter": "公開の選手別コメント表を未特定",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
     "comment_source": ""
   },
   "6": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://www.boatrace-hamanako.jp/modules/yosou/group-syussou.php?day={d}&race={r}"
+    ],
     "checked": [
+      {
+        "url": "https://www.boatrace-hamanako.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://www.boatrace-hamanako.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087183+09:00",
+    "checked_at": "2026-11-28T05:08:16.401211+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -126,7 +133,7 @@
         "boats": 0
       },
       {
-        "url": "https://www.gamagori-kyotei.com/asp/gamagori/kyogi/kyogihtml/index.htm?page=midokoro&yd=20261127",
+        "url": "https://www.gamagori-kyotei.com/asp/gamagori/kyogi/kyogihtml/index.htm?page=midokoro&yd=20261128",
         "state": "対応表なし",
         "boats": 0
       },
@@ -141,7 +148,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087186+09:00",
+    "checked_at": "2026-11-28T05:08:16.401215+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -157,12 +164,17 @@
     "comment_urls": [],
     "checked": [
       {
+        "url": "https://www.boatrace-tokoname.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
         "url": "https://www.boatrace-tokoname.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087190+09:00",
+    "checked_at": "2026-11-28T05:08:16.401223+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -177,7 +189,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087194+09:00",
+    "checked_at": "2026-11-28T05:08:16.401228+09:00",
     "comment_adapter": "公開の選手別コメント表を未特定",
     "original_adapter": "未設定",
     "comment_sample_boats": 0,
@@ -187,12 +199,17 @@
     "comment_urls": [],
     "checked": [
       {
+        "url": "https://www.boatrace-mikuni.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
         "url": "https://www.boatrace-mikuni.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087197+09:00",
+    "checked_at": "2026-11-28T05:08:16.401233+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -213,7 +230,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087200+09:00",
+    "checked_at": "2026-11-28T05:08:16.401237+09:00",
     "comment_adapter": "公開の選手別コメント表を未特定",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -238,22 +255,29 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087204+09:00",
+    "checked_at": "2026-11-28T05:08:16.401241+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
     "comment_source": "https://www.boatrace-suminoe.jp/asp/kyogi/12/pc/st02{r2}.htm"
   },
   "13": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://boatrace-amagasaki.jp/modules/yosou/group-syussou.php?day={d}&race={r}"
+    ],
     "checked": [
+      {
+        "url": "https://boatrace-amagasaki.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://boatrace-amagasaki.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087208+09:00",
+    "checked_at": "2026-11-28T05:08:16.401245+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -266,15 +290,22 @@
     }
   },
   "14": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://www.n14.jp/modules/yosou/group-syussou.php?day={d}&race={r}"
+    ],
     "checked": [
+      {
+        "url": "https://www.n14.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://www.n14.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087211+09:00",
+    "checked_at": "2026-11-28T05:08:16.401249+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -295,7 +326,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087213+09:00",
+    "checked_at": "2026-11-28T05:08:16.401252+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -321,7 +352,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087216+09:00",
+    "checked_at": "2026-11-28T05:08:16.401257+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -336,7 +367,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087219+09:00",
+    "checked_at": "2026-11-28T05:08:16.401260+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -349,15 +380,22 @@
     }
   },
   "18": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://www.boatrace-tokuyama.jp/modules/yosou/syussou.php?day={d}&race={r}"
+    ],
     "checked": [
+      {
+        "url": "https://www.boatrace-tokuyama.jp/modules/yosou/syussou.php?day=20261128&race=1",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://www.boatrace-tokuyama.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087222+09:00",
+    "checked_at": "2026-11-28T05:08:16.401264+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -373,27 +411,39 @@
     "comment_urls": [],
     "checked": [
       {
+        "url": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day=20261128&race=1&kind=3",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
         "url": "https://www.boatrace-shimonoseki.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087225+09:00",
+    "checked_at": "2026-11-28T05:08:16.401295+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
     "comment_source": "https://www.boatrace-shimonoseki.jp/modules/yosou/group-cyokuzen.php?day={d}&race={r}&kind=3"
   },
   "20": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://www.wmb.jp/modules/yosou/group-syussou.php?day={d}&race={r}"
+    ],
     "checked": [
+      {
+        "url": "https://www.wmb.jp/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://www.wmb.jp/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087227+09:00",
+    "checked_at": "2026-11-28T05:08:16.401301+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -409,17 +459,32 @@
     "comment_urls": [],
     "checked": [
       {
+        "url": "https://www.boatrace-ashiya.com/modules/yosou/group-syussou.php?day=20261128&race=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
         "url": "https://www.boatrace-ashiya.com/",
         "state": "対応表なし",
         "boats": 0
       },
       {
-        "url": "https://www.boatrace-ashiya.com/modules/raceinfo/?page=index_racers_comment",
+        "url": "https://www.boatrace-ashiya.com/modules/yosou/group-syussou.php?day=20261128&race=1&if=0&kind=0",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
+        "url": "https://www.boatrace-ashiya.com/modules/yosou/group-syussou.php?day=20261128&race=1&if=0&kind=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
+        "url": "https://www.boatrace-ashiya.com/modules/yosou/group-syussou.php?day=20261128&race=1&if=0&kind=2",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087229+09:00",
+    "checked_at": "2026-11-28T05:08:16.401304+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -435,12 +500,17 @@
     "comment_urls": [],
     "checked": [
       {
+        "url": "https://www.boatrace-fukuoka.com/modules/yosou/syussou.php?day=20261128&race=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
         "url": "https://www.boatrace-fukuoka.com/",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087232+09:00",
+    "checked_at": "2026-11-28T05:08:16.401308+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
@@ -453,20 +523,37 @@
     }
   },
   "23": {
-    "comment_urls": [],
+    "comment_urls": [
+      "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day={d}&race={r}&kind=3"
+    ],
     "checked": [
+      {
+        "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261128&race=1&kind=3",
+        "state": "読取成功",
+        "boats": 6
+      },
       {
         "url": "https://www.boatrace-karatsu.jp/",
         "state": "対応表なし",
         "boats": 0
       },
       {
-        "url": "https://www.boatrace-karatsu.jp/modules/raceinfo/?page=index_racers_comment",
+        "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261128&race=1&if=0&kind=0",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
+        "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261128&race=1&if=0&kind=1",
+        "state": "対応表なし",
+        "boats": 0
+      },
+      {
+        "url": "https://www.boatrace-karatsu.jp/modules/yosou/group-cyokuzen.php?day=20261128&race=1&if=0&kind=2",
         "state": "対応表なし",
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087234+09:00",
+    "checked_at": "2026-11-28T05:08:16.401312+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 0,
@@ -501,7 +588,7 @@
         "boats": 0
       }
     ],
-    "checked_at": "2026-11-27T20:08:32.087235+09:00",
+    "checked_at": "2026-11-28T05:08:16.401316+09:00",
     "comment_adapter": "実装済",
     "original_adapter": "実装済",
     "comment_sample_boats": 6,
