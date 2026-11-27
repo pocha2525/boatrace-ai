@@ -1,0 +1,60 @@
+{
+  "train_from": 20230401,
+  "train_until": 20261029,
+  "validation_from": 20261106,
+  "validation_until": 20261112,
+  "holdout_from": 20261113,
+  "holdout_until": 20261126,
+  "train_rows": 1189226,
+  "eligible_evaluation_races": 2734,
+  "excluded_evaluation_races": 1097,
+  "before_training_days": 0,
+  "before_features_enabled": false,
+  "model_promoted": false,
+  "note": "Historical diagnostic, not a fresh prospective holdout. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties, F/L, retirements and incomplete finishing fields excluded from this fixed-ticket experiment.",
+  "chosen_on_validation": "candidate",
+  "comparison": {
+    "approved": false,
+    "reason": "新規評価件数不足または改善の確証不足",
+    "low95": 8.952899589409487e-05,
+    "high95": 0.019299427044627053
+  },
+  "metrics": {
+    "baseline_66_refit": {
+      "races": 1904,
+      "top1_hit_pct": 9.296218487394958,
+      "top2_hit_pct": 17.54201680672269,
+      "mean_log_probability": -3.8871694496324984,
+      "multiclass_brier": 0.9627854684143977,
+      "fixed1_roi_pct": 91.44957983193277,
+      "fixed2_roi_pct": 89.88182773109244,
+      "features": 66,
+      "temperature": 1.0,
+      "validation_log_probability": -3.8936240389655263
+    },
+    "candidate": {
+      "races": 1904,
+      "top1_hit_pct": 9.663865546218489,
+      "top2_hit_pct": 18.119747899159663,
+      "mean_log_probability": -3.8772295325952695,
+      "multiclass_brier": 0.9621841948862794,
+      "fixed1_roi_pct": 90.4359243697479,
+      "fixed2_roi_pct": 90.3203781512605,
+      "features": 67,
+      "temperature": 1.0,
+      "validation_log_probability": -3.890806696213006
+    },
+    "candidate_without_comments": {
+      "races": 1904,
+      "top1_hit_pct": 9.663865546218489,
+      "top2_hit_pct": 18.119747899159663,
+      "mean_log_probability": -3.8772295325952695,
+      "multiclass_brier": 0.9621841948862794,
+      "fixed1_roi_pct": 90.4359243697479,
+      "fixed2_roi_pct": 90.3203781512605,
+      "features": 62,
+      "temperature": 1.0,
+      "validation_log_probability": -3.890806696213006
+    }
+  }
+}
