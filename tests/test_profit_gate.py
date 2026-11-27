@@ -112,3 +112,17 @@ def test_past_quality_failure_can_only_be_overcome_by_fresh_quality_and_profit()
     assert profit_gate.assess(pd.concat(parts,ignore_index=True),m)['approved']
     d=pd.concat(parts,ignore_index=True);d['log_probability']=-4.
     assert not profit_gate.assess(d,m)['approved']
+
+
+def test_manual_training_cannot_bypass_return_validation(monkeypatch,tmp_path):
+    import train
+    import stage_shadow
+    for y in profit_gate.TARGETS:
+        (tmp_path/f'model_{y}.txt').write_text('live')
+    monkeypatch.setattr(train,'MODEL',str(tmp_path))
+    called=[]
+    monkeypatch.setattr(stage_shadow,'main',lambda:called.append('shadow'))
+    monkeypatch.setattr(train,'download_all',lambda:(_ for _ in ()).throw(AssertionError('legacy training path')))
+    train.main()
+    assert called==['shadow']
+    assert (tmp_path/'model_win.txt').read_text()=='live'
