@@ -288,7 +288,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True, deadline=None):
     one = d.loc[d['course'] == 1, 'rc_win_d']
     d['in_d'] = one.iloc[0] if len(one) else np.nan
     if strict:
-        snapshot_features(d, hd, jcd, rno, bst, lk.get('_model_ids'))
+        LAST['features_observed_at'] = snapshot_features(d, hd, jcd, rno, bst, lk.get('_model_ids'))
     w, t2, t3 = [m.predict(d[m.feature_name()]) for m in bst]
     w = w / w.sum()
     t2 = t2 * 2 / t2.sum()
@@ -520,7 +520,18 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
                                   morning=mark, notice=st))
             write_log(hd, [dict(base, pick='', prob='', odds='', ev='')])
         return
+    odds_started = now_jst()
     om = odds_map(jcd, rno, hd)
+    odds_observed = now_jst()
+    try:
+        import policy_replay
+        policy_replay.capture(LOGS, hd, jcd, rno, dl, odds_started, odds_observed,
+                              tri_probs(pr), om, lk.get('_model_ids'),
+                              dict(min_prob=MIN_PROB, ev1=EV_TH, ev2=EV_TH2,
+                                   max_bets=MAX_BETS, safe_min=SAFE_MIN),
+                              LAST.get('features_observed_at'))
+    except (OSError, ValueError, TypeError) as e:
+        print('オッズ検証記録を保存できない', type(e).__name__)
     res = combos(pr, om)  # 当たりやすい順
     # 一番当たりやすい組み合わせが条件を満たすレースだけ買う。
     # 2点目は期待値0.8以上のときだけ追加する（EV_TH2）
@@ -702,6 +713,7 @@ def snapshot_features(frame, hd, jcd, rno, models, model_ids=None):
     os.makedirs(LOGS, exist_ok=True)
     with open(os.path.join(LOGS, f'features_{hd}.jsonl'), 'a', encoding='utf-8') as f:
         f.write(json.dumps(payload, ensure_ascii=False, allow_nan=False) + '\n')
+    return payload['observed_at']
 
 
 def restore_deliveries(hd):

@@ -255,6 +255,11 @@ def update_judged(hd):
 def main():
     hd = os.environ.get('HD') or \
         f'{now_jst().date() - datetime.timedelta(days=1):%Y%m%d}'
+    try:
+        import policy_replay
+        policy_replay.report(LOGS, results_for, hd)
+    except Exception as e:
+        print('締切前オッズの再検証を保留', type(e).__name__)
     all_bets = []
     daily = []
     races_total = 0
