@@ -63,7 +63,10 @@ def main(budget=BUDGET):
         before.append(ROOT, rows)
         ok = sum(1 for r in res if r)
         print(hd, '読んだ', len(todo), '取れた', ok)
-        if len(have) + len(todo) >= len(races):
+        # 実際に読めたレースが9割5分以上のときだけ「その日は完了」にする
+        # （読めなかったレースは、次の回にもう一度読む）
+        got = len(have) + ok
+        if len(have) + len(todo) >= len(races) and got >= 0.95 * len(races):
             with open(DONE, 'a') as f:
                 f.write(hd + '\n')
             got_days.append(hd)
@@ -107,7 +110,8 @@ def comments(budget=CM_BUDGET):
                 got += bool(rows)
                 cm.append(CM_ROOT, hd, v, rno, rows)
                 time.sleep(1.0)
-            if used < budget:
+            # 全レースを試し、8割以上読めたときだけ完了（コメントが無いレースもあるため）
+            if used < budget and got >= 0.8 * len(rs):
                 with open(CM_DONE, 'a') as f:
                     f.write(key + '\n')
             print('コメント', key, got, '/', len(rs))

@@ -125,6 +125,8 @@ def fmt(n_races, b):
 
 
 JUDGED = os.path.join(LOGS, 'judged_all.csv')
+NO_TRI = '不成立・返還'   # レースはあったが3連単の結果が無い（中止・返還など）
+MISSING = '結果未取得'    # 成績ファイルにまだ無い（あとでもう一度照合する）
 JUDGED_COLS = ['日付', '締切', '会場', 'R', '判定', '朝の候補',
                '本命', '本命オッズ', '本命期待値', '2番手', '2番手オッズ', '2番手期待値',
                '結果', '払戻', '本命当たり', '当たり', '見送り理由']
@@ -143,7 +145,12 @@ def judged_day(h):
     t['jcd'] = t['jcd'].astype(int)
     t['rno'] = t['rno'].astype(int)
     t = t.merge(rc[['jcd', 'rno', 'tri', 'tri_pay']], on=['jcd', 'rno'],
-                how='left')
+                how='left', indicator=True)
+    # 結果の状態：成績ファイルにレースがあり3連単が無い → 不成立・返還など
+    #             成績ファイルにレース自体が無い → 結果未取得（後でもう一度照合する）
+    t['tri'] = t['tri'].where(t['tri'].notna(),
+                              t['_merge'].map({'both': NO_TRI, 'left_only': MISSING}))
+    t = t.drop(columns=['_merge'])
     # 実際に買った買い目（成績記録 logs/日付.csv）
     bought = {}
     bp = os.path.join(LOGS, f'{h}.csv')
@@ -168,7 +175,7 @@ def judged_day(h):
         '2番手': t['picks'].map(lambda s: part(s, 1)),
         '2番手オッズ': t['odds'].map(lambda s: part(s, 1)),
         '2番手期待値': t['evs'].map(lambda s: part(s, 1)),
-        '結果': t['tri'].fillna('中止・返還'),
+        '結果': t['tri'].fillna(MISSING),
         '払戻': t['tri_pay'].fillna(0).astype(int),
         '見送り理由': t['reason'].fillna('').where(t['status'] != '受付成功', ''),
     })
@@ -180,13 +187,13 @@ def judged_day(h):
     out['本命当たり'] = (out['本命'] == out['結果']).map({True: '◎', False: '×'})
     mark = []
     for res, p1, p2, g in zip(out['結果'], out['本命'], out['2番手'], got):
-        if res == '中止・返還':
+        if res in (NO_TRI, MISSING):
             mark.append('-')
             continue
         m = '本命◎' if res == p1 else '2番手◎' if p2 and res == p2 else '×'
         mark.append(m + ('（的中）' if res in g else ''))
     out['当たり'] = mark
-    out.loc[out['結果'] == '中止・返還', '本命当たり'] = '-'
+    out.loc[out['結果'].isin([NO_TRI, MISSING]), '本命当たり'] = '-'
     return out.sort_values('締切')[JUDGED_COLS]
 
 
@@ -194,12 +201,18 @@ def update_judged(hd):
     """まだ記録していない日の判定に結果を付けて、judged_all.csv に足す"""
     old = None
     done = set()
+    keep = None
     if os.path.exists(JUDGED):
         old = pd.read_csv(JUDGED, dtype=str)
         old = old[old['日付'] != '日付']
-        done = {d.replace('/', '') for d in old['日付']}
         if set(JUDGED_COLS) - set(old.columns):
-            old, done = None, set()   # 列が増えたので全部作り直す
+            old = None   # 列が増えたので全部作り直す
+        else:
+            # 古い表記「中止・返還」と「結果未取得」が残る日は、照合し直す
+            redo = set(old.loc[old['結果'].isin(['中止・返還', MISSING]), '日付'])
+            keep = old[old['日付'].isin(redo)]   # 照合し直せなかったら元に戻す
+            old = old[~old['日付'].isin(redo)]
+            done = {d.replace('/', '') for d in old['日付']}
     new = []
     for path in sorted(glob.glob(os.path.join(LOGS, 'notify_*.csv'))):
         h = os.path.basename(path)[7:15]
@@ -212,6 +225,8 @@ def update_judged(hd):
             j = None
         if j is not None:
             new.append(j)
+        elif keep is not None and (keep['日付'].str.replace('/', '') == h).any():
+            new.append(keep[keep['日付'].str.replace('/', '') == h])
     if not new:
         return
     parts = ([old] if old is not None else []) + [x.astype(str) for x in new]

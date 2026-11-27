@@ -36,6 +36,8 @@ def info_morning(jcd, rno, hd):
         except (IndexError, ValueError):
             mot.append(None)
     nan = float('nan')
+    # 出走表の数字（級別・勝率など）を予想に渡す。直前情報は朝はまだ無い
+    predict.HTML[(jcd, rno)] = {'before': '', 'racelist': html}
     return ids, [nan] * 6, {}, nan, nan, mot, ids
 
 

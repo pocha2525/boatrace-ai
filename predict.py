@@ -30,6 +30,8 @@ EV_TH2 = 0.8         # 2点目（確率2位）の期待値がこれ以上なら�
 MIN_PROB = 0.12      # 一番当たりやすい買い目の確率がこれ以上
 MAX_BETS = 2         # 1レースあたりの最大点数
 LAST = {}  # 直前に予想したレースの進入・確率（通知の表示用）
+# レースごとの取得したページ（朝の候補は4並列なので、レースごとに分けて持つ）
+HTML = {}
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
             'prob', 'odds', 'ev', 'run_at']
 
@@ -120,8 +122,10 @@ def race_info(jcd, rno, hd):
     wind = next((float(v) for v, u in w if u == 'm'), 0.0)
     wave = next((float(v) for v, u in w if u == 'cm'), 0.0)
     LAST['html_before'] = b
+    HTML[(jcd, rno)] = {'before': b}
     rl = page('racelist', jcd, rno, hd)
     LAST['html_racelist'] = rl
+    HTML[(jcd, rno)]['racelist'] = rl
     rl_ids = list(dict.fromkeys(re.findall(r'toban=(\d{4})', rl)))[:6]
     r = BeautifulSoup(rl, 'html.parser')
     h2 = r.select('td.is-lineH2')
@@ -181,13 +185,14 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     save_entries(hd, jcd, rno, ids)
     done = extra.today_results(LOGS, hd)   # 今日すでに終わったレースの着
     yr = int(hd[:4])
+    pages = HTML.get((jcd, rno), {})   # このレースのページだけを使う（他のレースと混ざらない）
     try:
-        rl = bfile.parse_racelist(LAST.get('html_racelist') or '')
+        rl = bfile.parse_racelist(pages.get('racelist') or '')
     except Exception as e:
         print('出走表の数字を読めない', e)
         rl = {}
     try:
-        bf = before.parse(LAST.get('html_before') or '', hd, jcd, rno)
+        bf = before.parse(pages.get('before') or '', hd, jcd, rno)
         if strict:
             before.append(LOGS, bf)   # 直前情報を記録（あとで学習に使う）
     except Exception as e:
@@ -215,7 +220,7 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
     except Exception as e:
         print('記録できない', e)
     try:
-        cmd = cm.fetch(get_direct, jcd, rno, hd, LAST.get('html_racelist') or '')   # 選手コメント
+        cmd = cm.fetch(get_direct, jcd, rno, hd, pages.get('racelist') or '')   # 選手コメント
         if strict:
             cm.append(LOGS, hd, jcd, rno, cmd)
     except Exception as e:
@@ -256,10 +261,9 @@ def predict(bst, lk, jcd, rno, hd, strict=True):
         # 出走表の数字（級別・全国/当地の勝率・モーター/ボートの2連率など）
         r.update(rl.get(rid, {c: np.nan for c in bfile.BCOLS}))
         # 直前情報（体重・チルト・部品交換・展示ST など）
-        if i < len(bf):
-            r.update({k: bf[i].get(k) for k in
-                      ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
-                       'ex_st', 'ex_f', 'stab']})
+        r.update({k: (bf[i].get(k) if i < len(bf) else np.nan) for k in
+                  ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
+                   'ex_st', 'ex_f', 'stab']})
         r['wd_x'], r['wd_y'] = wxy
         r['ot_lap'], r['ot_turn'], r['ot_str'] = otd.get(b, (np.nan, np.nan, np.nan))
         c_ = cmd.get(b) if cmd.get(b, {}).get('reg') == rid else None
