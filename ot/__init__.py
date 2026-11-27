@@ -9,6 +9,7 @@ import glob
 
 import numpy as np
 import pandas as pd
+from common import ThreadState
 
 OT = ['ot_lap_d', 'ot_turn_d', 'ot_str_d', 'ot_lap_rk', 'ot_turn_rk', 'ot_str_rk']
 SRC = 'https://github.com/hassak0408/boat-oriten'
@@ -72,7 +73,7 @@ def add_hist(df, root):
     return add_rel(df, ['date', 'venue', 'race'])
 
 
-LAST = {}
+LAST = ThreadState()
 
 
 def fetch(get, jcd, rno, hd):
