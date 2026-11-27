@@ -31,3 +31,16 @@ def test_tied_results_excluded_before_scoring():
     result = backtest.complete(d)
     assert len(result) == 6 and result.race.eq(1).all()
     assert backtest.outcomes(result).tolist() == [0]
+    d.loc[d.race.eq(1) & d.boat.eq(6), 'rank'] = np.nan
+    assert len(backtest.complete(d)) == 0
+
+
+def test_original_time_loader_ignores_diagnostic_logs(monkeypatch, tmp_path):
+    import ot
+    monkeypatch.chdir(tmp_path)
+    (tmp_path/'logs').mkdir()
+    (tmp_path/'logs'/'oriten_check_20261126.csv').write_text('hd,jcd,rno,n,memo\n20261126,1,1,6,ok\n')
+    (tmp_path/'logs'/'oriten_20261126.csv').write_text('hd,jcd,rno,boat,lap,turn,straight\n20261126,1,1,1,36.1,5.1,6.1\n')
+    query = pd.DataFrame([dict(date=20261126, venue=1, race=1, boat=1)])
+    result = ot.add_hist(query, str(tmp_path/'empty'))
+    assert result.ot_lap.iloc[0] == 36.1
