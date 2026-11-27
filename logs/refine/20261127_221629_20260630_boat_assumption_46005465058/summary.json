@@ -1,0 +1,72 @@
+{
+  "train_from": 20230401,
+  "train_until": 20260602,
+  "validation_from": 20260603,
+  "validation_until": 20260616,
+  "holdout_from": 20260617,
+  "holdout_until": 20260630,
+  "train_rows": 1050200,
+  "eligible_evaluation_races": 4070,
+  "excluded_evaluation_races": 0,
+  "before_training_days": 0,
+  "before_features_enabled": false,
+  "input_mode": "boat_assumption",
+  "variant": "recent",
+  "model_promoted": false,
+  "exploratory": true,
+  "note": "Historical diagnostic, not a fresh prospective holdout. November evaluation was already inspected in earlier experiments. Historical pre-deadline odds unavailable; fixed-ticket returns are not the live EV strategy. Boat-assumption periods do not restore actual exhibition courses. New venue comment collectors lack sufficient verified historical captures. K tenji fallback is the published exhibition time. Ties, F/L, retirements and incomplete finishing fields excluded from this fixed-ticket experiment.",
+  "chosen_on_validation": "candidate",
+  "comparison": {
+    "approved": false,
+    "reason": "新規評価件数不足または改善の確証不足",
+    "low95": -0.0009696392241708738,
+    "high95": 0.016381064103483226
+  },
+  "metrics": {
+    "baseline_66_refit": {
+      "races": 2247,
+      "top1_hit_pct": 10.5028927458834,
+      "top2_hit_pct": 18.11303960836671,
+      "mean_log_probability": -3.826853996314034,
+      "multiclass_brier": 0.9610333390418514,
+      "fixed1_roi_pct": 94.5749888740543,
+      "fixed2_roi_pct": 89.25901201602136,
+      "selected12_n": 120,
+      "selected12_hit_pct": 23.333333333333332,
+      "selected12_roi_pct": 111.58333333333333,
+      "features": 66,
+      "temperature": 1.0,
+      "validation_log_probability": -3.8700975225255307
+    },
+    "candidate": {
+      "races": 2247,
+      "top1_hit_pct": 10.7254116599911,
+      "top2_hit_pct": 19.181130396083667,
+      "mean_log_probability": -3.818890328237176,
+      "multiclass_brier": 0.9608127989411943,
+      "fixed1_roi_pct": 97.44548286604362,
+      "fixed2_roi_pct": 93.71829105473965,
+      "selected12_n": 126,
+      "selected12_hit_pct": 21.428571428571427,
+      "selected12_roi_pct": 97.93650793650794,
+      "features": 67,
+      "temperature": 1.0,
+      "validation_log_probability": -3.8668506693831026
+    },
+    "candidate_recent": {
+      "races": 2247,
+      "top1_hit_pct": 10.45838896306186,
+      "top2_hit_pct": 18.69158878504673,
+      "mean_log_probability": -3.8328399681780994,
+      "multiclass_brier": 0.9609206545241097,
+      "fixed1_roi_pct": 93.72051624388072,
+      "fixed2_roi_pct": 91.3061860258122,
+      "selected12_n": 122,
+      "selected12_hit_pct": 18.0327868852459,
+      "selected12_roi_pct": 78.77049180327869,
+      "features": 81,
+      "temperature": 1.0,
+      "validation_log_probability": -3.8752937200128272
+    }
+  }
+}
