@@ -149,11 +149,11 @@ def get(url, tries=3):
     return None
 
 
-def get_direct(url, tries=2, timeout=20):
+def get_direct(url, tries=2, timeout=20, method='GET', data=None):
     """中継を使わずに直接読む（各レース場の公式サイト用。中継は boatrace.jp と mbrace だけ通す）"""
     for i in range(tries):
         try:
-            r = requests.get(url, headers=UA, timeout=timeout)
+            r = requests.request(method, url, headers=UA, timeout=timeout, data=data)
             if r.status_code == 200:
                 return r
             if r.status_code == 404:
@@ -227,6 +227,9 @@ def head_info(line, date, venue, race):
     info['wave'] = num(wv.group(1)) if wv else None
     info['tri'] = None
     info['tri_pay'] = None
+    info['tri_payouts'] = {}
+    info['refund_boats'] = ''
+    info['race_status'] = 'pending'
     return info
 
 
@@ -254,11 +257,17 @@ def parse_k_text(text, date):
         if m:
             races[(venue, race)]['tri'] = m.group(1)
             races[(venue, race)]['tri_pay'] = int(m.group(2))
+            races[(venue, race)]['tri_payouts'][m.group(1)] = int(m.group(2))
+            races[(venue, race)]['race_status'] = 'settled'
             continue
+        if any(w in line for w in ('レース中止', '競走不成立', '競走中止')):
+            races[(venue, race)]['race_status'] = 'cancelled'
         m = ROW_PAT.match(line)
         if m:
             rest = m.group(7).split() + [None, None, None]
             g1 = m.group(1)
+            if g1.upper().startswith(('F', 'L')):
+                races[(venue, race)]['refund_boats'] += m.group(2)
             rows.append({
                 'date': date, 'venue': venue, 'race': race,
                 'rank': int(g1) if g1.isdigit() else None,
@@ -288,7 +297,7 @@ SENT_UNKNOWN = '結果不明'  # タイムアウト（届いたか分からな�
 SENT_NONE = '未送信'      # NTFY_TOPIC が未設定
 
 
-def send_notify(title, message, timeout=20, priority=4):
+def _send_notify(title, message, timeout=20, priority=4):
     """ntfy に送り、結果を返す。
     戻り値: dict(status, http, ntfy_id, error)
     ※ status=受付成功 は「ntfy のサーバーが受け付けた」という意味で、
@@ -322,6 +331,27 @@ def send_notify(title, message, timeout=20, priority=4):
     return dict(status=SENT_OK, http=200, ntfy_id=nid, error='')
 
 
-def notify(title, message):
+def send_notify(title, message, timeout=20, priority=4, notification_id=None, deadline=None, receipt=None):
+    """Reserve first so a crash/final git-push failure cannot cause a duplicate."""
+    from delivery import Ledger
+    if not os.environ.get('NTFY_TOPIC', '').strip():
+        return _send_notify(title, message, timeout, priority)
+    race = re.search(r'通知ID: ([0-9-]+)', message)
+    key = notification_id or (race.group(1) if race else
+                             now_jst().strftime('%Y%m%d') + ':' + title)
+    ledger = Ledger()
+    claim = ledger.reserve(key, receipt)
+    if claim is None:
+        print('通知の重複または台帳を確保できず：送信しない', key)
+        return dict(status=SENT_UNKNOWN, http='', ntfy_id='', error='ledger_not_reserved')
+    if deadline is not None and (deadline - now_jst()).total_seconds() < 120:
+        ledger.finish(claim, '締切により中止')
+        return dict(status='締切により中止', http='', ntfy_id='', error='deadline')
+    result = _send_notify(title, message, timeout, priority)
+    ledger.finish(claim, result['status'])
+    return result
+
+
+def notify(title, message, notification_id=None):
     """ntfy でスマホに通知する（結果の状態を返す）"""
-    return send_notify(title, message)['status']
+    return send_notify(title, message, notification_id=notification_id)['status']

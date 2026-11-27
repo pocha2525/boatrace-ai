@@ -121,4 +121,9 @@ def load_hist(root):
     if not fs:
         return pd.DataFrame(columns=COLS)
     d = pd.concat([pd.read_csv(f) for f in fs], ignore_index=True)
+    for c in COLS:
+        if c not in d:
+            d[c] = np.nan
+        d[c] = pd.to_numeric(d[c], errors='coerce')
+    d = d.dropna(subset=['hd', 'jcd', 'rno', 'boat'])
     return d.drop_duplicates(['hd', 'jcd', 'rno', 'boat'], keep='last')
