@@ -14,7 +14,7 @@ BEFORE = ['bf_wt', 'bf_tilt', 'bf_prop', 'bf_parts', 'bf_adj',
           'ex_st', 'ex_f', 'ex_st_rank', 'ex_st_d', 'stab']
 COLS = ['hd', 'jcd', 'rno', 'boat', 'racer', 'bf_wt', 'bf_tilt', 'bf_prop',
         'bf_parts', 'bf_adj', 'ex_course', 'ex_st', 'ex_f', 'wind_img',
-        'wind', 'wave', 'stab']
+        'wind', 'wave', 'stab', 'tenji']
 
 
 def _f(s):
@@ -49,7 +49,7 @@ def parse(html, hd, jcd, rno):
             return []
         rows.append({'hd': hd, 'jcd': jcd, 'rno': rno, 'boat': i + 1,
                      'racer': int(ids[i]) if i < len(ids) else None,
-                     'bf_wt': _f(t[3]), 'bf_tilt': _f(t[5]),
+                     'bf_wt': _f(t[3]), 'tenji': _f(t[4]), 'bf_tilt': _f(t[5]),
                      'bf_prop': int('新' in t[6]),
                      'bf_parts': parts(t[7]),
                      'bf_adj': _f(t[12])})
@@ -100,6 +100,15 @@ def append(root, rows):
     os.makedirs(root, exist_ok=True)
     p = path(root, rows[0]['hd'])
     new = not os.path.exists(p)
+    if not new:
+        with open(p, encoding='utf-8') as f:
+            head = f.readline().strip().split(',')
+        if head != COLS:   # 列が増えたときは、前の行に空の列を足して書き直す
+            old = pd.read_csv(p)
+            for c in COLS:
+                if c not in old:
+                    old[c] = np.nan
+            old[COLS].to_csv(p, index=False)
     pd.DataFrame(rows)[COLS].to_csv(p, mode='a', header=new, index=False)
 
 

@@ -10,13 +10,14 @@ ss_top3    : 今節の3着以内率
 ss_st      : 今節の平均スタートタイミング
 ss_tenji_d : 今日の展示タイム − 今節の展示タイムの平均（マイナスなら仕上がりが良くなった）
 vs_cw      : この会場の今節、このコースの1着率 − いつもの1着率（ならしてある）
+ss_bad     : 今節の着順なしの回数（落水・転覆・失格・F・欠場など）
 """
 import os
 
 import numpy as np
 import pandas as pd
 
-SETSU = ['ss_n', 'ss_rank', 'ss_top3', 'ss_st', 'ss_tenji_d', 'vs_cw']
+SETSU = ['ss_n', 'ss_rank', 'ss_top3', 'ss_st', 'ss_tenji_d', 'vs_cw', 'ss_bad']
 GAP_RACER = 2   # 同じ会場で何日空いたら別の節とみなすか（選手）
 GAP_VENUE = 1   # 同じ（会場）
 SMOOTH = 10     # 会場の今節傾向のならし（レース数）
@@ -62,6 +63,7 @@ def add_hist(df):
     f['ss_top3'] = cum['top3'] / cum['n'].where(cum['n'] > 0)
     f['ss_st'] = cum['st_sum'] / cum['st_n'].where(cum['st_n'] > 0)
     f['_tj'] = cum['tj_sum'] / cum['tj_n'].where(cum['tj_n'] > 0)
+    f['ss_bad'] = cum['n'] - cum['rank_n']
     df = df.merge(f, on=['racer', 'venue', 'date'], how='left')
     df['ss_tenji_d'] = df['tenji'] - df['_tj']
     df = df.drop(columns=['_tj'])
@@ -124,10 +126,11 @@ def lookup(tables, racer, venue, course, tenji, vc_win, hd):
     rt, vt = tables
     today = pd.Timestamp(str(hd)).toordinal()
     f = dict(ss_n=0.0, ss_rank=np.nan, ss_top3=np.nan, ss_st=np.nan,
-             ss_tenji_d=np.nan, vs_cw=0.0)
+             ss_tenji_d=np.nan, vs_cw=0.0, ss_bad=0.0)
     r = rt.get((int(racer), int(venue)))
     if r is not None and 0 < today - pd.Timestamp(str(int(r.last))).toordinal() <= GAP_RACER:
         f['ss_n'] = float(r.n)
+        f['ss_bad'] = float(r.n - r.rank_n)
         f['ss_rank'] = r.rank_sum / r.rank_n if r.rank_n else np.nan
         f['ss_top3'] = r.top3 / r.n if r.n else np.nan
         f['ss_st'] = r.st_sum / r.st_n if r.st_n else np.nan
