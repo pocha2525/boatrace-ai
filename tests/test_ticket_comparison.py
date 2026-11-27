@@ -40,3 +40,18 @@ def test_enrich_checks_saved_predictions_and_notification_includes_two_points(tm
     import pytest
     with pytest.raises(ValueError, match='previous score'):
         ticket_comparison.enrich(result, path)
+
+
+def test_manual_notification_checks_actual_run_completion(monkeypatch):
+    import requests
+    from notify_evaluation import verified_conclusion
+    class Response:
+        def raise_for_status(self):
+            pass
+        def json(self):
+            return {'status': 'completed', 'conclusion': 'success'}
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: Response())
+    assert verified_conclusion('123', 'owner/repo', 'unknown') == 'success'
+    summary = dict(holdout_from=20261113, holdout_until=20261126, metrics={})
+    assert '未完了' not in message([summary], '123', 'owner/repo', 'success')
+    assert '一部の実行が未完了' not in message([summary], '123', 'owner/repo', 'unknown')
