@@ -3,7 +3,7 @@ import re
 import lxml.html
 
 KEYS = {
-    'lap': ('一周', '半周'),
+    'lap': ('一周', '1周', '半周'),
     'turn': ('まわり足', 'まわりあし', '回り足'),
     'straight': ('直線',),
 }
@@ -49,7 +49,7 @@ def table_grid(tbl):
                 except ValueError:
                     rs, cs = 1, 1
                 rs = min(rs, n - i)
-                text = cell.text_content()
+                text = ' '.join(cell.itertext())
                 for dr in range(rs):
                     for dc in range(cs):
                         grid[(r + dr, c + dc)] = (text, cell.tag == 'th', dr == 0 and dc == 0)
@@ -82,6 +82,12 @@ def parse_page(html):
         return [], 'まわり足の表なし'
     doc = lxml.html.fromstring(html)
     for tbl in doc.xpath('//table'):
+        # Miyajima renders its first two header rows as td cells.
+        rows = tbl.xpath('./tr|./thead/tr|./tbody/tr')
+        if rows and '枠' in rows[0].text_content() and not rows[0].xpath('./th'):
+            for tr in rows[:2]:
+                for cell in tr.xpath('./td'):
+                    cell.tag = 'th'
         heads = ''.join(_clean(th.text_content()) for th in tbl.xpath('.//th'))
         if not any(k in heads for k in KEYS['turn']):
             continue
@@ -104,7 +110,7 @@ def parse_page(html):
                     return c
             return None
         col = {
-            'lane': find(lambda s: s in ('枠', '艇番', '枠番', '艇') or s.endswith('枠') or '艇番' in s),
+            'lane': find(lambda s: s in ('枠', '艇番', '枠番', '枠番選手名', '艇') or '枠番' in s or s.endswith('枠') or '艇番' in s),
             'player': find(lambda s: '選手' in s or 'レーサー' in s or '登録番号' in s or '登番' in s),
             'ex': find(lambda s: ('展示' in s) and not any(k in s for k in ('一周', '半周', 'まわり', '回り', '直線', '評価', 'スタート', 'ST', '順位'))
                        and ('タイム' in s or s.endswith('展示') or s == '展示')),
@@ -112,7 +118,7 @@ def parse_page(html):
             'turn': find(lambda s: any(k in s for k in KEYS['turn'])),
             'straight': find(lambda s: any(k in s for k in KEYS['straight'])),
         }
-        if col['turn'] is None:
+        if col['turn'] is None or (col['lap'] is None and col['straight'] is None):
             continue
         lap_kind = '半周' if (col['lap'] is not None and '半周' in label[col['lap']]) else '一周'
         out = {}
@@ -149,7 +155,7 @@ def parse_page(html):
                     m = re.search(r'(?<!\d)(\d{4})(?!\d)', t)
                     reg = int(m.group(1)) if m else None
             out[lane] = dict(lane=lane, reg=reg, ex=val('ex'), lap=val('lap'), lap_kind=lap_kind, turn=val('turn'), straight=val('straight'))
-        if out:
+        if out and any(x.get(k) is not None for x in out.values() for k in ('lap', 'turn', 'straight')):
             got = [k for k in ('ex', 'lap', 'turn', 'straight') if col[k] is not None]
             return [out[k] for k in sorted(out)], '列:' + ','.join(f'{k}={label[col[k]]}' for k in got)
     return [], '表はあるが読めない'
