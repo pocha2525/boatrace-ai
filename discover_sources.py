@@ -75,6 +75,10 @@ def main():
         if not entry['comment_urls']:
             entry['comment_urls'] = old.get(venue, {}).get('comment_urls', [])
         entries[venue] = entry = dict(old.get(venue, {}), **entry)
+        import cm, ot
+        number = int(venue)
+        entry['comment_adapter'] = '実装済' if number in cm.URLS or number == 24 else '公開の選手別コメント表を未特定'
+        entry['original_adapter'] = '実装済' if number in ot.URLS else '未設定'
         entry['checked_at'] = now_jst().isoformat()
     os.makedirs(MODEL, exist_ok=True)
     with open(path, 'w', encoding='utf-8') as f:
