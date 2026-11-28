@@ -3,7 +3,7 @@ function myFunction() {
 }
 // =======================================================
 // 競艇AI 成績の自動まとめ（スマホで見やすい版）
-// GitHubの記録を10分ごとに読み込んで、スプレッドシートに書き写す
+// GitHubの記録を5分ごとに確認し、変わった表示だけを書き換える
 // ※最初の1回だけ brSetupBoatraceStats を実行（済んでいれば不要）
 // =======================================================
 const BR_LOG_BASE_URL = 'https://raw.githubusercontent.com/pocha2525/boatrace-ai/main/logs/';
@@ -11,14 +11,49 @@ const BR_TARGET_SHEET_URL = 'https://docs.google.com/spreadsheets/d/1AtbhKouKMSq
 
 // GitHubの記録（CSV）を読む。無ければ null
 function brFetchCsv_(filename) {
-  const res = UrlFetchApp.fetch(BR_LOG_BASE_URL + filename + '?t=' + Date.now(), {muteHttpExceptions: true});
-  if (res.getResponseCode() !== 200) return null;
-  const text = res.getContentText('UTF-8').trim();
-  if (!text) return null;
-  const rows = Utilities.parseCsv(text);
-  if (!rows.length) return null;
-  const head = rows[0].join(',');
-  return [rows[0]].concat(rows.slice(1).filter(r => r.join(',') !== head && r.join('').trim() !== ''));
+  try {
+    const res = UrlFetchApp.fetch(BR_LOG_BASE_URL + filename + '?t=' + Date.now(), {muteHttpExceptions: true});
+    if (res.getResponseCode() !== 200) return null;
+    const text = res.getContentText('UTF-8').trim();
+    if (!text) return null;
+    const rows = Utilities.parseCsv(text);
+    if (!rows.length) return null;
+    const head = rows[0].join(',');
+    const data = [rows[0]].concat(rows.slice(1).filter(r => r.join(',') !== head && r.join('').trim() !== ''));
+    data.brSource = brSourceInfo_(data, filename);
+    return data;
+  } catch (err) {
+    // 一時的な通信失敗でも、最後に表示できた成績を消さない。
+    return null;
+  }
+}
+
+// 実際に記録された時刻だけを使う。締切や同期時刻をデータ時刻にしない。
+function brSourceInfo_(rows, filename) {
+  const g = brCol_(rows);
+  let latestDate = '';
+  let latestTime = '';
+  rows.slice(1).forEach(r => {
+    const raw = g(r, 'hd') || g(r, '日付');
+    const m = String(raw).match(/^(\d{4})[/-]?(\d{2})[/-]?(\d{2})$/);
+    const date = m ? m[1] + '/' + m[2] + '/' + m[3] : '';
+    if (date > latestDate) latestDate = date;
+    ['send_end', 'decided_at', 'run_at', 'run_start', 'updated_at', 'timestamp', 'created_at'].forEach(col => {
+      const value = String(g(r, col));
+      let time = '';
+      if (date && /^\d{2}:\d{2}(:\d{2})?$/.test(value)) {
+        time = date + ' ' + value + (value.length === 5 ? ':00' : '');
+      } else if (/^\d{4}[-/]\d{2}[-/]\d{2}[T ]\d{2}:\d{2}/.test(value)) {
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) time = Utilities.formatDate(parsed, 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss');
+      }
+      if (time > latestTime) latestTime = time;
+    });
+  });
+  // 日付しかないCSVは「日付のみ」と明記し、更新済みに見せかけない。
+  const time = latestTime && latestTime.slice(0, 10) >= latestDate ? latestTime :
+    latestDate ? latestDate + '（日付のみ・時刻不明）' : '時刻不明';
+  return {filename: filename, time: time};
 }
 
 // 今日の記録が無ければ、3日前までさかのぼって一番新しい日の記録を返す
@@ -42,23 +77,45 @@ function brCol_(rows) {
   return (r, name) => { const i = h.indexOf(name); return i < 0 ? '' : (r[i] || ''); };
 }
 
-// 「1-3-2」が日付に化けないよう、文字のまま書き込む。列幅はスマホ向けに広めにする
+// 表示内容のハッシュ。同期キー等の秘密プロパティは参照しない。
+function brHash_(value) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, JSON.stringify(value), Utilities.Charset.UTF_8)
+    .map(b => ('0' + ((b + 256) % 256).toString(16)).slice(-2)).join('');
+}
+
+// 「1-3-2」が日付に化けないよう文字で書く。変更のある範囲だけを更新する。
 function brWriteSheet_(ss, sheetName, rows, asText) {
-  const sh = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
-  sh.clear();
-  if (!rows || rows.length < 2) {
-    sh.getRange(1, 1).setValue('まだ記録がありません').setFontWeight('bold');
-    return sh;
-  }
+  let sh = ss.getSheetByName(sheetName);
+  if (!rows || rows.length < 2) return sh; // 読めないときは前回の表示を保持
+  const props = PropertiesService.getScriptProperties();
+  const hashKey = 'BR_DISPLAY_HASH_' + sheetName;
+  const hash = brHash_([2, rows, !!asText]);
+  if (sh && sh.getLastRow() > 0 && props.getProperty(hashKey) === hash) return sh;
+  if (!sh) sh = ss.insertSheet(sheetName);
+  const oldRows = sh.getLastRow();
+  const oldCols = sh.getLastColumn();
   const w = Math.max.apply(null, rows.map(r => r.length));
   const data = rows.map(r => r.concat(new Array(w - r.length).fill('')));
+  if (sh.getMaxRows() < data.length) sh.insertRowsAfter(sh.getMaxRows(), data.length - sh.getMaxRows());
+  if (sh.getMaxColumns() < w) sh.insertColumnsAfter(sh.getMaxColumns(), w - sh.getMaxColumns());
   const rg = sh.getRange(1, 1, data.length, w);
   if (asText) rg.setNumberFormat('@');
-  rg.setValues(data).setFontSize(11).setVerticalAlignment('middle');
-  sh.setFrozenRows(1);
-  sh.getRange(1, 1, 1, w).setBackground('#1f4e78').setFontColor('#ffffff').setFontWeight('bold');
-  sh.autoResizeColumns(1, w);
-  for (let c = 1; c <= w; c++) sh.setColumnWidth(c, sh.getColumnWidth(c) + 24);
+  rg.setValues(data);
+  // 全消去せず、前回より短くなった末尾だけを消す。
+  if (oldRows > data.length) sh.getRange(data.length + 1, 1, oldRows - data.length, oldCols).clearContent();
+  if (oldCols > w) sh.getRange(1, w + 1, Math.min(oldRows, data.length), oldCols - w).clearContent();
+  const layoutKey = 'BR_LAYOUT_HASH_' + sheetName;
+  const layout = brHash_([2, rows[0], !!asText]);
+  if (props.getProperty(layoutKey) !== layout) {
+    rg.setFontSize(11).setVerticalAlignment('middle');
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, w).setBackground('#1f4e78').setFontColor('#ffffff').setFontWeight('bold');
+    sh.setColumnWidths(1, w, 110);
+    if (sheetName === '更新状況') sh.setColumnWidths(1, w, 230);
+    else if (w >= 15) sh.setColumnWidth(w, 260);
+    props.setProperty(layoutKey, layout);
+  }
+  props.setProperty(hashKey, hash);
   return sh;
 }
 
@@ -99,7 +156,7 @@ function brFormatNotify_(rows, results, bets) {
   });
   const out = [['日付', '締切', 'レース', '判定', '朝', '本命', 'オッズ', '期待値',
                 '2番手', 'オッズ', '期待値', '結果', '当たり', '配当', '見送り理由']];
-  ids.reverse().forEach(id => {
+  ids.reverse().slice(0, 300).forEach(id => {
     const r = last[id];
     const st = g(r, 'status');
     const key = g(r, 'jcd') + '-' + g(r, 'rno');
@@ -143,7 +200,7 @@ function brFormatJudged_(rows) {
   const x = (v, unit) => v ? v + unit : '';
   const out = [['日付', '締切', 'レース', '判定', '朝', '本命', 'オッズ', '期待値',
                 '2番手', 'オッズ', '期待値', '結果', '当たり', '配当', '見送り理由']];
-  rows.slice(1).reverse().forEach(r => {
+  rows.slice(-Math.min(rows.length - 1, 300)).reverse().forEach(r => {
     const d = g(r, '日付');
     const reason = g(r, '見送り理由');
     out.push([
@@ -168,7 +225,7 @@ function brFormatBets_(rows) {
   if (!rows || rows.length < 2) return null;
   const g = brCol_(rows);
   const out = [['日付', 'レース', '買い目', '点目', 'オッズ', '期待値', '結果', '当たり', '払戻']];
-  rows.slice(1).reverse().forEach(r => {
+  rows.slice(-Math.min(rows.length - 1, 300)).reverse().forEach(r => {
     const hit = g(r, '的中');
     out.push([
       brMd_(g(r, '日付')),
@@ -191,7 +248,7 @@ function brFormatMorning_(rows) {
   const g = brCol_(rows);
   const pct = s => s ? Math.round(Number(s) * 100) + '%' : '';
   const out = [['日付', '締切', 'レース', '本命', '確率', '2番手', '確率']];
-  rows.slice(1).forEach(r => {
+  rows.slice(1, 301).forEach(r => {
     const p = g(r, 'picks').split(' ');
     const q = g(r, 'probs').split(' ');
     out.push([brMd_(g(r, 'hd')), g(r, 'deadline'), g(r, 'venue') + g(r, 'rno') + 'R',
@@ -205,14 +262,18 @@ function brFormatDaily_(rows) {
   if (!rows || rows.length < 2) return null;
   const g = brCol_(rows);
   const cols = ['日付', '点数', '的中数', '投資', '払戻', '回収率%', '累計回収率%', '累計収支'];
-  return [cols].concat(rows.slice(1).map(r => cols.map(c => g(r, c))));
+  return [cols].concat(rows.slice(-Math.min(rows.length - 1, 500)).map(r => cols.map(c => g(r, c))));
 }
 
 // 累計収支（円）のグラフ：マイナスならマイナスに見える
 function brUpdateChart_(sh, rows) {
-  sh.getCharts().forEach(c => sh.removeChart(c));
-  if (!rows || rows.length < 2) return;
+  if (!sh || !rows || rows.length < 2) return;
+  const props = PropertiesService.getScriptProperties();
   const n = rows.length;
+  const extent = String(n);
+  const charts = sh.getCharts();
+  if (charts.length && props.getProperty('BR_DAILY_CHART_ROWS') === extent) return;
+  charts.forEach(c => sh.removeChart(c));
   const chart = sh.newChart()
     .setChartType(Charts.ChartType.LINE)
     .addRange(sh.getRange(1, 1, n, 1))
@@ -228,6 +289,7 @@ function brUpdateChart_(sh, rows) {
     .setPosition(n + 2, 1, 0, 0)
     .build();
   sh.insertChart(chart);
+  props.setProperty('BR_DAILY_CHART_ROWS', extent);
 }
 
 // GitHub（予想の実行）から、記録した直後に呼ばれる入口
@@ -240,10 +302,10 @@ function doGet(e) {
   return ContentService.createTextOutput(brSyncBoatraceStats() ? 'ok' : 'busy');
 }
 
-// 10分ごと（と、GitHubから呼ばれたとき）に実行される本体（名前は変えない：時計がこの名前で呼ぶ）
+// 5分ごと（と、GitHubから呼ばれたとき）に実行される本体（名前は変えない：時計がこの名前で呼ぶ）
 function brSyncBoatraceStats() {
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(60000)) return false;   // 同時に2つ動かない
+  if (!lock.tryLock(2000)) return false;   // 同時に2つ動かない
   try {
     brSyncMain_();
     return true;
@@ -255,26 +317,84 @@ function brSyncBoatraceStats() {
 function brSyncMain_() {
   const ss = SpreadsheetApp.openByUrl(BR_TARGET_SHEET_URL);
   const today = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd');
-  // 今日の分がまだ無い（朝8時の判定開始前など）ときは、記録のある一番新しい日を表示する
+  const checked = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm:ss');
+  const props = PropertiesService.getScriptProperties();
+  const status = [['表示', '同期確認時刻（日本時間）', '元データ時刻（日本時間）', '状態', '参照元', '表示件数']];
+  function syncTab(name, source, formatted, note) {
+    const prior = ss.getSheetByName(name);
+    const metaKey = 'BR_SOURCE_META_' + name;
+    let meta = null;
+    const saved = props.getProperty(metaKey);
+    if (saved) { try { meta = JSON.parse(saved); } catch (err) {} }
+    if (source && formatted && formatted.length > 1) {
+      const oldDay = meta && meta.filename.match(/_(\d{8})\.csv$/);
+      const newDay = source.brSource && source.brSource.filename.match(/_(\d{8})\.csv$/);
+      if (prior && oldDay && newDay && oldDay[1] > newDay[1]) {
+        status.push([name, checked, meta.time, '最新日の取得不可・前回表示を保持', meta.filename, Math.max(0, prior.getLastRow() - 1)]);
+        return prior;
+      }
+      const sh = brWriteSheet_(ss, name, formatted, name !== '日別の成績');
+      meta = source.brSource || {filename: '', time: '時刻不明'};
+      const serialized = JSON.stringify(meta);
+      if (saved !== serialized) props.setProperty(metaKey, serialized);
+      status.push([name, checked, meta.time, note || '取得成功', meta.filename, formatted.length - 1]);
+      return sh;
+    }
+    status.push([name, checked, meta ? meta.time : '不明',
+      prior ? '取得不可・前回表示を保持' : '取得不可・未表示', meta ? meta.filename : '',
+      prior ? Math.max(0, prior.getLastRow() - 1) : 0]);
+    return prior;
+  }
+  // 今日が未作成なら最近3日前まで。見つからなくても前回表示は残す。
   const nd = brLatest_('notify_', today);
-  brWriteSheet_(ss, '今日の判定', nd ? brFormatNotify_(nd.rows,
-                                                  brFetchCsv_('results_' + nd.day + '.csv'),
-                                                  brFetchCsv_(nd.day + '.csv')) : null, true);
+  let notify = null;
+  let notifyNote = '';
+  if (nd) {
+    const results = brFetchCsv_('results_' + nd.day + '.csv');
+    const bets = brFetchCsv_(nd.day + '.csv');
+    // 結果等が一時的に読めなくても、既存の確定情報を消さない。
+    const old = ss.getSheetByName('今日の判定');
+    const oldMeta = props.getProperty('BR_SOURCE_META_今日の判定');
+    let sameDay = false;
+    if (oldMeta) { try { sameDay = JSON.parse(oldMeta).filename === nd.rows.brSource.filename; } catch (err) {} }
+    if (old && sameDay && (!results || !bets)) {
+      const oldValues = old.getDataRange().getValues();
+      notify = brFormatNotify_(nd.rows, results, bets);
+      const previous = {};
+      oldValues.slice(1).forEach(r => { previous[r[0] + '|' + r[2]] = r; });
+      notify.slice(1).forEach(r => {
+        const prior = previous[r[0] + '|' + r[2]];
+        if (!prior) return;
+        if (!results && prior[11] && prior[11] !== 'レース後に反映') {
+          r[11] = prior[11]; r[12] = prior[12]; r[13] = prior[13];
+        }
+        if (!bets && String(prior[3]).indexOf('買い') === 0) {
+          r[3] = prior[3];
+          if (r[11] === prior[11] && String(prior[12]).indexOf('（的中）') >= 0 && String(r[12]).indexOf('（的中）') < 0) r[12] += '（的中）';
+        }
+      });
+    } else notify = brFormatNotify_(nd.rows, results, bets);
+    if (!results || !bets) notifyNote = '判定取得成功・結果/買い目の一部未取得';
+  }
+  syncTab('今日の判定', nd && nd.rows, notify, notifyNote);
   const md = brLatest_('morning_', today);
-  brWriteSheet_(ss, '今日の朝の候補', md ? brFormatMorning_(md.rows) : null, true);
-  brWriteSheet_(ss, '全部の買い目', brFormatBets_(brFetchCsv_('all_bets.csv')), true);
-  brWriteSheet_(ss, '判定の記録（結果つき）', brFormatJudged_(brFetchCsv_('judged_all.csv')), true);
-  const daily = brFormatDaily_(brFetchCsv_('daily.csv'));
-  const dsh = brWriteSheet_(ss, '日別の成績', daily, false);
+  syncTab('今日の朝の候補', md && md.rows, md && brFormatMorning_(md.rows));
+  const bets = brFetchCsv_('all_bets.csv');
+  syncTab('全部の買い目', bets, brFormatBets_(bets));
+  const judged = brFetchCsv_('judged_all.csv');
+  syncTab('判定の記録（結果つき）', judged, brFormatJudged_(judged));
+  const dailySource = brFetchCsv_('daily.csv');
+  const daily = brFormatDaily_(dailySource);
+  const dsh = syncTab('日別の成績', dailySource, daily);
   brUpdateChart_(dsh, daily);
-  dsh.getRange(1, 1).setNote('最終自動更新: ' + Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM/dd HH:mm'));
+  brWriteSheet_(ss, '更新状況', status, true);
 }
 
-// 最初だけ1回手動実行：10分ごとの時計を登録（kick等の時計には触らない）
+// 最初だけ1回手動実行：5分ごとの時計を登録（kick等の時計には触らない）
 function brSetupBoatraceStats() {
   ScriptApp.getProjectTriggers()
     .filter(t => t.getHandlerFunction() === 'brSyncBoatraceStats')
     .forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('brSyncBoatraceStats').timeBased().everyMinutes(10).create();
+  ScriptApp.newTrigger('brSyncBoatraceStats').timeBased().everyMinutes(5).create();
   brSyncBoatraceStats();
 }

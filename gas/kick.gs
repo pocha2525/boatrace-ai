@@ -44,6 +44,6 @@ function setup() {
   ScriptApp.getProjectTriggers()
     .filter(t => t.getHandlerFunction() === 'kick')
     .forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('kick').timeBased().everyMinutes(10).create();
+  ScriptApp.newTrigger('kick').timeBased().everyMinutes(5).create();
   run_('predict');
 }
