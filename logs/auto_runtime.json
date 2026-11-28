@@ -2,32 +2,32 @@
   "tasks": {
     "predict-20261128": {
       "status": "ok",
-      "started_at": "2026-11-28T20:38:06.352296+09:00",
-      "finished_at": "2026-11-28T20:40:21.433612+09:00",
+      "started_at": "2026-11-28T20:43:10.978235+09:00",
+      "finished_at": "2026-11-28T20:44:04.309590+09:00",
       "consecutive_failures": 0,
       "metrics": {
         "venues": 14,
         "targets": 0,
         "results": {
-          "attempted": 7,
+          "attempted": 0,
           "saved": 0,
           "settled": 0,
           "pending": 20,
-          "due": 7,
+          "due": 0,
           "errors": 0,
-          "fetched": 7,
-          "backoff": 13,
+          "fetched": 0,
+          "backoff": 20,
           "budget_exhausted": 0
         }
       }
     },
     "analysis-20261128": {
       "status": "ok",
-      "finished_at": "2026-11-28T20:40:21.454232+09:00",
+      "finished_at": "2026-11-28T20:44:04.419459+09:00",
       "consecutive_failures": 0
     }
   },
-  "updated_at": "2026-11-28T20:40:21.433640+09:00",
+  "updated_at": "2026-11-28T20:44:04.309619+09:00",
   "live_stats": {
     "status": "ok",
     "day": "20261128",
@@ -57,7 +57,7 @@
     "selection_reused_count": 6375,
     "new_selection_count": 51,
     "new_settlement_count": 5,
-    "elapsed_seconds": 0.011869,
+    "elapsed_seconds": 0.098237,
     "audit_sha256": "558505ac48cdc1fd676a44c3f679cd37eb50264a4555485ff0614ebbfd27cfdb",
     "rule_sha256": "54b83a65dd39e2f34d853fc3a46463f955fea44faff98d55c6d2cebbe7f67aed",
     "model_manifest_hash": "1f1041a16b6ae7ce3606535ab9477abdbb97b9a685680590e5f6bca39523b451",
@@ -66,7 +66,7 @@
     "scope": "Daily exploratory audit only. No forecast generation, fitting, adoption or notification. Historical policy/allocations may be post hoc."
   },
   "last_run": {
-    "at": "2026-11-28T20:40:21.454265+09:00",
+    "at": "2026-11-28T20:44:04.419507+09:00",
     "ran": [
       "predict"
     ],
