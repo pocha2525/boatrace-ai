@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "hd": "20261128",
+  "races": {
+    "18-7": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "18-8": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "18-10": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "20-2": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "18-12": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "15-1": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "20-5": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    },
+    "15-4": {
+      "attempts": 1,
+      "last_attempt_at": "2026-11-28T19:24:37.480145+09:00",
+      "next_attempt_at": "2026-11-28T19:29:37.480145+09:00",
+      "status": "pending"
+    }
+  },
+  "updated_at": "2026-11-28T19:24:37.480145+09:00"
+}
