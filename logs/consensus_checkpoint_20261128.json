@@ -1,0 +1,76 @@
+{
+  "updated_jst": "2026-11-28T14:03:00+09:00",
+  "delivery_policy": "consensus-v1",
+  "code_commits": [
+    "62466cf4",
+    "42670b2b"
+  ],
+  "tests_commit": "2e914b6d",
+  "github_validate": {
+    "run": 46110088506,
+    "job": 140871469614,
+    "result": "success",
+    "passed": 98
+  },
+  "rules_sha256": "54b83a65dd39e2f34d853fc3a46463f955fea44faff98d55c6d2cebbe7f67aed",
+  "protected_models": {
+    "baseline": [
+      "1cf3abb4cc60383ebfc9a2892480567ebdc992ea8a601c2cdc9e72f270cee7ec",
+      "ad05375eff414e66a345cd6d047a3d8822ee90db165d9cbf97f8acdcbd893164",
+      "f2fb849bb34c832ea3c46989ecd20457cac19eaaae813cceb28fe4e3ed4a607d"
+    ],
+    "candidate": [
+      "cdf92b110c2ed36f8453e06c571101f61df2652836dc9988c51474eb7a766ac4",
+      "32e43df4a78b0adab5666064b30616ad18f4c2e9e58e750bba6b3b17c1032dea",
+      "7775780049e3ab2f704ae182963ff492af0dfd72ed7da27c17b06825e3f46f9a"
+    ]
+  },
+  "retraining": {
+    "first_run": 46109769256,
+    "first_result": "failed before first target fit: null-only object feature types",
+    "recovery_run": 46110168675,
+    "recovery_job": 140871701283,
+    "recovery_state": "in_progress",
+    "new_artifact_only": true,
+    "no_automatic_promotion": true
+  },
+  "parallel_work": [
+    "requested research retraining",
+    "incremental return analysis",
+    "independent delivery safety review"
+  ],
+  "delta": {
+    "source_ref": "705fa6637b937989e2fdb2f5780339984c41848c",
+    "market": 77,
+    "results": 62,
+    "new_market": 10,
+    "new_results": 4,
+    "reused_settled_profile_races": 2611,
+    "reasoned_settled": 49,
+    "reasoned_pending": 15,
+    "cache_summary": "focus_20261128_1357_summary.json",
+    "cache_detail": "focus_20261128_1357_detail.csv",
+    "copy_to_previous_folder_before_next_run": true
+  },
+  "next_checks": [
+    "14:13 difference-only analysis",
+    "14:16 internal exhibition analysis; no separate prediction email",
+    "15:13 final focus summary"
+  ],
+  "notification_rules": {
+    "picks": "model top4 intersect valid saved reasoning4; individual p>=0.12 and EV>=1",
+    "max_picks": 2,
+    "daily_limit": 1,
+    "morning_lists": false,
+    "skip_alerts": false,
+    "standalone_manual_forecast": false,
+    "unknown_or_pending_retries": false,
+    "confirmed_pre_send_deadline_cancellation_releases_slot": true
+  },
+  "limitations": [
+    "One-day comparison has no day-level 95% interval",
+    "No proven improvement in return",
+    "Numeric rules only partially represent ChatGPT reasoning",
+    "Requested retraining completion not yet confirmed"
+  ]
+}
