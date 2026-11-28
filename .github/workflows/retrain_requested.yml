@@ -1,0 +1,36 @@
+name: requested-retrain
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: requested-retrain
+  cancel-in-progress: false
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONUNBUFFERED: '1'
+      OMP_NUM_THREADS: '2'
+      RETRAIN_OUT: research_model
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/cache/restore@v4
+        with:
+          path: data
+          key: requested-data-${{ github.run_id }}
+          restore-keys: kdata-
+      - run: pip install -r requirements.txt
+      - run: git clone --depth 1 https://github.com/hassak0408/boat-oriten oriten
+      - name: Train once without replacing protected models
+        run: python retrain_once.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: requested-model-${{ github.run_id }}
+          path: research_model/
+          if-no-files-found: error
+          retention-days: 90
