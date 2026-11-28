@@ -47,7 +47,7 @@ def test_daily_cap_from_csv_and_legacy_exclusion(tmp_path, status, used):
 
 
 @pytest.mark.parametrize('status,used', [('送信予約', True), (predict.SENT_UNKNOWN, True),
-                                       (predict.SENT_OK, True), (predict.SENT_FAIL, False)])
+                                       (predict.SENT_OK, True), (predict.SENT_FAIL, False), ('締切により中止', False)])
 def test_daily_cap_survives_lost_final_csv(tmp_path, status, used):
     folder = tmp_path/'delivery'; folder.mkdir()
     (folder/'claim.json').write_text(json.dumps(dict(notification_id=consensus.daily_id('20261128'), status=status)))
@@ -63,3 +63,25 @@ def test_morning_saves_internal_candidates_without_any_delivery(monkeypatch, tmp
     monkeypatch.setattr(morning, 'send', lambda *a: pytest.fail('candidate notification disabled'))
     morning.main()
     assert len(list(tmp_path.glob('morning_*.csv'))) == 1
+
+
+def test_only_daily_cancelled_delivery_can_release_the_unused_slot(monkeypatch):
+    import base64
+    import delivery
+    monkeypatch.setenv('GITHUB_ACTIONS', 'true')
+    monkeypatch.setenv('GITHUB_TOKEN', 'test-only')
+    monkeypatch.setenv('GITHUB_REPOSITORY', 'owner/repo')
+    class Response:
+        status_code = 200
+        def __init__(self, data): self.data = data
+        def json(self): return self.data
+    content = base64.b64encode(json.dumps(dict(status='締切により中止')).encode()).decode()
+    monkeypatch.setattr(delivery.requests, 'get', lambda *a, **k: Response(dict(content=content, sha='old')))
+    writes = []
+    def put(*args, **kwargs):
+        writes.append(kwargs['json'])
+        return Response(dict(content=dict(sha='new')))
+    monkeypatch.setattr(delivery.requests, 'put', put)
+    assert delivery.Ledger().reserve('20261128-18-04') is None
+    assert delivery.Ledger().reserve(consensus.daily_id('20261128')) is not None
+    assert len(writes) == 1 and writes[0]['sha'] == 'old'

@@ -43,3 +43,11 @@ def test_excludes_late_features_refunds_and_ambiguous_results(tmp_path):
     for change in cases:
         write_inputs(tmp_path, **change)
         assert retrain_once.current_rows(tmp_path, '20261128', asof)[1] == 0
+
+
+def test_training_matrix_coerces_null_only_columns_without_zero_imputation():
+    frame = pd.DataFrame(dict(venue=[18, 18], wd_x=[None, None], cm_mot=[None, None], numeric=['.5', '.3']))
+    matrix = retrain_once.training_matrix(frame, ['venue', 'wd_x', 'cm_mot', 'numeric', 'missing'])
+    assert matrix.wd_x.isna().all() and matrix.cm_mot.isna().all() and matrix['missing'].isna().all()
+    assert float(matrix.numeric.iloc[0]) == .5
+    assert all(str(t) == 'float32' for t in matrix.dtypes)
