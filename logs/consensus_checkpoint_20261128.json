@@ -1,5 +1,5 @@
 {
-  "updated_jst": "2026-11-28T14:03:00+09:00",
+  "updated_jst": "2026-11-28T14:06:00+09:00",
   "delivery_policy": "consensus-v1",
   "code_commits": [
     "62466cf4",
@@ -30,9 +30,25 @@
     "first_result": "failed before first target fit: null-only object feature types",
     "recovery_run": 46110168675,
     "recovery_job": 140871701283,
-    "recovery_state": "in_progress",
+    "recovery_state": "success",
     "new_artifact_only": true,
-    "no_automatic_promotion": true
+    "no_automatic_promotion": true,
+    "completed_jst": "2026-11-28T14:05:19+09:00",
+    "historical_days": 1427,
+    "historical_through": 20261127,
+    "train_through": 20261128,
+    "training_rows": 1215239,
+    "fresh_settled_races": 61,
+    "artifact_id": 15249726567,
+    "artifact_name": "requested-model-46110168675",
+    "artifact_digest": "sha256:355a1aa025ad7143a2f85c082bf7eb8f90204fa6a6982888bbb451f3750d9c5d",
+    "actual_completed_fits": 1,
+    "targets_completed": [
+      "win",
+      "top2",
+      "top3"
+    ],
+    "model_promoted": false
   },
   "parallel_work": [
     "requested research retraining",
@@ -70,7 +86,31 @@
   "limitations": [
     "One-day comparison has no day-level 95% interval",
     "No proven improvement in return",
-    "Numeric rules only partially represent ChatGPT reasoning",
-    "Requested retraining completion not yet confirmed"
-  ]
+    "Numeric rules only partially represent ChatGPT reasoning"
+  ],
+  "runtime_check": {
+    "predict_run": 46109889628,
+    "result": "success",
+    "new_policy_decisions": 2,
+    "new_policy_sent": 0,
+    "reference": "8384312",
+    "asof_jst": "2026-11-28T14:00:40+09:00",
+    "collection_continues": true,
+    "silent_skips": true
+  },
+  "audit_cache_commit": "73944c6",
+  "additional_hypothetical_audit": {
+    "source_ref": "705fa6637b937989e2fdb2f5780339984c41848c",
+    "markets": 77,
+    "valid_rules": 64,
+    "eligible_races": 1,
+    "daily_capped_races": 1,
+    "picks": [
+      "2-1-3"
+    ],
+    "investment": 100,
+    "returned": 1250,
+    "not_live_performance": true,
+    "note": "Only one retrospective hit; no independent future validation, no promotion evidence."
+  }
 }

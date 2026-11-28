@@ -1,0 +1,97 @@
+{
+  "audit": "consensus-v1-initial-historical-audit",
+  "source_ref": "705fa6637b937989e2fdb2f5780339984c41848c",
+  "created_at": "2026-11-28T05:04:06.229152+00:00",
+  "data_day": "20261128",
+  "latest_observed": "2026-11-28T13:50:12.510507+09:00",
+  "market_rows": 77,
+  "first_market_races": 77,
+  "valid_asof_complete_rule_races": 64,
+  "qualifying_races_before_daily_limit": 1,
+  "policy": {
+    "model_top": 4,
+    "reasoned_top": 4,
+    "per_pick_min_probability": 0.12,
+    "per_pick_min_ev": 1.0,
+    "max_picks": 2,
+    "daily_cap": 1
+  },
+  "full_qualifying": {
+    "races": 1,
+    "settled_races": 1,
+    "pending_races": 0,
+    "tickets": 1,
+    "settled_tickets": 1,
+    "hit_races": 1,
+    "refund_tickets": 0,
+    "investment": 100,
+    "returned": 1250,
+    "profit": 1150,
+    "roi_pct": 1250.0,
+    "day_ci95": null,
+    "day_ci_note": "Only one recorded day, so day-to-day variation cannot be estimated.",
+    "roi_without_largest_hit": null,
+    "roi_without_largest_hit_note": "Removing the only settled hit leaves no investment.",
+    "max_drawdown": 0
+  },
+  "first_qualifying_per_day": {
+    "races": 1,
+    "settled_races": 1,
+    "pending_races": 0,
+    "tickets": 1,
+    "settled_tickets": 1,
+    "hit_races": 1,
+    "refund_tickets": 0,
+    "investment": 100,
+    "returned": 1250,
+    "profit": 1150,
+    "roi_pct": 1250.0,
+    "day_ci95": null,
+    "day_ci_note": "Only one recorded day, so day-to-day variation cannot be estimated.",
+    "roi_without_largest_hit": null,
+    "roi_without_largest_hit_note": "Removing the only settled hit leaves no investment.",
+    "max_drawdown": 0
+  },
+  "source_hashes": {
+    "consensus": "6986de2004cd7de8c8c7b1020dddf873ccc3de0c61ef709e234ceb60d7fa6f84",
+    "reasoned_forecast": "54b83a65dd39e2f34d853fc3a46463f955fea44faff98d55c6d2cebbe7f67aed",
+    "settlement": "96578da0738cfd6b3d4fdabe103044ed9ff5b6fb61fb9f20ed9af8b8db1e6706"
+  },
+  "input_hashes": {
+    "market": "72e4fedd9254a8411f3e1dd2d1a176da38354ca86ee0d04d5bc777791e2cb20b",
+    "results": "1fa38488556c81456c21eb64a957a3a3255bd9eac1a025f97a8380276abacc45"
+  },
+  "notification_statuses": [
+    "受付成功",
+    "条件未達",
+    "締切により中止"
+  ],
+  "limitations": [
+    "Historical hypothetical audit; earlier outcomes have already been observed, so this is not independent prospective validation.",
+    "Daily first-hit selection uses only observation time and prespecified probabilities/EV, never outcome or later odds.",
+    "No actual notification ledger, forecast, production model, threshold or frozen challenger was modified.",
+    "Day-level confidence interval is not estimable from a single day.",
+    "Daily cap is hypothetical for the whole recorded day; consensus policy was only deployed during the afternoon."
+  ],
+  "actual_buy_receipts_at_snapshot": [
+    {
+      "race": "20261128-23-6",
+      "status": "受付成功",
+      "picks": "2-1-4 2-1-3",
+      "policy": "",
+      "decided_at": "10:59:15"
+    }
+  ],
+  "actual_skip_notice_receipts_count": 2,
+  "actual_skip_notice_receipts": [
+    {
+      "race": "20261128-18-4",
+      "decided_at": "09:59:15"
+    },
+    {
+      "race": "20261128-17-7",
+      "decided_at": "12:41:39"
+    }
+  ],
+  "actual_notification_scope_note": "Buy and skip receipts from notify CSV only; morning lists, manual emails and performance reports are separate and not counted here."
+}

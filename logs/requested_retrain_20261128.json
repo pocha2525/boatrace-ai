@@ -1,0 +1,52 @@
+{
+  "version": "requested-retrain-v1",
+  "requested": true,
+  "source_commit": "2146590d81f45ceb6a9bc7e98fa62694b08a4beb",
+  "run_id": "46110168675",
+  "started_at": "2026-11-28T14:01:45.960139+09:00",
+  "completed_at": "2026-11-28T14:05:19.414925+09:00",
+  "research_only": true,
+  "live_unchanged": true,
+  "frozen_shadow_unchanged": true,
+  "historical_through": 20261127,
+  "train_through": 20261128,
+  "rows": 1215239,
+  "historical_days": 1427,
+  "fresh_settled_races": 61,
+  "parameters": {
+    "objective": "binary",
+    "learning_rate": 0.05,
+    "num_leaves": 63,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "feature_fraction": 0.8,
+    "verbose": -1,
+    "num_threads": 2,
+    "seed": 20261128
+  },
+  "rounds": 400,
+  "candidate_hashes": {
+    "win": "9ef35fbc0a4696e7ad63a10ea135011c0c4b9d6854ec030e26808744aed8ad3d",
+    "top2": "dbc56e96f6a1d6999fb16b088c72829dbc99a8ce0bf2034d6749c59a380150f2",
+    "top3": "884b7c95171862c4d0c764abcd81079a00f819c49ee2e5fc88f2ad2619508420"
+  },
+  "input_hashes": {
+    "logs/features_20261128.jsonl": "2bf3887a1eccbdf69f2c8e74397cf4b9b8d7aa635ecbcf14624a4cff9803cda9",
+    "logs/market_20261128.jsonl": "72e4fedd9254a8411f3e1dd2d1a176da38354ca86ee0d04d5bc777791e2cb20b",
+    "logs/results_20261128.csv": "8dd61a6f2246deddc835205539969ca9a5fc3073df2e132722619af827aea0bc"
+  },
+  "evaluation": "Not evaluated. Training rows cannot be used for independent performance claims.",
+  "artifact": {
+    "id": 15249726567,
+    "name": "requested-model-46110168675",
+    "sha256": "355a1aa025ad7143a2f85c082bf7eb8f90204fa6a6982888bbb451f3750d9c5d",
+    "expires_at": "2027-02-26T05:01:13Z"
+  },
+  "workflow_conclusion": "success",
+  "initial_attempt": {
+    "run_id": 46109769256,
+    "completed_targets": 0,
+    "error": "Null-only object columns; corrected before recovery"
+  },
+  "production_promoted": false
+}
