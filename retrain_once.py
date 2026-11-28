@@ -68,6 +68,12 @@ def current_rows(logs, hd, asof):
     return pd.DataFrame(rows), len(rows)//6
 
 
+def training_matrix(frame, features):
+    # JSON null-only columns otherwise remain object after concatenation.
+    # Preserve unknown values as NaN, never substitute zero weather/comments.
+    return frame.reindex(columns=features).apply(pd.to_numeric, errors='coerce').astype('float32')
+
+
 def main():
     asof = now_jst()
     hd = asof.strftime('%Y%m%d')
@@ -100,7 +106,7 @@ def main():
     trained = {}
     print('REQUESTED_RETRAIN_START', asof.isoformat(), 'rows', len(frame), 'fresh_settled_races', live_races, flush=True)
     for target in TARGETS:
-        dataset = lgb.Dataset(frame[features], frame[target], categorical_feature=['venue'], free_raw_data=True)
+        dataset = lgb.Dataset(training_matrix(frame, features), frame[target], categorical_feature=['venue'], free_raw_data=True)
         fitted = lgb.train(params, dataset, num_boost_round=400)
         path = output/f'model_{target}.txt'
         fitted.save_model(str(path))

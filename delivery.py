@@ -9,6 +9,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 
 import requests
 
@@ -34,7 +35,10 @@ class Ledger:
             if r.status_code == 200:
                 obj = r.json()
                 prior = json.loads(base64.b64decode(obj['content']))
-                if prior.get('status') != '送信失敗':
+                retry = prior.get('status') == '送信失敗' or (
+                    re.fullmatch(r'consensus-v1-[0-9]{8}', notification_id) is not None
+                    and prior.get('status') == '締切により中止')
+                if not retry:
                     return None
                 sha = obj['sha']
             elif r.status_code != 404:

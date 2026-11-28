@@ -44,7 +44,7 @@ def day_used(logs, hd):
         try:
             with open(path, encoding='utf8') as f:
                 row = json.load(f)
-            if row.get('notification_id') == daily_id(hd) and row.get('status') != '送信失敗':
+            if row.get('notification_id') == daily_id(hd) and row.get('status') not in ('送信失敗', '締切により中止'):
                 return True
         except (OSError, ValueError):
             continue
@@ -55,7 +55,7 @@ def evidence(record):
     head = str(record.get('head', ''))
     groups = record.get('group_evidence', {})
     strengths = [g for g, values in groups.items() if values.get(head, 0) >= .6]
-    lines = ['根拠：AI上位4点と、能力・今節・展示などの判断ルール4点が一致。']
+    lines = ['根拠：AIと能力・今節・展示などの判断ルール、双方の候補に含まれる買い目です。']
     if strengths:
         lines.append('1着候補の比較上位：' + labels(strengths[:3]))
     try:
