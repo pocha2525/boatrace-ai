@@ -1,6 +1,7 @@
 import csv
 import datetime
 import json
+from urllib.parse import parse_qs, urlparse
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -24,9 +25,11 @@ def context(tmp_path, races=1, result=None):
     calls, direct, writes = [], [], []
     def read_log(path):
         return pd.read_csv(path, dtype=str).fillna('') if Path(path).exists() else None
-    def page(kind, jcd, rno, hd):
-        calls.append((kind, jcd, rno, hd))
-        return ''
+    def get(url, **kwargs):
+        query = parse_qs(urlparse(url).query)
+        calls.append(('raceresult', int(query['jcd'][0]), int(query['rno'][0]), query['hd'][0]))
+        assert kwargs == dict(tries=1, timeout=8, direct_fallback=False, relay_only=True)
+        return None
     def get_direct(url, **kwargs):
         direct.append((url, kwargs))
         return None
@@ -34,7 +37,7 @@ def context(tmp_path, races=1, result=None):
         writes.extend(rows)
     ctx = SimpleNamespace(LOGS=str(tmp_path), BR='https://official.test/', RESULT_MAX=2, RESULT_WAIT_MIN=12,
                           RESULT_COLS=[], read_log=read_log, notify_path=lambda hd: str(tmp_path/f'notify_{hd}.csv'),
-                          result_path=lambda hd: str(tmp_path/f'results_{hd}.csv'), page=page, get_direct=get_direct,
+                          result_path=lambda hd: str(tmp_path/f'results_{hd}.csv'), get=get, get_direct=get_direct,
                           parse_result_details=lambda text: dict(PAY) if text == 'settled' else None,
                           save_sample=lambda *a: None, append_rows=append, now_jst=lambda: NOW)
     return ctx, calls, direct, writes
@@ -59,7 +62,7 @@ def test_durable_exponential_backoff_and_bounded_direct_attempt(tmp_path):
     assert metrics['attempted'] == 0 and metrics['backoff'] == 1
     result_collector.collect('20261128', NOW+datetime.timedelta(minutes=5), ctx)
     assert len(calls) == len(direct) == 2 and not writes
-    assert all(x[1] == dict(timeout=20, tries=1) for x in direct)
+    assert all(x[1] == dict(timeout=8, tries=1) for x in direct)
     state = json.loads((tmp_path/'result_attempts_20261128.json').read_text())['races']['18-1']
     assert state['attempts'] == 2
     assert state['next_attempt_at'] == (NOW+datetime.timedelta(minutes=15)).isoformat()
@@ -114,7 +117,7 @@ def test_non_200_direct_response_does_not_parse_or_settle(tmp_path):
 
 def test_normal_official_result_does_not_make_fallback_request(tmp_path):
     ctx, calls, direct, writes = context(tmp_path)
-    ctx.page = lambda *a: 'settled'
+    ctx.get = lambda *a, **k: SimpleNamespace(status_code=200, text='settled', encoding=None)
     assert result_collector.collect('20261128', NOW, ctx)['settled'] == 1
     assert not direct and len(writes) == 1
 
@@ -167,3 +170,121 @@ def test_relay_permission_denial_does_not_trigger_transport_fallback(monkeypatch
     monkeypatch.setattr(common.requests, 'get', get)
     assert common.get('https://official.test/', tries=1) is None
     assert calls == [common.RELAY]
+
+
+def test_monotonic_budget_yields_queue_without_marking_unattempted(tmp_path, monkeypatch):
+    ctx, calls, direct, writes = context(tmp_path, races=8)
+    ctx.RESULT_MAX = 8
+    clock = [0.0]
+    monkeypatch.setattr(result_collector.time, 'monotonic', lambda: clock[0])
+    def relay(url, **kwargs):
+        rno = int(parse_qs(urlparse(url).query)['rno'][0])
+        calls.append(rno)
+        clock[0] += kwargs['timeout']
+        return None
+    def official(url, **kwargs):
+        direct.append(kwargs)
+        clock[0] += kwargs['timeout']
+        return None
+    ctx.get, ctx.get_direct = relay, official
+    metrics = result_collector.collect('20261128', NOW, ctx)
+    assert clock[0] == 90
+    assert metrics['budget_exhausted'] == 1
+    assert metrics['attempted'] == 6 and metrics['due'] == 8
+    assert calls == [1, 2, 3, 4, 5, 6]
+    assert direct[-1] == dict(timeout=2, tries=1)
+    state = json.loads((tmp_path/'result_attempts_20261128.json').read_text())
+    assert set(state['races']) == {f'18-{n}' for n in range(1, 7)}
+    # The next tick starts with untouched races, ahead of old failures.
+    clock[0] = 0
+    result_collector.collect('20261128', NOW+datetime.timedelta(minutes=5), ctx)
+    assert calls[6:8] == [7, 8]
+    assert not writes
+
+
+def test_budget_exhausted_in_relay_skips_direct_fallback(tmp_path, monkeypatch):
+    ctx, calls, direct, writes = context(tmp_path, races=2)
+    clock = [0.0]
+    monkeypatch.setattr(result_collector.time, 'monotonic', lambda: clock[0])
+    def relay(url, **kwargs):
+        assert kwargs['timeout'] == 8
+        clock[0] = 90
+        return None
+    ctx.get = relay
+    metrics = result_collector.collect('20261128', NOW, ctx)
+    assert metrics['attempted'] == 1 and metrics['budget_exhausted'] == 1
+    assert not direct and not writes
+    state = json.loads((tmp_path/'result_attempts_20261128.json').read_text())
+    assert set(state['races']) == {'18-1'}
+
+
+def test_result_max_is_always_capped_at_eight(tmp_path):
+    ctx, calls, direct, writes = context(tmp_path, races=12)
+    ctx.RESULT_MAX = 99
+    assert result_collector.collect('20261128', NOW, ctx)['attempted'] == 8
+    assert len(calls) == len(direct) == 8
+
+
+def test_result_relay_failure_has_exactly_one_direct_request(tmp_path, monkeypatch):
+    ctx, calls, direct, writes = context(tmp_path)
+    ctx.BR = 'https://official.test/'
+    ctx.get, ctx.get_direct = common.get, common.get_direct
+    monkeypatch.setattr(common, 'RELAY', 'https://relay.test/')
+    monkeypatch.setattr(common.time, 'sleep', lambda _: None)
+    transport = []
+    def relay(url, **kwargs):
+        transport.append((url, kwargs))
+        raise requests.Timeout('mock-only')
+    def official(method, url, **kwargs):
+        transport.append((url, kwargs))
+        return SimpleNamespace(status_code=200, text='settled', encoding=None)
+    monkeypatch.setattr(common.requests, 'get', relay)
+    monkeypatch.setattr(common.requests, 'request', official)
+    metrics = result_collector.collect('20261128', NOW, ctx)
+    assert metrics['settled'] == 1
+    assert len(transport) == 2
+    assert transport[0][0] == common.RELAY
+    assert transport[1][0].startswith(ctx.BR)
+    assert all(kwargs['timeout'] == 8 for _, kwargs in transport)
+    assert writes[0]['tri_pay'] == 720
+
+
+def test_empty_successful_relay_uses_one_official_direct_request(tmp_path, monkeypatch):
+    ctx, calls, direct, writes = context(tmp_path)
+    ctx.get, ctx.get_direct = common.get, common.get_direct
+    monkeypatch.setattr(common, 'RELAY', 'https://relay.test/')
+    transport = []
+    def relay(url, **kwargs):
+        transport.append(url)
+        return SimpleNamespace(status_code=200, json=lambda: {'status': 200, 'body': ''})
+    def official(method, url, **kwargs):
+        transport.append(url)
+        return SimpleNamespace(status_code=200, text='settled', encoding=None)
+    monkeypatch.setattr(common.requests, 'get', relay)
+    monkeypatch.setattr(common.requests, 'request', official)
+    assert result_collector.collect('20261128', NOW, ctx)['settled'] == 1
+    assert transport == [common.RELAY, 'https://official.test/raceresult?rno=1&jcd=18&hd=20261128']
+    assert writes[0]['tri_payouts'] == PAY['tri_payouts']
+
+
+def test_no_relay_configuration_makes_only_one_direct_request(tmp_path, monkeypatch):
+    ctx, calls, direct, writes = context(tmp_path)
+    ctx.get, ctx.get_direct = common.get, common.get_direct
+    monkeypatch.setattr(common, 'RELAY', '')
+    monkeypatch.setattr(common.requests, 'get', lambda *a, **k: pytest.fail('relay-only must not make a direct request'))
+    transport = []
+    def official(method, url, **kwargs):
+        transport.append(url)
+        return SimpleNamespace(status_code=200, text='settled', encoding=None)
+    monkeypatch.setattr(common.requests, 'request', official)
+    assert result_collector.collect('20261128', NOW, ctx)['settled'] == 1
+    assert len(transport) == 1
+
+
+def test_context_without_get_uses_one_bounded_direct_request(tmp_path):
+    ctx, calls, direct, writes = context(tmp_path)
+    del ctx.get
+    result_collector.collect('20261128', NOW, ctx)
+    assert not calls
+    assert len(direct) == 1
+    assert direct[0][1] == dict(timeout=8, tries=1)

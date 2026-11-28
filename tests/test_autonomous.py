@@ -66,3 +66,10 @@ def test_report_prefers_saved_official_results_and_handles_known_legacy_header(m
     monkeypatch.setattr(report,'MODEL',str(tmp_path))
     (tmp_path/'history.csv').write_text('202611232125,v2,known legacy row\n')
     assert report.model_history()[-1]==(202611232125,'v2')
+
+
+def test_slow_cycle_does_not_skip_next_five_minute_start():
+    start=dt.datetime(2026,11,28,19,25,tzinfo=autonomous.JST)
+    state={'tasks':{'predict-20261128':dict(status='ok',started_at=start.isoformat(),finished_at=(start+dt.timedelta(minutes=3)).isoformat())}}
+    assert autonomous.due('predict',start+dt.timedelta(minutes=5),state)
+    assert not autonomous.due('predict',start+dt.timedelta(minutes=3),state)
