@@ -2,20 +2,20 @@
   "tasks": {
     "predict-20261128": {
       "status": "ok",
-      "started_at": "2026-11-28T19:33:07.608187+09:00",
-      "finished_at": "2026-11-28T19:35:20.891070+09:00",
+      "started_at": "2026-11-28T19:38:13.062633+09:00",
+      "finished_at": "2026-11-28T19:40:32.331385+09:00",
       "consecutive_failures": 0,
       "metrics": {
         "venues": 14,
         "targets": 0,
         "results": {
           "attempted": 8,
-          "saved": 0,
-          "settled": 0,
-          "pending": 72,
+          "saved": 5,
+          "settled": 5,
+          "pending": 67,
           "due": 72,
-          "errors": 8,
-          "fetched": 0,
+          "errors": 0,
+          "fetched": 8,
           "backoff": 0,
           "budget_exhausted": 0
         }
@@ -23,11 +23,11 @@
     },
     "analysis-20261128": {
       "status": "ok",
-      "finished_at": "2026-11-28T19:35:20.971700+09:00",
+      "finished_at": "2026-11-28T19:40:32.473803+09:00",
       "consecutive_failures": 0
     }
   },
-  "updated_at": "2026-11-28T19:35:20.891093+09:00",
+  "updated_at": "2026-11-28T19:40:32.331404+09:00",
   "live_stats": {
     "status": "ok",
     "day": "20261128",
@@ -40,9 +40,9 @@
   "analysis": {
     "version": "daily-fast-analysis-v1",
     "hd": "20261128",
-    "inputs_id": "cf0921656afa314b4da9cab2ed0da8a2ea39efe363e8042e399a91ecdfd45350",
-    "same_input": true,
-    "created_at": "2026-11-28T10:30:25.839743+00:00",
+    "inputs_id": "e33506a4114369647296c6a6c11181e682439d20871968a47a78ed3993f6c726",
+    "same_input": false,
+    "created_at": "2026-11-28T10:40:32.459678+00:00",
     "market_rows": 122,
     "first_market_races": 122,
     "verified_baseline_races": 122,
@@ -50,14 +50,14 @@
     "verified_rule_races": 107,
     "profile_count": 51,
     "latest_observed": "2026-11-28T19:24:37.474162+09:00",
-    "new_input_count": 0,
+    "new_input_count": 4,
     "new_market_count": 0,
-    "new_outcome_count": 0,
-    "reused_count": 6222,
-    "selection_reused_count": 0,
-    "new_selection_count": 6222,
-    "new_settlement_count": 601,
-    "elapsed_seconds": 0.057769,
+    "new_outcome_count": 4,
+    "reused_count": 6192,
+    "selection_reused_count": 6222,
+    "new_selection_count": 0,
+    "new_settlement_count": 30,
+    "elapsed_seconds": 0.120359,
     "audit_sha256": "558505ac48cdc1fd676a44c3f679cd37eb50264a4555485ff0614ebbfd27cfdb",
     "rule_sha256": "54b83a65dd39e2f34d853fc3a46463f955fea44faff98d55c6d2cebbe7f67aed",
     "model_manifest_hash": "1f1041a16b6ae7ce3606535ab9477abdbb97b9a685680590e5f6bca39523b451",
@@ -66,7 +66,7 @@
     "scope": "Daily exploratory audit only. No forecast generation, fitting, adoption or notification. Historical policy/allocations may be post hoc."
   },
   "last_run": {
-    "at": "2026-11-28T19:35:20.971753+09:00",
+    "at": "2026-11-28T19:40:32.473833+09:00",
     "ran": [
       "predict"
     ],
