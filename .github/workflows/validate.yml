@@ -6,6 +6,7 @@ on:
       - "tests/**"
       - ".github/workflows/validate.yml"
       - "requirements.txt"
+      - "gas/**"
   pull_request:
   workflow_dispatch:
 permissions:
@@ -24,3 +25,4 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt pytest
       - run: python -m pytest -q
+      - run: node tests/test_sheet_sync.js
