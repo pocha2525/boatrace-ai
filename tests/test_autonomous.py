@@ -73,3 +73,14 @@ def test_slow_cycle_does_not_skip_next_five_minute_start():
     state={'tasks':{'predict-20261128':dict(status='ok',started_at=start.isoformat(),finished_at=(start+dt.timedelta(minutes=3)).isoformat())}}
     assert autonomous.due('predict',start+dt.timedelta(minutes=5),state)
     assert not autonomous.due('predict',start+dt.timedelta(minutes=3),state)
+
+
+def test_all_result_source_failures_do_not_claim_healthy_success(monkeypatch,tmp_path):
+    stub_analysis(monkeypatch)
+    now=dt.datetime.now(autonomous.JST)
+    metrics=dict(results=dict(attempted=3,saved=0,errors=3,pending=12))
+    result=autonomous.operate(tmp_path,'predict',now,lambda *a:metrics)
+    assert result['errors']==[dict(phase='predict',error_type='RuntimeError')]
+    state=json.loads((tmp_path/'logs/auto_runtime.json').read_text())
+    assert state['tasks'][f'predict-{now:%Y%m%d}']['status']=='error'
+    assert autonomous.due('predict',now,state)

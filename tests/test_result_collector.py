@@ -28,7 +28,7 @@ def context(tmp_path, races=1, result=None):
     def get(url, **kwargs):
         query = parse_qs(urlparse(url).query)
         calls.append(('raceresult', int(query['jcd'][0]), int(query['rno'][0]), query['hd'][0]))
-        assert kwargs == dict(tries=1, timeout=8, direct_fallback=False, relay_only=True)
+        assert kwargs == dict(tries=1, timeout=25, direct_fallback=False, relay_only=True)
         return None
     def get_direct(url, **kwargs):
         direct.append((url, kwargs))
@@ -190,15 +190,16 @@ def test_monotonic_budget_yields_queue_without_marking_unattempted(tmp_path, mon
     metrics = result_collector.collect('20261128', NOW, ctx)
     assert clock[0] == 90
     assert metrics['budget_exhausted'] == 1
-    assert metrics['attempted'] == 6 and metrics['due'] == 8
-    assert calls == [1, 2, 3, 4, 5, 6]
-    assert direct[-1] == dict(timeout=2, tries=1)
+    assert metrics['attempted'] == 3 and metrics['due'] == 8
+    assert calls == [1, 2, 3]
+    assert len(direct) == 2
+    assert all(attempt == dict(timeout=8, tries=1) for attempt in direct)
     state = json.loads((tmp_path/'result_attempts_20261128.json').read_text())
-    assert set(state['races']) == {f'18-{n}' for n in range(1, 7)}
+    assert set(state['races']) == {f'18-{n}' for n in range(1, 4)}
     # The next tick starts with untouched races, ahead of old failures.
     clock[0] = 0
     result_collector.collect('20261128', NOW+datetime.timedelta(minutes=5), ctx)
-    assert calls[6:8] == [7, 8]
+    assert calls[3:5] == [4, 5]
     assert not writes
 
 
@@ -207,7 +208,7 @@ def test_budget_exhausted_in_relay_skips_direct_fallback(tmp_path, monkeypatch):
     clock = [0.0]
     monkeypatch.setattr(result_collector.time, 'monotonic', lambda: clock[0])
     def relay(url, **kwargs):
-        assert kwargs['timeout'] == 8
+        assert kwargs['timeout'] == 25
         clock[0] = 90
         return None
     ctx.get = relay
@@ -245,7 +246,7 @@ def test_result_relay_failure_has_exactly_one_direct_request(tmp_path, monkeypat
     assert len(transport) == 2
     assert transport[0][0] == common.RELAY
     assert transport[1][0].startswith(ctx.BR)
-    assert all(kwargs['timeout'] == 8 for _, kwargs in transport)
+    assert [kwargs['timeout'] for _, kwargs in transport] == [25, 8]
     assert writes[0]['tri_pay'] == 720
 
 
