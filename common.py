@@ -113,11 +113,18 @@ class Resp:
         return self.content.decode(self.encoding or 'utf-8', errors='replace')
 
 
+class _RelayRetry(str):
+    def __new__(cls, direct_ok):
+        value = str.__new__(cls, 'retry')
+        value.direct_ok = direct_ok
+        return value
+
+
 def get_relay(url):
-    r = requests.get(RELAY, params={'u': url}, timeout=90)
+    r = requests.get(RELAY, params={'u': url}, timeout=25)
     if r.status_code != 200:
         print('中継エラー', r.status_code, url)
-        return 'retry'
+        return _RelayRetry(r.status_code >= 500)
     j = r.json()
     st = j.get('status')
     if st == 200:
@@ -125,18 +132,20 @@ def get_relay(url):
     if st == 404:
         return None
     print('中継', j.get('error') or st, url)
-    return 'retry'
+    return _RelayRetry(isinstance(st, int) and st >= 500)
 
 
 def get(url, tries=3):
     """URLを取得する。404ならNone、失敗時は数回やり直す。
     RELAY_URL があれば、Google Apps Script 経由で取得する。"""
+    direct_fallback = False
     for i in range(tries):
         try:
             if RELAY:
                 r = get_relay(url)
                 if r != 'retry':
                     return r
+                direct_fallback = getattr(r, 'direct_ok', True)
             else:
                 r = requests.get(url, headers=UA, timeout=30)
                 if r.status_code == 200:
@@ -144,8 +153,19 @@ def get(url, tries=3):
                 if r.status_code == 404:
                     return None
         except (requests.RequestException, ValueError) as e:
+            direct_fallback = bool(RELAY)
             print('通信エラー', url, e)
         time.sleep(2 * (i + 1))
+    # Relay transport/server failures can be local to the relay. A bounded
+    # direct attempt keeps official collection running without bypassing a
+    # legitimate 404 response (which returned above).
+    if RELAY and direct_fallback:
+        try:
+            r = requests.get(url, headers=UA, timeout=20)
+            if r.status_code == 200:
+                return r
+        except requests.RequestException as e:
+            print('直接取得エラー', url, type(e).__name__)
     return None
 
 

@@ -85,7 +85,9 @@ def load_model():
 def today_venues(hd):
     r = get(f'{BR}index?hd={hd}')
     if r is None:
+        LAST['venue_list_available'] = False
         return []
+    LAST['venue_list_available'] = True
     r.encoding = 'utf-8'
     return sorted({int(x) for x in re.findall(r'jcd=(\d{2})', r.text)})
 
@@ -459,8 +461,14 @@ def skip_reason(res, om):
 
 
 def send_skip_notice(name, rno, dl, nid, reason, res, reasoned=None, odds=None):
-    """Compatibility hook: skip notices are now internal only."""
-    return ST_SKIP
+    """Notify only a published morning candidate; never append extra forecasts."""
+    if remain(dl) < SAFE_MIN:
+        return ST_CANCEL
+    lines = [f'締切 {dl:%H:%M}', f'理由: {reason}',
+             '朝の候補を見送ります。統合予想の買い目追加はありません。',
+             f'通知ID: {nid}']
+    return send_notify(f'見送り {name} {rno}R', '\n'.join(lines),
+                       notification_id=nid, deadline=dl)['status']
 
 
 @locked_log
@@ -515,9 +523,9 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     if pr is None:
         why = LAST.get('skip') or '情報が取れない'
         print(name, rno, 'R 見送り：', why)
-        # 朝の候補も通知せず、最終の内部判定だけ保存する。
+        # 朝の候補だけ、最後の確認時に見送り理由を通知する。
         if cand and remain(dl) < LAST_CHANCE_MIN:
-            st = ST_SKIP
+            st = send_skip_notice(name, rno, dl, nid, why, [])
             write_notify(hd, dict(base, notify_id=nid,
                                   run_start=f'{now:%H:%M:%S}',
                                   decided_at=f'{now_jst():%H:%M:%S}',
@@ -565,7 +573,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     head = rank_text('1着', 'w')
     if not bets:
         why = '本日の統合通知は送信済み・結果不明' if daily_used else 'AIと判断ルールの共通買い目が確率12%・EV1.0以上を満たさない'
-        st = ''
+        st = send_skip_notice(name, rno, dl, nid, why, res) if cand else ''
         write_notify(hd, dict(rec, status=ST_SKIP, reason=why, notice=st))
         write_log(hd, [no_bet])
         print(f'{name} {rno}R 見送り（{why} / {head}）')
@@ -674,44 +682,10 @@ def parse_result_details(html):
 
 
 def update_results(hd, now):
-    """判定したレースのうち、終わったものの結果を記録する（予想には影響しない）"""
-    t = read_log(notify_path(hd))
-    if t is None or len(t) == 0:
-        return
-    t = t.drop_duplicates('notify_id', keep='last')
-    got = set()
-    r = read_log(result_path(hd))
-    if r is not None:
-        r = r[r['tri'].str.fullmatch(r'[1-6]-[1-6]-[1-6]', na=False)]
-        got = {(int(j), int(n)) for j, n in zip(r['jcd'], r['rno'])}
-    todo = []
-    for _, x in t.iterrows():
-        key = (int(x['jcd']), int(x['rno']))
-        if key in got:
-            continue
-        h, m = map(int, str(x['deadline']).split(':'))
-        dl = now.replace(hour=h, minute=m, second=0, microsecond=0)
-        past = (now - dl).total_seconds() / 60
-        if past >= RESULT_WAIT_MIN:
-            todo.append((past, key, x['venue'], x['deadline']))
-    todo.sort(reverse=True)  # 古いレースから
-    rows = []
-    for past, (jcd, rno), venue, dl in todo[:RESULT_MAX]:
-        try:
-            html = page('raceresult', jcd, rno, hd)
-            res = parse_result_details(html)
-            if res:
-                save_sample(hd, 'raceresult', html)
-        except Exception as e:
-            print('結果を読めない', jcd, rno, e)
-            res = None
-        if res is None:
-            continue  # まだ出ていない。次の回にもう一度
-        rows.append(dict(hd=hd, jcd=jcd, venue=venue, rno=rno, deadline=dl,
-                         **res, got_at=f'{now_jst():%H:%M}'))
-    if rows:
-        append_rows(result_path(hd), RESULT_COLS, rows)
-        print('結果を記録', len(rows), 'レース')
+    """Bounded fair queue with persisted retry/backoff and direct fallback."""
+    import sys
+    from result_collector import collect
+    return collect(hd, now, sys.modules[__name__])
 
 
 def snapshot_features(frame, hd, jcd, rno, models, model_ids=None):
@@ -764,14 +738,17 @@ def main():
     bst, lk = load_model()
     if bst is None:
         msg = 'モデルがまだありません。先に train を実行してください。'
-        print(msg)
-        return
+        raise RuntimeError(msg)
 
     venues = []
     restore_deliveries(hd)
     done = done_races(hd)
     upcoming = []
     locations = today_venues(hd)
+    if not locations and LAST.get('venue_list_available') is False:
+        # Still try to resolve previously observed races before bounded retry.
+        update_results(hd, now_jst())
+        raise RuntimeError('当日開催一覧の取得失敗')
     with ThreadPoolExecutor(4) as pool:
         schedules = list(pool.map(lambda j: (j, deadlines(j, hd)), locations))
     for jcd, dls in schedules:
@@ -800,6 +777,7 @@ def main():
                     if os.path.exists(ta) else 'v2 3モデル(11/23 Colab)'))
         print('動作確認', ' / '.join(info))
 
+    errors = 0
     cands = morning_races(hd)
     print('朝の候補', len(cands), 'レース')
     for mins, jcd, rno, dl in targets:
@@ -807,13 +785,19 @@ def main():
             run_race(bst, lk, jcd, rno, hd, dl, now,
                      cand=(jcd, rno) in cands)
         except Exception as e:
-            print('エラー', jcd, rno, e)
+            errors += 1
+            print('エラー', jcd, rno, type(e).__name__)
 
     # 判定が全部終わってから、終わったレースの結果を記録する
     try:
-        update_results(hd, now_jst())
+        result_metrics = update_results(hd, now_jst())
     except Exception as e:
-        print('結果の記録に失敗', e)
+        errors += 1
+        result_metrics = {'error_type': type(e).__name__}
+        print('結果の記録に失敗', type(e).__name__)
+    if errors:
+        raise RuntimeError(f'レース処理の取得失敗{errors}件（次回再確認）')
+    return dict(venues=len(venues), targets=len(targets), results=result_metrics)
 
 
 if __name__ == '__main__':

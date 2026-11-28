@@ -24,6 +24,12 @@ def results_for(hd):
 
 
 def _results_for(hd):
+    # Live official snapshots avoid waiting for the next K-file publication.
+    live_path = os.path.join(LOGS, f'results_{hd}.csv')
+    if os.path.exists(live_path):
+        live = pd.read_csv(live_path, dtype={'hd': str})
+        if len(live):
+            return live.drop_duplicates(['jcd', 'rno'], keep='last')
     d = datetime.datetime.strptime(hd, '%Y%m%d').date()
     path = download_k(d)
     if path is None:
@@ -86,8 +92,14 @@ def model_history():
     path = os.path.join(MODEL, 'history.csv')
     if os.path.exists(path):
         t = pd.read_csv(path, dtype=str)
+        if 'from' not in t.columns:
+            legacy = pd.read_csv(path, header=None, names=['from','version','note'], dtype=str)
+            if legacy['from'].str.fullmatch(r'[0-9]{12}').all():
+                t = legacy
+            else:
+                raise ValueError('Unknown model history schema')
         h += [(int(r['from']), r['version']) for _, r in t.iterrows()]
-    return sorted(h)
+    return sorted(dict(h).items())
 
 
 def version_of(row, hist):

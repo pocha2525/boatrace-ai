@@ -11,11 +11,14 @@ from reasoned_notice import labels
 VERSION = 'consensus-v1'
 MIN_PROB = .12
 MIN_EV = 1.0
-MAX_BETS = 2
+MAX_BETS = 2  # Live limit; increase only after prospective return validation.
+AUTHORIZED_MAX_BETS = 4
 
 
-def select(ranked, record):
+def select(ranked, record, max_bets=MAX_BETS):
     """Intersect model top four with the already validated odds-free forecast."""
+    if not isinstance(max_bets, int) or not 1 <= max_bets <= AUTHORIZED_MAX_BETS:
+        raise ValueError('Authorized comparison range is one to four picks')
     if not isinstance(record, dict) or record.get('eligible') is not True:
         return []
     picks = record.get('picks', [])
@@ -24,7 +27,7 @@ def select(ranked, record):
     ordered = sorted(ranked, key=lambda x: -x[2])[:4]
     return [x for x in ordered if x[1] in picks and
             all(math.isfinite(float(v)) for v in (x[0], x[2], x[3])) and
-            x[2] >= MIN_PROB and x[0] >= MIN_EV][:MAX_BETS]
+            x[2] >= MIN_PROB and x[0] >= MIN_EV][:max_bets]
 
 
 def daily_id(hd):
