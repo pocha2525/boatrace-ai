@@ -46,7 +46,8 @@ def test_missing_or_non_finite_odds_are_not_fabricated():
 
 
 @pytest.mark.parametrize('buy', [True, False])
-def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch, tmp_path, buy):
+@pytest.mark.parametrize('candidate', [True, False])
+def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch, tmp_path, buy, candidate):
     now = datetime.datetime.fromisoformat('2026-11-28T10:00:01+09:00')
     close = now+datetime.timedelta(minutes=5)
     record = saved()
@@ -78,7 +79,7 @@ def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch
     monkeypatch.setattr(predict, 'send_notify', send)
     monkeypatch.setattr(predict, 'write_notify', lambda hd, row: notices.append(row))
     monkeypatch.setattr(predict, 'write_log', lambda hd, rows: logged.extend(rows))
-    predict.run_race([], {'_model_ids': ['baseline']}, 18, 5, '20261128', close, now, cand=True)
+    predict.run_race([], {'_model_ids': ['baseline']}, 18, 5, '20261128', close, now, cand=candidate)
     if buy:
         assert len(sent) == 1
         assert sent[0][0].startswith('統合予想 ')
@@ -89,7 +90,11 @@ def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch
         assert [r['pick'] for r in logged] == ['1-2-5']
         assert notices[0]['policy'] == 'consensus-v1'
     else:
-        assert not sent
+        assert len(sent) == int(candidate)
+        if candidate:
+            assert sent[0][0].startswith('見送り ')
+            assert '検証4点' not in sent[0][1] and '1-2-5' not in sent[0][1]
+            assert sent[0][2]['notification_id'] == '20261128-18-05'
         assert notices[0]['status'] == predict.ST_SKIP
         assert logged[0]['pick'] == ''
 

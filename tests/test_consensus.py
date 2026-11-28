@@ -55,14 +55,17 @@ def test_daily_cap_survives_lost_final_csv(tmp_path, status, used):
     assert not consensus.day_used(tmp_path, '20261129')
 
 
-def test_morning_saves_internal_candidates_without_any_delivery(monkeypatch, tmp_path):
+def test_morning_sends_one_candidate_list_without_a_final_forecast(monkeypatch, tmp_path):
     monkeypatch.setattr(predict, 'LOGS', str(tmp_path))
     monkeypatch.setattr(predict, 'load_model', lambda: ([], {}))
     monkeypatch.setattr(predict, 'today_venues', lambda _: [])
     monkeypatch.setattr(morning, 'LOGS', str(tmp_path))
-    monkeypatch.setattr(morning, 'send', lambda *a: pytest.fail('candidate notification disabled'))
+    sent = []
+    monkeypatch.setattr(morning, 'send', lambda *a: (sent.append(a), predict.SENT_OK)[1])
     morning.main()
     assert len(list(tmp_path.glob('morning_*.csv'))) == 1
+    assert len(sent) == 1 and '暫定' in sent[0][0]
+    assert '最終買い目ではありません' in sent[0][1]
 
 
 def test_only_daily_cancelled_delivery_can_release_the_unused_slot(monkeypatch):
@@ -85,3 +88,11 @@ def test_only_daily_cancelled_delivery_can_release_the_unused_slot(monkeypatch):
     assert delivery.Ledger().reserve('20261128-18-04') is None
     assert delivery.Ledger().reserve(consensus.daily_id('20261128')) is not None
     assert len(writes) == 1 and writes[0]['sha'] == 'old'
+
+
+def test_four_pick_ceiling_is_available_for_audit_without_changing_live_default():
+    rows = [(2, p, .2-i*.01, 10) for i, p in enumerate(record()['picks'])]
+    assert len(consensus.select(rows, record())) == 2
+    assert len(consensus.select(rows, record(), max_bets=4)) == 4
+    with pytest.raises(ValueError):
+        consensus.select(rows, record(), max_bets=5)
