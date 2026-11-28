@@ -51,6 +51,8 @@ def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch
     close = now+datetime.timedelta(minutes=5)
     record = saved()
     probability = {'-'.join(map(str, p)): 1/120 for p in permutations(range(1, 7), 3)}
+    probability = dict.fromkeys(probability, .8/119)
+    probability['1-2-5'] = .2
     odds = dict.fromkeys(probability, 10)
     sent, notices, logged = [], [], []
 
@@ -69,7 +71,7 @@ def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch
     monkeypatch.setattr(predict, 'predict', prediction)
     monkeypatch.setattr(predict, 'tri_probs', lambda _: probability)
     monkeypatch.setattr(predict, 'odds_map', lambda *args: odds)
-    monkeypatch.setattr(predict, 'combos', lambda *args: [(1.2 if buy else .8, '1-2-3', .2 if buy else .08, 6)])
+    monkeypatch.setattr(predict, 'combos', lambda *args: [(1.2 if buy else .8, '1-2-5', .2 if buy else .08, 6)])
     monkeypatch.setattr(predict, 'save_sample', lambda *args: None)
     monkeypatch.setattr(predict, 'entry_text', lambda: '進入1-2-3-4-5-6')
     monkeypatch.setattr(predict, 'rank_text', lambda *args: '順位の表示')
@@ -77,16 +79,18 @@ def test_buy_and_skip_use_one_existing_delivery_with_verified_record(monkeypatch
     monkeypatch.setattr(predict, 'write_notify', lambda hd, row: notices.append(row))
     monkeypatch.setattr(predict, 'write_log', lambda hd, rows: logged.extend(rows))
     predict.run_race([], {'_model_ids': ['baseline']}, 18, 5, '20261128', close, now, cand=True)
-    assert len(sent) == 1 and '【私の判断ルール｜検証4点】' in sent[0][1]
-    assert '1-2-5（参考10倍）' in sent[0][1]
-    assert sent[0][2]['notification_id'] == '20261128-18-05'
     if buy:
-        assert sent[0][0].startswith('買い ')
-        assert [r['pick'] for r in sent[0][2]['receipt']['bets']] == ['1-2-3']
-        assert [r['pick'] for r in logged] == ['1-2-3']
+        assert len(sent) == 1
+        assert sent[0][0].startswith('統合予想 ')
+        assert 'AI＋判断ルールの共通予想' in sent[0][1]
+        assert '検証4点' not in sent[0][1] and '1-5-2' not in sent[0][1]
+        assert sent[0][2]['notification_id'] == 'consensus-v1-20261128'
+        assert [r['pick'] for r in sent[0][2]['receipt']['bets']] == ['1-2-5']
+        assert [r['pick'] for r in logged] == ['1-2-5']
+        assert notices[0]['policy'] == 'consensus-v1'
     else:
-        assert sent[0][0].startswith('見送り ')
-        assert '本番AIの参考候補（見送り）' in sent[0][1]
+        assert not sent
+        assert notices[0]['status'] == predict.ST_SKIP
         assert logged[0]['pick'] == ''
 
 
