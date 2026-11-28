@@ -34,28 +34,27 @@
       "error": "NoOfficialResponse"
     },
     "15-1": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:13:54.881107+09:00",
-      "next_attempt_at": "2026-11-28T20:23:54.881107+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "20-5": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:13:54.881107+09:00",
-      "next_attempt_at": "2026-11-28T20:23:54.881107+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "15-4": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:13:54.881107+09:00",
-      "next_attempt_at": "2026-11-28T20:23:54.881107+09:00",
-      "status": "pending",
-      "error": "NoOfficialResponse"
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
+      "status": "pending"
     },
     "20-7": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:19:02.014214+09:00",
-      "next_attempt_at": "2026-11-28T20:29:02.014214+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "8-7": {
@@ -77,9 +76,9 @@
       "status": "settled"
     },
     "15-6": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:19:02.014214+09:00",
-      "next_attempt_at": "2026-11-28T20:29:02.014214+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "17-8": {
@@ -101,15 +100,15 @@
       "status": "settled"
     },
     "20-10": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:19:02.014214+09:00",
-      "next_attempt_at": "2026-11-28T20:29:02.014214+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "15-9": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:19:02.014214+09:00",
-      "next_attempt_at": "2026-11-28T20:29:02.014214+09:00",
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
       "status": "pending"
     },
     "14-11": {
@@ -119,10 +118,11 @@
       "status": "settled"
     },
     "20-12": {
-      "attempts": 2,
-      "last_attempt_at": "2026-11-28T20:19:02.014214+09:00",
-      "next_attempt_at": "2026-11-28T20:29:02.014214+09:00",
-      "status": "pending"
+      "attempts": 3,
+      "last_attempt_at": "2026-11-28T20:34:39.208738+09:00",
+      "next_attempt_at": "2026-11-28T20:54:39.208738+09:00",
+      "status": "pending",
+      "error": "NoOfficialResponse"
     },
     "3-7": {
       "attempts": 2,
@@ -497,5 +497,5 @@
       "status": "settled"
     }
   },
-  "updated_at": "2026-11-28T20:28:54.136748+09:00"
+  "updated_at": "2026-11-28T20:34:39.208738+09:00"
 }
