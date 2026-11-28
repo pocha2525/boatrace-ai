@@ -9,6 +9,9 @@ on:
         default: '0'
 permissions:
   contents: write
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
 jobs:
   morning:
     runs-on: ubuntu-latest
@@ -24,10 +27,11 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install pandas lightgbm requests beautifulsoup4 lxml
-      - run: python morning.py
+      - run: python autonomous.py --mode morning
         env:
           MANUAL: ${{ inputs.auto == '1' && '0' || '1' }}
       - name: save
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

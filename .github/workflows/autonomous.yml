@@ -1,0 +1,53 @@
+name: autonomous
+on:
+  workflow_dispatch:
+    inputs:
+      check_only:
+        description: 'Read-only health check (no prediction or notification)'
+        type: boolean
+        default: true
+permissions:
+  contents: write
+concurrency:
+  group: repo-write
+  cancel-in-progress: false
+jobs:
+  operate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: '1'
+      GITHUB_TOKEN: ${{ github.token }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      RELAY_URL: ${{ secrets.RELAY_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - id: due
+        run: python autonomous.py --preflight
+      - if: steps.due.outputs.run == 'true'
+        run: pip install -r requirements.txt
+      - if: steps.due.outputs.run == 'true'
+        name: Automatic operation or read-only manual verification
+        run: |
+          if [ '${{ github.event_name }}' = 'workflow_dispatch' ] && [ '${{ inputs.check_only }}' = 'true' ]; then
+            python autonomous.py --check-only
+          else
+            python autonomous.py --mode auto
+          fi
+      - name: Persist state even after a transient failure
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A logs
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Autonomous operation checkpoint'
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then exit 0; fi
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
+          exit 1
