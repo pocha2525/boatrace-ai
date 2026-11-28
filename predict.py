@@ -20,6 +20,7 @@ import bfile
 import before
 import ot
 import cm
+import reasoned_notice
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, get_direct, page, notify, add_rel, send_notify,
@@ -457,16 +458,17 @@ def skip_reason(res, om):
     return f'本命{k}の期待値{ev:.2f}（{EV_TH:.1f}未満）'
 
 
-def send_skip_notice(name, rno, dl, nid, reason, res):
+def send_skip_notice(name, rno, dl, nid, reason, res, reasoned=None, odds=None):
     """朝の候補だったレースを見送ったことを通知する。送信結果の状態を返す"""
     if remain(dl) < SAFE_MIN:
         return '締切により送らず'
     lines = [f'締切 {dl:%H:%M}', f'理由: {reason}']
     if res:
-        lines += [entry_text(), rank_text('1着', 'w'), '本命（買わない）:']
+        lines += [entry_text(), rank_text('1着', 'w'), '本番AIの参考候補（見送り）:']
         for ev, k, q, o in res[:MAX_BETS]:
             lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
-    lines += ['※朝の候補でしたが、締切前の判定で見送りです', f'通知ID: {nid}']
+    lines += reasoned_notice.lines(reasoned, odds)
+    lines += ['※本番AIは締切前の判定で見送りです。検証4点とは別の判定です。', f'通知ID: {nid}']
     return send_notify(f'見送り {name} {rno}R', '\n'.join(lines), notification_id=nid, deadline=dl)['status']
 
 
@@ -537,14 +539,16 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     odds_started = now_jst()
     om = odds_map(jcd, rno, hd)
     odds_observed = now_jst()
+    recorded_reasoning = None
     try:
         import policy_replay
-        policy_replay.capture(LOGS, hd, jcd, rno, dl, odds_started, odds_observed,
+        market = policy_replay.capture(LOGS, hd, jcd, rno, dl, odds_started, odds_observed,
                               tri_probs(pr), om, lk.get('_model_ids'),
                               dict(min_prob=MIN_PROB, ev1=EV_TH, ev2=EV_TH2,
                                    max_bets=MAX_BETS, safe_min=SAFE_MIN),
                               LAST.get('features_observed_at'), shadow=LAST.get('shadow'),
                               reasoned=LAST.get('reasoned'))
+        recorded_reasoning = market.get('reasoned')
     except (OSError, ValueError, TypeError) as e:
         print('オッズ検証記録を保存できない', type(e).__name__)
     res = combos(pr, om)  # 当たりやすい順
@@ -573,7 +577,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     head = rank_text('1着', 'w')
     if not bets:
         why = skip_reason(res, om)
-        st = send_skip_notice(name, rno, dl, nid, why, res) if cand else ''
+        st = send_skip_notice(name, rno, dl, nid, why, res, recorded_reasoning, om) if cand else ''
         write_notify(hd, dict(rec, status=ST_SKIP, reason=why, notice=st))
         write_log(hd, [no_bet])
         print(f'{name} {rno}R 見送り（{why} / {head}）')
@@ -588,9 +592,10 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         return
 
     lines = [f'締切 {dl:%H:%M}', entry_text(), head,
-             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '買い目:']
+             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本番AIの買い目:']
     for ev, k, q, o in bets:
         lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
+    lines += reasoned_notice.lines(recorded_reasoning, om)
     if cand:
         lines.append('※朝の候補のレースです')
     lines.append(f'通知ID: {nid}')
