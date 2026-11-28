@@ -120,8 +120,8 @@ class _RelayRetry(str):
         return value
 
 
-def get_relay(url):
-    r = requests.get(RELAY, params={'u': url}, timeout=25)
+def get_relay(url, timeout=25):
+    r = requests.get(RELAY, params={'u': url}, timeout=timeout)
     if r.status_code != 200:
         print('中継エラー', r.status_code, url)
         return _RelayRetry(r.status_code >= 500)
@@ -135,33 +135,38 @@ def get_relay(url):
     return _RelayRetry(isinstance(st, int) and st >= 500)
 
 
-def get(url, tries=3):
+def get(url, tries=3, timeout=None, direct_fallback=True, relay_only=False):
     """URLを取得する。404ならNone、失敗時は数回やり直す。
-    RELAY_URL があれば、Google Apps Script 経由で取得する。"""
-    direct_fallback = False
+    RELAY_URL があれば、Google Apps Script 経由で取得する。
+    明示したtimeoutだけを上書きし、通常の呼び出しの既定値は維持する。
+    relay_onlyは結果収集用。直接取得は呼び出し側が1回だけ管理する。"""
+    if relay_only and not RELAY:
+        return None
+    relay_direct_ok = False
     for i in range(tries):
         try:
             if RELAY:
-                r = get_relay(url)
+                r = get_relay(url) if timeout is None else get_relay(url, timeout=timeout)
                 if r != 'retry':
                     return r
-                direct_fallback = getattr(r, 'direct_ok', True)
+                relay_direct_ok = getattr(r, 'direct_ok', True)
             else:
-                r = requests.get(url, headers=UA, timeout=30)
+                r = requests.get(url, headers=UA, timeout=30 if timeout is None else timeout)
                 if r.status_code == 200:
                     return r
                 if r.status_code == 404:
                     return None
         except (requests.RequestException, ValueError) as e:
-            direct_fallback = bool(RELAY)
+            relay_direct_ok = bool(RELAY)
             print('通信エラー', url, e)
-        time.sleep(2 * (i + 1))
+        if timeout is None or i + 1 < tries:
+            time.sleep(2 * (i + 1))
     # Relay transport/server failures can be local to the relay. A bounded
     # direct attempt keeps official collection running without bypassing a
     # legitimate 404 response (which returned above).
-    if RELAY and direct_fallback:
+    if RELAY and relay_direct_ok and direct_fallback and not relay_only:
         try:
-            r = requests.get(url, headers=UA, timeout=20)
+            r = requests.get(url, headers=UA, timeout=20 if timeout is None else timeout)
             if r.status_code == 200:
                 return r
         except requests.RequestException as e:

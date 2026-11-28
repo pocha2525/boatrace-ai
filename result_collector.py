@@ -9,9 +9,12 @@ import math
 import os
 from pathlib import Path
 import re
+import time
 
 BACKOFF_MIN = 5
 BACKOFF_MAX_MIN = 120
+RESULT_BUDGET_SECONDS = 90
+RESULT_REQUEST_TIMEOUT_SECONDS = 8
 
 
 def _text(value):
@@ -78,8 +81,10 @@ def collect(hd, now, ctx):
     ``ctx`` is the predict module, passed by the caller to keep result parsing,
     network access and CSV ownership in the existing application.
     """
+    budget_end = time.monotonic() + RESULT_BUDGET_SECONDS
     hd = str(hd)
-    metrics = dict(attempted=0, saved=0, settled=0, pending=0, due=0, errors=0, fetched=0, backoff=0)
+    metrics = dict(attempted=0, saved=0, settled=0, pending=0, due=0, errors=0, fetched=0, backoff=0,
+                   budget_exhausted=0)
     notices = ctx.read_log(ctx.notify_path(hd))
     if notices is None or notices.empty:
         return metrics
@@ -122,7 +127,10 @@ def collect(hd, now, ctx):
     # Never-tried new races outrank old failed ones, regardless of deadline.
     todo.sort(key=lambda item: (item[0], item[1], item[2]))
     metrics['due'] = len(todo)
-    for _, _, (jcd, rno), notice, name, previous in todo[:ctx.RESULT_MAX]:
+    for _, _, (jcd, rno), notice, name, previous in todo[:min(8, ctx.RESULT_MAX)]:
+        if time.monotonic() >= budget_end:
+            metrics['budget_exhausted'] = 1
+            break  # Unattempted races retain their position and have no backoff reservation.
         metrics['attempted'] += 1
         count = max(0, int(previous.get('attempts', 0)))+1
         wait = min(BACKOFF_MAX_MIN, BACKOFF_MIN*2**min(count-1, 8))
@@ -132,16 +140,27 @@ def collect(hd, now, ctx):
         state['races'][name] = attempt
         _save(path, state, now)  # Persist reservation even if the runner dies.
         html, result = '', None
-        try:
-            html = ctx.page('raceresult', jcd, rno, hd)
-            result = ctx.parse_result_details(html)
-        except Exception as exc:
-            attempt['error'] = type(exc).__name__
-        if not result:
+        url = f'{ctx.BR}raceresult?rno={rno}&jcd={jcd:02d}&hd={hd}'
+        # Do not call page(): its ordinary retry/fallback policy can take minutes.
+        # Relay-only disables common.get's automatic direct fallback. The single
+        # explicit direct attempt below also handles empty/stale relay responses.
+        fetch = getattr(ctx, 'get', None)
+        remaining = budget_end-time.monotonic()
+        if callable(fetch) and remaining > 0:
+            try:
+                response = fetch(url, tries=1, timeout=min(RESULT_REQUEST_TIMEOUT_SECONDS, remaining),
+                                 direct_fallback=False, relay_only=True)
+                if response is not None and response.status_code == 200:
+                    response.encoding = 'utf-8'
+                    html = response.text
+                    result = ctx.parse_result_details(html)
+            except Exception as exc:
+                attempt['error'] = type(exc).__name__
+        remaining = budget_end-time.monotonic()
+        if not result and remaining > 0:
             # A stale/empty relay response is not proof of unpublished results.
             try:
-                response = ctx.get_direct(f'{ctx.BR}raceresult?rno={rno}&jcd={jcd:02d}&hd={hd}',
-                                          timeout=20, tries=1)
+                response = ctx.get_direct(url, timeout=min(RESULT_REQUEST_TIMEOUT_SECONDS, remaining), tries=1)
                 if response is not None and response.status_code == 200:
                     response.encoding = 'utf-8'
                     html = response.text
@@ -149,6 +168,8 @@ def collect(hd, now, ctx):
                     attempt['direct_fallback'] = True
             except Exception as exc:
                 attempt['error'] = type(exc).__name__
+        if time.monotonic() >= budget_end:
+            metrics['budget_exhausted'] = 1
         if html:
             metrics['fetched'] += 1
         if isinstance(result, dict) and result:

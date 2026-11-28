@@ -48,7 +48,9 @@ def due(mode, now, state):
         return True
     if mode not in ('predict', 'results'):
         return False
-    return (now-dt.datetime.fromisoformat(prior['finished_at'])).total_seconds() >= MIN_INTERVAL
+    # Measure cadence from cycle start: a slow previous cycle must not turn
+    # a five-minute clock back into ten-minute collection.
+    return (now-dt.datetime.fromisoformat(prior.get('started_at') or prior['finished_at'])).total_seconds() >= MIN_INTERVAL
 
 
 def check(repo, now):
