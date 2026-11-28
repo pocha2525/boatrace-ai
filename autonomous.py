@@ -97,6 +97,10 @@ def operate(repo, mode, now=None, executor=None):
         started = dt.datetime.now(JST)
         try:
             metrics = executor(phase, hd)
+            result_metrics = metrics.get('results', {}) if isinstance(metrics, dict) else {}
+            attempted = result_metrics.get('attempted', 0)
+            if attempted and result_metrics.get('saved', 0) == 0 and result_metrics.get('errors', 0) >= attempted:
+                raise RuntimeError('All attempted official result sources unavailable')
             finished = dt.datetime.now(JST)
             state['tasks'][key] = dict(status='ok', started_at=started.isoformat(),
                 finished_at=finished.isoformat(), consecutive_failures=0,

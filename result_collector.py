@@ -14,7 +14,9 @@ import time
 BACKOFF_MIN = 5
 BACKOFF_MAX_MIN = 120
 RESULT_BUDGET_SECONDS = 90
-RESULT_REQUEST_TIMEOUT_SECONDS = 8
+# The GAS relay needs its proven 25s allowance; the shared budget bounds the batch.
+RESULT_RELAY_TIMEOUT_SECONDS = 25
+RESULT_DIRECT_TIMEOUT_SECONDS = 8
 
 
 def _text(value):
@@ -148,7 +150,7 @@ def collect(hd, now, ctx):
         remaining = budget_end-time.monotonic()
         if callable(fetch) and remaining > 0:
             try:
-                response = fetch(url, tries=1, timeout=min(RESULT_REQUEST_TIMEOUT_SECONDS, remaining),
+                response = fetch(url, tries=1, timeout=min(RESULT_RELAY_TIMEOUT_SECONDS, remaining),
                                  direct_fallback=False, relay_only=True)
                 if response is not None and response.status_code == 200:
                     response.encoding = 'utf-8'
@@ -160,7 +162,7 @@ def collect(hd, now, ctx):
         if not result and remaining > 0:
             # A stale/empty relay response is not proof of unpublished results.
             try:
-                response = ctx.get_direct(url, timeout=min(RESULT_REQUEST_TIMEOUT_SECONDS, remaining), tries=1)
+                response = ctx.get_direct(url, timeout=min(RESULT_DIRECT_TIMEOUT_SECONDS, remaining), tries=1)
                 if response is not None and response.status_code == 200:
                     response.encoding = 'utf-8'
                     html = response.text
