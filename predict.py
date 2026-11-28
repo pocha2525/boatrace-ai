@@ -20,7 +20,7 @@ import bfile
 import before
 import ot
 import cm
-import reasoned_notice
+import consensus
 
 from common import (MODEL, LOGS, JST, VENUES, FEATS, X, TARGETS, BR,
                     now_jst, get, get_direct, page, notify, add_rel, send_notify,
@@ -36,7 +36,7 @@ MAX_BETS = 2         # 1レースあたりの最大点数
 LAST = ThreadState()  # レース処理の状態はスレッドごとに分離
 HTML = ThreadState()  # Claude修正のレース別ページも保持
 LOG_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'pick',
-            'prob', 'odds', 'ev', 'run_at']
+            'prob', 'odds', 'ev', 'run_at', 'policy']
 
 # ---- 通知の安全対策 ----
 SAFE_MIN = 2  # 締切まで残りこの分数未満なら送らない（締切後の通知も防ぐ）
@@ -49,7 +49,7 @@ NOTIFY_COLS = ['notify_id', 'hd', 'jcd', 'venue', 'rno', 'deadline',
                'run_start', 'decided_at', 'remain_decided',
                'send_start', 'send_end', 'remain_send', 'status',
                'http', 'ntfy_id', 'error', 'picks', 'probs', 'odds',
-               'evs', 'reason', 'morning', 'notice']
+               'evs', 'reason', 'morning', 'notice', 'policy']
 # 朝の候補（morning.py が保存）
 MORNING_COLS = ['hd', 'jcd', 'venue', 'rno', 'deadline', 'picks', 'probs']
 # 次の起動（約10分後）では締切2分前を切るので、今回が最後の判定になる残り分数
@@ -459,17 +459,8 @@ def skip_reason(res, om):
 
 
 def send_skip_notice(name, rno, dl, nid, reason, res, reasoned=None, odds=None):
-    """朝の候補だったレースを見送ったことを通知する。送信結果の状態を返す"""
-    if remain(dl) < SAFE_MIN:
-        return '締切により送らず'
-    lines = [f'締切 {dl:%H:%M}', f'理由: {reason}']
-    if res:
-        lines += [entry_text(), rank_text('1着', 'w'), '本番AIの参考候補（見送り）:']
-        for ev, k, q, o in res[:MAX_BETS]:
-            lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
-    lines += reasoned_notice.lines(reasoned, odds)
-    lines += ['※本番AIは締切前の判定で見送りです。検証4点とは別の判定です。', f'通知ID: {nid}']
-    return send_notify(f'見送り {name} {rno}R', '\n'.join(lines), notification_id=nid, deadline=dl)['status']
+    """Compatibility hook: skip notices are now internal only."""
+    return ST_SKIP
 
 
 @locked_log
@@ -503,7 +494,7 @@ def remain(dl):
 
 
 def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
-    """cand=True: 朝の候補に上がったレース（見送りも通知する）"""
+    """Collect all snapshots; send only the first shared signal of the day."""
     name = VENUES.get(jcd, str(jcd))
     nid = f'{hd}-{jcd:02d}-{rno:02d}'  # 通知ID（1レース1通知）
     if remain(dl) < SAFE_MIN:
@@ -519,15 +510,14 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     except Exception as e:
         print('見本を保存できない', e)
     base = {'hd': hd, 'jcd': jcd, 'venue': name, 'rno': rno,
-            'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}'}
+            'deadline': f'{dl:%H:%M}', 'run_at': f'{now:%H:%M}', 'policy': consensus.VERSION}
     mark = '○' if cand else ''
     if pr is None:
         why = LAST.get('skip') or '情報が取れない'
         print(name, rno, 'R 見送り：', why)
-        # 朝の候補で、今回が最後の判定なら「見送り」を通知して終える
-        # （それ以外は今まで通り、次の回にもう一度判定する）
+        # 朝の候補も通知せず、最終の内部判定だけ保存する。
         if cand and remain(dl) < LAST_CHANCE_MIN:
-            st = send_skip_notice(name, rno, dl, nid, why, [])
+            st = ST_SKIP
             write_notify(hd, dict(base, notify_id=nid,
                                   run_start=f'{now:%H:%M:%S}',
                                   decided_at=f'{now_jst():%H:%M:%S}',
@@ -552,12 +542,10 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
     except (OSError, ValueError, TypeError) as e:
         print('オッズ検証記録を保存できない', type(e).__name__)
     res = combos(pr, om)  # 当たりやすい順
-    # 一番当たりやすい組み合わせが条件を満たすレースだけ買う。
-    # 2点目は期待値0.8以上のときだけ追加する（EV_TH2）
-    ok = res and res[0][2] >= MIN_PROB and res[0][0] >= EV_TH
-    bets = [res[0]] if ok else []
-    if ok:
-        bets += [x for x in res[1:MAX_BETS] if x[0] >= EV_TH2]
+    bets = consensus.select(res, recorded_reasoning)
+    daily_used = consensus.day_used(LOGS, hd)
+    if daily_used:
+        bets = []
 
     # 検証用の記録の共通部分（買い・見送りに関係なく、確率の上位2つを残す。
     # 買った買い目は成績記録 logs/日付.csv に入る）
@@ -571,13 +559,13 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
                probs=' '.join(f'{q:.4f}' for ev, k, q, o in shown),
                odds=' '.join(str(o) for ev, k, q, o in shown),
                evs=' '.join(f'{ev:.2f}' for ev, k, q, o in shown),
-               morning=mark, notice='')
+               morning=mark, notice='', policy=consensus.VERSION)
     no_bet = dict(base, pick='', prob='', odds='', ev='')
 
     head = rank_text('1着', 'w')
     if not bets:
-        why = skip_reason(res, om)
-        st = send_skip_notice(name, rno, dl, nid, why, res, recorded_reasoning, om) if cand else ''
+        why = '本日の統合通知は送信済み・結果不明' if daily_used else 'AIと判断ルールの共通買い目が確率12%・EV1.0以上を満たさない'
+        st = ''
         write_notify(hd, dict(rec, status=ST_SKIP, reason=why, notice=st))
         write_log(hd, [no_bet])
         print(f'{name} {rno}R 見送り（{why} / {head}）')
@@ -591,14 +579,16 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         print(f'{name} {rno}R 通知中止：締切まで{rec["remain_decided"]}分')
         return
 
-    lines = [f'締切 {dl:%H:%M}', entry_text(), head,
-             rank_text('2着', 'q2'), rank_text('3着', 'q3'), '本番AIの買い目:']
+    # Log only the shared picks that will actually appear in this one notice.
+    rec.update(picks=' '.join(x[1] for x in bets),
+               probs=' '.join(f'{x[2]:.4f}' for x in bets),
+               odds=' '.join(str(x[3]) for x in bets),
+               evs=' '.join(f'{x[0]:.2f}' for x in bets))
+    lines = [f'締切 {dl:%H:%M}', entry_text(), 'AI＋判断ルールの共通予想:']
     for ev, k, q, o in bets:
-        lines.append(f'{k}  {o}倍  確率{q * 100:.1f}%  期待値{ev:.2f}')
-    lines += reasoned_notice.lines(recorded_reasoning, om)
-    if cand:
-        lines.append('※朝の候補のレースです')
-    lines.append(f'通知ID: {nid}')
+        lines.append(f'{k}  {o}倍  AI確率{q * 100:.1f}%  AI推定EV{ev:.2f}')
+    lines += consensus.evidence(recorded_reasoning)
+    lines += ['予想通知は1日1回・最大2点です。', f'通知ID: {nid}']
 
     # 送る直前にもう一度確かめる
     r_send = remain(dl)
@@ -610,7 +600,7 @@ def run_race(bst, lk, jcd, rno, hd, dl, now, cand=False):
         print(f'{name} {rno}R 通知中止：締切まで{r_send:.2f}分')
         return
     t0 = now_jst()
-    out = send_notify(f'買い {name} {rno}R', '\n'.join(lines), notification_id=nid, deadline=dl,
+    out = send_notify(f'統合予想 {name} {rno}R', '\n'.join(lines), notification_id=consensus.daily_id(hd), deadline=dl,
                       receipt={'notify': rec, 'bets': [dict(base, pick=k, prob=round(q, 4),
                                odds=float(o), ev=round(ev, 2)) for ev, k, q, o in bets]})
     t1 = now_jst()
@@ -774,8 +764,6 @@ def main():
     bst, lk = load_model()
     if bst is None:
         msg = 'モデルがまだありません。先に train を実行してください。'
-        if manual:
-            notify('ボートレースAI', msg)
         print(msg)
         return
 
@@ -810,7 +798,7 @@ def main():
         ta = os.path.join(MODEL, 'trained_at.txt')
         info.append('モデル: ' + (open(ta).read().strip()
                     if os.path.exists(ta) else 'v2 3モデル(11/23 Colab)'))
-        notify('動作確認OK', '\n'.join(info))
+        print('動作確認', ' / '.join(info))
 
     cands = morning_races(hd)
     print('朝の候補', len(cands), 'レース')

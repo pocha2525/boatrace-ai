@@ -1,4 +1,4 @@
-"""朝の候補レース通知：出走表だけで本命がはっきりしていそうなレースを一覧にする。
+"""朝の内部候補レース記録：出走表だけで本命がはっきりしていそうなレースを一覧にする。
 
 展示タイム・進入・直前オッズはまだ無いので、
 コースは枠なり、展示タイムと風・波は「不明」として計算する。
@@ -77,7 +77,7 @@ def main():
     manual = os.environ.get('MANUAL') == '1'
     # 自動実行で、今日の候補がもう保存済みなら二重に送らない
     if os.path.exists(predict.morning_path(hd)) and not manual:
-        print('今日の朝の候補は送信済みです')
+        print('今日の朝の内部候補は保存済みです')
         return
     bst, lk = predict.load_model()
     if bst is None:
@@ -117,23 +117,8 @@ def main():
     found = [x for x in found if x[0] > sent_at]
     found.sort()
 
-    if not found:
-        st = send('本日の本命候補', 'これからのレースに、本命がはっきりしたレースはありませんでした')
-        if st in (SENT_OK, SENT_UNKNOWN):
-            save_candidates(hd, [])
-        return
-    lines = []
-    for dl, jcd, rno, top in found[:MAX_LINES]:
-        picks = ' '.join(f'{k}({q * 100:.0f}%)' for q, k in top)
-        lines.append(f'{dl:%H:%M} {VENUES.get(jcd, jcd)}{rno}R  {picks}')
-    lines.append('')
-    lines.append('※展示・オッズ前の候補です（進入は枠なりと仮定）。最終判断は締切前の通知で。')
-    lines.append('※候補のレースは、締切前に「買い」か「見送り」のどちらかを通知します。')
-    st = send(f'本日の本命候補 {len(found)}レース', '\n'.join(lines))
-    # 受付成功・結果不明のときに保存（届いた可能性があるので二重に送らない）
-    if st in (SENT_OK, SENT_UNKNOWN):
-        save_candidates(hd, found)
-    print('送信結果', st)
+    save_candidates(hd, found)
+    print('朝の内部候補を保存', len(found), 'レース（通知なし）')
 
 
 if __name__ == '__main__':
